@@ -21,10 +21,10 @@ class RollbackDemo {
             this.clearLogs();
         });
 
-        // 주기적으로 주문 목록 새로고침 (5초마다)
-        setInterval(() => {
-            this.loadOrders();
-        }, 5000);
+        // // 주기적으로 주문 목록 새로고침 (5초마다)
+        // setInterval(() => {
+        //     this.loadOrders();
+        // }, 5000);
     }
 
     async createOrder() {
@@ -64,9 +64,9 @@ class RollbackDemo {
         }
 
         // 주문 목록 새로고침
-        setTimeout(() => {
-            this.loadOrders();
-        }, 60000);
+        // setTimeout(() => {
+        //     this.loadOrders();
+        // }, 1000);
     }
 
     async loadOrders() {

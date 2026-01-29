@@ -17,6 +17,6 @@ public class Order {
         this.customerName = customerName;
         this.amount = amount;
         this.status = "CREATED";
-        log.info("✨ Order domain object created for: {}", customerName);
+        log.info("✨ 다음 고객을 위한 주문 도메인 객체 생성: {}", customerName);
     }
 }

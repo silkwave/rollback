@@ -21,18 +21,18 @@ public class OrderService {
 
     @Transactional
     public Order create(OrderRequest req) {
-        log.info("Creating order for customer: {}", req.getCustomerName());
+        log.info("고객 {}의 주문을 생성합니다.", req.getCustomerName());
         Order order = req.toOrder();
         orders.save(order);
-        log.info("Order created with ID: {}", order.getId());
+        log.info("주문이 생성되었습니다. ID: {}", order.getId());
 
         try {
             paymentClient.pay(order.getId(), req.getAmount(), req.isForcePaymentFailure());
             orders.updateStatus(order.getId(), "PAID");
-            log.info("Order {} processed successfully", order.getId());
+            log.info("주문 {} 처리가 완료되었습니다.", order.getId());
             return order;
         } catch (Exception e) {
-            log.error("Payment failed for order {}: {}", order.getId(), e.getMessage());
+            log.error("주문 {} 결제에 실패했습니다: {}", order.getId(), e.getMessage());
             events.publishEvent(new OrderFailed(order.getId(), e.getMessage()));
             throw e;
         }

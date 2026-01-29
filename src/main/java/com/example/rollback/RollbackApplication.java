@@ -11,6 +11,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class RollbackApplication {
     public static void main(String[] args) {
         SpringApplication.run(RollbackApplication.class, args);
-        log.info("🚀 RollbackApplication started successfully with Async enabled.");
+        log.info("🚀 RollbackApplication이 비동기 처리와 함께 성공적으로 시작되었습니다.");
     }
 }

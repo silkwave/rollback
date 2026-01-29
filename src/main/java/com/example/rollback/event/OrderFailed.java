@@ -9,7 +9,7 @@ public class OrderFailed {
     private final String reason;
 
     public OrderFailed(Long orderId, String reason) {
-        log.info("🔥 OrderFailed event created for order ID: {}", orderId);
+        log.info("🔥 주문 ID {}에 대한 OrderFailed 이벤트가 생성되었습니다.", orderId);
         this.orderId = orderId;
         this.reason = reason;
     }

@@ -25,12 +25,12 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderRequest request, BindingResult bindingResult) {
-        log.info("POST /api/orders - request: {}", request);
+        log.info("POST /api/orders - 요청: {}", request);
 
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
-                "message", "Validation failed: " + bindingResult.getAllErrors().get(0).getDefaultMessage()
+                "message", "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage()
             ));
         }
 
@@ -38,14 +38,14 @@ public class OrderController {
             Order order = orderService.create(request);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Order created successfully",
+                "message", "주문이 성공적으로 생성되었습니다",
                 "order", order
             ));
         } catch (Exception e) {
-            log.error("Order creation failed: {}", e.getMessage());
+            log.error("주문 생성 실패: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
-                "message", "Order failed: " + e.getMessage()
+                "message", "주문 실패: " + e.getMessage()
             ));
         }
     }

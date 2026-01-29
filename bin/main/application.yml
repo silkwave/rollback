@@ -33,6 +33,6 @@ logging:
   level:
     '[com.example.rollback]': DEBUG
     '[org.springframework.transaction]': DEBUG
-    '[org.mybatis]': DEBUG  
+    # '[org.mybatis]': DEBUG  
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%-5level]){highlight} %clr(%logger{36}){cyan} - %msg%n"

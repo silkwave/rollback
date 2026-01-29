@@ -9,7 +9,7 @@ import java.util.List;
 @Mapper
 public interface OrderRepository {
     
-    Order save(Order order);
+    void save(Order order);
     
     Order findById(@Param("id") Long id);
     

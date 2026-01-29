@@ -15,14 +15,17 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/orders")
+/** 주문 관련 HTTP 요청을 처리하는 컨트롤러 */
 public class OrderController {
 
     private final OrderService orderService;
     private final OrderRepository orderRepository;
 
+    /** 새로운 주문을 생성합니다. */
     @PostMapping
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderRequest request) {
         try {
+            // 주문 생성 비즈니스 로직 호출
             Order order = orderService.create(request);
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -30,6 +33,7 @@ public class OrderController {
                 "order", order
             ));
         } catch (Exception e) {
+            // 주문 생성 중 예외 발생 시 실패 응답 반환
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "Order failed: " + e.getMessage()
@@ -37,11 +41,13 @@ public class OrderController {
         }
     }
 
+    /** 모든 주문 목록을 조회합니다. */
     @GetMapping
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
 
+    /** ID로 특정 주문을 조회합니다. */
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrder(@PathVariable Long id) {
         Order order = orderRepository.findById(id);

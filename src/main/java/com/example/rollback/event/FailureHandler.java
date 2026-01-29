@@ -36,10 +36,12 @@ public class FailureHandler {
     @Async
     public void handle(OrderFailed event) {
         log.info("🔄 ROLLBACK COMPLETED - Executing failure notification");
+        log.info("🧵 Async Thread: {}", Thread.currentThread().getName());
         // 이벤트로부터 주문 ID와 실패 원인을 받아 알림 서비스를 호출합니다.
         notifier.sendFailure(
             event.getOrderId(),
             event.getReason()
         );
+        log.info("✅ Failure notification sent successfully");
     }
 }

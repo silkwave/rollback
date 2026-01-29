@@ -6,12 +6,14 @@ import com.example.rollback.repository.OrderRepository;
 import com.example.rollback.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/orders")
@@ -24,6 +26,7 @@ public class OrderController {
     /** 새로운 주문을 생성합니다. */
     @PostMapping
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderRequest request) {
+        log.info("➡️ POST /api/orders - request: {}", request);
         try {
             // 주문 생성 비즈니스 로직 호출
             Order order = orderService.create(request);
@@ -33,6 +36,7 @@ public class OrderController {
                 "order", order
             ));
         } catch (Exception e) {
+            log.error("🚨 Order creation failed: {}", e.getMessage());
             // 주문 생성 중 예외 발생 시 실패 응답 반환
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
@@ -44,12 +48,14 @@ public class OrderController {
     /** 모든 주문 목록을 조회합니다. */
     @GetMapping
     public List<Order> getAllOrders() {
+        log.info("➡️ GET /api/orders");
         return orderRepository.findAll();
     }
 
     /** ID로 특정 주문을 조회합니다. */
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrder(@PathVariable Long id) {
+        log.info("➡️ GET /api/orders/{}", id);
         Order order = orderRepository.findById(id);
         if (order != null) {
             return ResponseEntity.ok(order);

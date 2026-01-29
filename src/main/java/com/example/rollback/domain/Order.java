@@ -1,7 +1,9 @@
 package com.example.rollback.domain;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Data
 public class Order {
     private Long id;
@@ -13,5 +15,6 @@ public class Order {
         this.customerName = customerName;
         this.amount = amount;
         this.status = "CREATED";
+        log.info("✨ Order domain object created for: {}", customerName);
     }
 }

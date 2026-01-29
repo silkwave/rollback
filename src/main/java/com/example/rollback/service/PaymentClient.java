@@ -18,17 +18,17 @@ public class PaymentClient {
      * @param forceFailure 결제 실패를 강제로 시뮬레이션할지 여부 (테스트용)
      */
     public void pay(Long orderId, Integer amount, boolean forceFailure) {
-        log.info("Processing payment for order {} with amount {}", orderId, amount);
+        log.info(" \"✅✅✅✅✅✅✅ Processing payment for order {} with amount {}", orderId, amount);
         log.info("💳 [PG] Connecting to external payment gateway...");
 
         if (forceFailure) {
-            log.warn("Simulating payment failure for order {} {}", orderId , forceFailure);
-            log.error("❌ [PG] Payment gateway rejected the request due to timeout simulation");
+            log.warn("🚨🚨🚨🚨🚨 Simulating payment failure for order {} forceFailure [{}]", orderId , forceFailure);
+            log.error("🚨🚨🚨🚨❌ [PG] Payment gateway rejected the request due to timeout simulation");
             // 테스트를 위해 의도적으로 예외를 발생시켜 결제 실패를 시뮬레이션합니다.
             throw new RuntimeException("Payment gateway error: Connection timeout");
         }
 
-        log.info("✅ [PG] Payment approved by external gateway");
+        log.info("✅✅✅✅✅✅✅ [PG] Payment approved by external gateway");
         log.info("Payment successful for order {}", orderId);
     }
 }

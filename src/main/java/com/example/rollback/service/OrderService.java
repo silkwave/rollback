@@ -23,10 +23,10 @@ public class OrderService {
     @Transactional
     // 주문 생성 및 결제 처리 메서드
     public Order create(OrderRequest req) {
-        log.info("▶️ Starting order creation process for customer: {}", req.getCustomerName());
+        log.info("▶️▶️▶️▶️▶️ Starting order creation process for customer: {}", req.getCustomerName());
         // 1. 주문 정보 저장
         var order = orders.save(req.toOrder());
-        log.info("Order created with ID: {}", order.getId());
+        log.info("▶️▶️▶️▶️▶️  Order created with ID: {}", order.getId());
 
         try {
             // 2. 결제 시도

@@ -7,6 +7,10 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password: password
+
+  output:
+    ansi:
+      enabled: always  # 또는 detect      
   
   h2:
     console:
@@ -16,8 +20,9 @@ spring:
   jpa:
     show-sql: true
     properties:
-      hibernate:
-        format_sql: true
+      '[hibernate.format_sql]': true
+      '[hibernate.use_sql_comments]': true
+      '[hibernate.show_sql]': true
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
@@ -26,5 +31,8 @@ mybatis:
 
 logging:
   level:
-    com.example.rollback: DEBUG
-    org.springframework.transaction: DEBUG
+    '[com.example.rollback]': DEBUG
+    '[org.springframework.transaction]': DEBUG
+    '[org.mybatis]': DEBUG  
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%-5level]){highlight} %clr(%logger{36}){cyan} - %msg%n"

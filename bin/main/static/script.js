@@ -66,7 +66,7 @@ class RollbackDemo {
         // 주문 목록 새로고침
         setTimeout(() => {
             this.loadOrders();
-        }, 1000);
+        }, 60000);
     }
 
     async loadOrders() {

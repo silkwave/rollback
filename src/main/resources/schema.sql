@@ -4,3 +4,11 @@ CREATE TABLE IF NOT EXISTS orders (
     amount INTEGER NOT NULL,
     status VARCHAR(20) DEFAULT 'CREATED'
 );
+
+CREATE TABLE IF NOT EXISTS notification_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT,
+    message VARCHAR(255),
+    type VARCHAR(50),
+    created_at TIMESTAMP
+);

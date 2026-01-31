@@ -130,34 +130,7 @@ public class InventoryService {
         return updatedInventory;
     }
     
-    // 재고 입고 (트랜잭션)
-    @Transactional
-    public Inventory addStock(String productName, int quantity) {
-        ContextLogger.info("재고 입고 시작 - 상품: {}, 수량: {}", productName, quantity);
-        
-        Optional<Inventory> inventoryOpt = inventoryRepository.findByProductName(productName);
-        if (inventoryOpt.isEmpty()) {
-            throw new IllegalArgumentException("재고를 찾을 수 없습니다: " + productName);
-        }
-        
-        Inventory inventory = inventoryOpt.get();
-        
-        // 데이터베이스에서 입고 처리
-        int affectedRows = inventoryRepository.addStock(inventory.getId(), quantity);
-        if (affectedRows == 0) {
-            throw new IllegalStateException("재고 입고에 실패했습니다: " + productName);
-        }
-        
-        // 업데이트된 재고 정보 다시 조회
-        Inventory updatedInventory = inventoryRepository.findById(inventory.getId())
-            .orElseThrow(() -> new IllegalStateException("재고 정보를 다시 조회할 수 없습니다"));
-        
-        ContextLogger.info("재고 입고 완료 - 상품: {}, 수량: {}, 현재 재고: {}", 
-            productName, quantity, updatedInventory.getCurrentStock());
-        
-        return updatedInventory;
-    }
-    
+
     // 재고 부족 목록 조회
     public List<Inventory> getLowStockItems() {
         ContextLogger.info("재고 부족 목록 조회 요청");

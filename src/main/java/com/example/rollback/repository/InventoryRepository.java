@@ -62,13 +62,7 @@ public interface InventoryRepository {
             "AND reserved_stock >= #{quantity}")
     int releaseReservation(@Param("id") Long id, @Param("quantity") int quantity);
     
-    // 재고 입고
-    @Update("UPDATE inventory SET " +
-            "current_stock = current_stock + #{quantity}, " +
-            "updated_at = CURRENT_TIMESTAMP " +
-            "WHERE id = #{id}")
-    int addStock(@Param("id") Long id, @Param("quantity") int quantity);
-    
+
     // 재고 부족 목록 조회
     @Select("SELECT * FROM inventory WHERE " +
             "(current_stock - reserved_stock) <= min_stock_level " +
@@ -81,7 +75,5 @@ public interface InventoryRepository {
             "FROM inventory WHERE product_name = #{productName}")
     boolean hasEnoughStock(@Param("productName") String productName, @Param("quantity") int quantity);
     
-    // 재고 삭제
-    @Delete("DELETE FROM inventory WHERE id = #{id}")
-    int deleteById(Long id);
+
 }

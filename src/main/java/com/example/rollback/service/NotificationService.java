@@ -30,15 +30,5 @@ public class NotificationService {
         ContextLogger.logStep("NOTIFICATION", "실패 알림 전송 완료 및 로그 저장");
     }
     
-    // 성공 알림 전송 - 새로운 트랜잭션에서 실행
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void sendSuccess(Long orderId) {
-        ContextLogger.logStep("NOTIFICATION", "성공 알림 전송 시작");
-        
-        String message = String.format("주문 %d 성공 - 고객에게 이메일 발송됨", orderId);
-        ContextLogger.logNotification("SUCCESS_EMAIL", message);
-        
-        notificationLogRepository.save(new NotificationLog(orderId, message, NotificationType.SUCCESS));
-        ContextLogger.logStep("NOTIFICATION", "성공 알림 전송 완료 및 로그 저장");
-    }
+    
 }

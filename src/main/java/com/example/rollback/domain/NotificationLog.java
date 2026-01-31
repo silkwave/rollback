@@ -24,10 +24,7 @@ public class NotificationLog {
         this.createdAt = LocalDateTime.now();
     }
     
-    // 하위 호환성을 위한 생성자
-    public NotificationLog(Long orderId, String message, NotificationType type) {
-        this(null, orderId, message, type);
-    }
+
     
     // 알림 타입 열거형
     public enum NotificationType {

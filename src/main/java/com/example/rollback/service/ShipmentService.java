@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -19,24 +18,14 @@ public class ShipmentService {
     
     private final ShipmentRepository shipmentRepository;
     
-    // 전체 배송 목록 조회
-    public List<Shipment> getAllShipments() {
-        ContextLogger.info("전체 배송 목록 조회 요청");
-        return shipmentRepository.findAll();
-    }
-    
+
     // 주문 ID로 배송 조회
     public Optional<Shipment> findByOrderId(Long orderId) {
         ContextLogger.info("주문별 배송 조회 요청 - 주문 ID: {}", orderId);
         return shipmentRepository.findByOrderId(orderId);
     }
     
-    // 운송장번호로 배송 조회
-    public Optional<Shipment> findByTrackingNumber(String trackingNumber) {
-        ContextLogger.info("운송장번호로 배송 조회 요청 - 운송장번호: {}", trackingNumber);
-        return shipmentRepository.findByTrackingNumber(trackingNumber);
-    }
-    
+
     // 새로운 배송 생성 (트랜잭션)
     @Transactional
     public Shipment createShipment(Long orderId, String shippingAddress) {
@@ -166,21 +155,7 @@ public class ShipmentService {
         return updatedShipment;
     }
     
-    // 배송 중인 목록 조회
-    public List<Shipment> getInTransitShipments() {
-        ContextLogger.info("배송 중인 목록 조회 요청");
-        return shipmentRepository.findInTransit();
-    }
-    
-    // 오늘 배송 완료된 목록 조회
-    public List<Shipment> getDeliveredTodayShipments() {
-        ContextLogger.info("오늘 배송 완료된 목록 조회 요청");
-        return shipmentRepository.findDeliveredToday();
-    }
-    
-    // 특정 상태의 배송 목록 조회
-    public List<Shipment> getShipmentsByStatus(String status) {
-        ContextLogger.info("상태별 배송 목록 조회 요청 - 상태: {}", status);
-        return shipmentRepository.findByStatus(status);
-    }
+
+
+
 }

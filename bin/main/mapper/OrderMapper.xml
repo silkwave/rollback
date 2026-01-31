@@ -8,14 +8,14 @@
     </insert>
 
     <select id="findById" resultType="com.example.rollback.domain.Order">
-        SELECT id, guid, customer_name, amount, product_name, quantity, status, 
+        SELECT id, guid, customer_name as customerName, amount, product_name as productName, quantity, status, 
                created_at as createdAt, updated_at as updatedAt
         FROM orders
         WHERE id = #{id}
     </select>
 
     <select id="findAll" resultType="com.example.rollback.domain.Order">
-        SELECT id, guid, customer_name, amount, product_name, quantity, status,
+        SELECT id, guid, customer_name as customerName, amount, product_name as productName, quantity, status,
                created_at as createdAt, updated_at as updatedAt
         FROM orders
         ORDER BY id DESC

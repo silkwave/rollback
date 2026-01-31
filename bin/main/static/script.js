@@ -144,28 +144,6 @@ class RollbackDemo {
             this.addLog(`🚨 주문 생성 오류: ${error.message}`, 'error');
         }
     }
-
-        try {
-            const response = await fetch('/api/orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(orderData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                this.addLog(`✅ 주문 생성 성공: ${result.order.id}번 주문`, 'success');
-                document.getElementById('orderForm').reset();
-                this.loadOrders();
-            } else {
-                this.addLog(`❌ 주문 생성 실패: ${result.message}`, 'error');
-            }
-        } catch (error) {
-            this.addLog(`🚨 주문 생성 오류: ${error.message}`, 'error');
-        }
     
 
     async createInventory() {

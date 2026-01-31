@@ -4,6 +4,8 @@ import com.example.rollback.domain.Order;
 import com.example.rollback.domain.OrderRequest;
 import com.example.rollback.domain.Shipment;
 import com.example.rollback.domain.Inventory;
+import com.example.rollback.domain.InventoryRequest;
+import com.example.rollback.domain.ShipmentRequest;
 import com.example.rollback.repository.OrderRepository;
 import com.example.rollback.service.*;
 import com.example.rollback.util.ContextHolder;
@@ -258,34 +260,40 @@ public class OrderController {
     }
     
     @PostMapping("/inventory")
-    public ResponseEntity<?> createInventory(@RequestBody Map<String, Object> request, 
+    public ResponseEntity<?> createInventory(@Valid @RequestBody InventoryRequest request,
+                                         BindingResult bindingResult,
                                          HttpServletRequest httpRequest) {
         try {
             String guid = GuidQueueUtil.generateSimpleGuid();
             ContextHolder.initializeContext(guid);
-            
+
             String clientIp = getClientIp(httpRequest);
             String userAgent = httpRequest.getHeader("User-Agent");
             ContextHolder.addClientInfo(clientIp, userAgent, null);
-            
+
             ContextLogger.info("\n\n\n\n=======================================================");
             ContextLogger.info("POST /api/orders/inventory - 신규 재고 생성 요청: {}", request);
 
-            String productName = (String) request.get("productName");
-            Integer currentStock = (Integer) request.get("currentStock");
-            Integer minStockLevel = request.get("minStockLevel") != null ? 
-                (Integer) request.get("minStockLevel") : 10;
-            
-            Inventory inventory = inventoryService.createInventory(productName, currentStock, minStockLevel);
+            if (bindingResult.hasErrors()) {
+                String errorMessage = "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage();
+                ContextLogger.warn(errorMessage);
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "guid", guid,
+                    "message", errorMessage
+                ));
+            }
+
+            Inventory inventory = inventoryService.createInventory(request.getProductName(), request.getCurrentStock(), request.getMinStockLevel());
             ContextLogger.info("신규 재고 생성 성공: {}", inventory.getId());
-            
+
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "guid", guid,
                 "message", "재고가 성공적으로 생성되었습니다",
                 "inventory", inventory
             ));
-            
+
         } catch (Exception e) {
             ContextLogger.error("재고 생성 실패: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
@@ -324,7 +332,8 @@ public class OrderController {
     
     @PostMapping("/{id}/shipment")
     public ResponseEntity<?> createShipment(@PathVariable Long id, 
-                                           @RequestBody Map<String, String> request,
+                                           @Valid @RequestBody ShipmentRequest request,
+                                           BindingResult bindingResult,
                                            HttpServletRequest httpRequest) {
         try {
             String guid = GuidQueueUtil.generateSimpleGuid();
@@ -337,15 +346,17 @@ public class OrderController {
             ContextLogger.info("\n\n\n\n=======================================================");
             ContextLogger.info("POST /api/orders/{}/shipment - 배송 생성 요청", id);
 
-            String shippingAddress = request.get("shippingAddress");
-            if (shippingAddress == null || shippingAddress.trim().isEmpty()) {
+            if (bindingResult.hasErrors()) {
+                String errorMessage = "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage();
+                ContextLogger.warn(errorMessage);
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "배송지 주소는 필수입니다"
+                    "guid", guid,
+                    "message", errorMessage
                 ));
             }
             
-            Shipment shipment = shipmentService.createShipment(id, shippingAddress);
+            Shipment shipment = shipmentService.createShipment(id, request.getShippingAddress());
             ContextLogger.info("배송 생성 성공: {}", shipment.getId());
             
             return ResponseEntity.ok(Map.of(

@@ -145,29 +145,56 @@ public class OrderService {
             String guid = ContextHolder.getCurrentGuid();
             ContextLogger.info("주문 수정 시작 - ID: {}, GUID: {}", id, guid);
             
+            // 기존 주문 정보 가져오기
             Order existingOrder = orders.findById(id);
             if (existingOrder == null) {
                 throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + id);
             }
-            
+
             // 주문 상태 확인 (특정 상태에서는 수정 불가)
             if (existingOrder.getStatus() == OrderStatus.DELIVERED || 
                 existingOrder.getStatus() == OrderStatus.CANCELLED) {
                 throw new IllegalStateException("배송완료되거나 취소된 주문은 수정할 수 없습니다: " + id);
             }
             
-            // 재고 확인 (상품 변경 시)
-            if (!existingOrder.getProductName().equals(req.getProductName())) {
-                if (!inventoryService.hasEnoughStock(req.getProductName(), req.getQuantity())) {
-                    throw new IllegalStateException("재고가 부족합니다: " + req.getProductName());
+            // 기존 재고 정보
+            String oldProductName = existingOrder.getProductName();
+            Integer oldQuantity = existingOrder.getQuantity();
+
+            // 요청된 재고 정보
+            String newProductName = req.getProductName();
+            Integer newQuantity = req.getQuantity();
+
+            // 1. 상품명 변경 처리
+            if (!oldProductName.equals(newProductName)) {
+                // 이전 상품의 재고 예약 해제 (null 체크 추가)
+                if (oldProductName != null && oldQuantity != null) {
+                    inventoryService.releaseReservation(oldProductName, oldQuantity);
+                    ContextLogger.info("이전 상품 재고 예약 해제 완료 - 상품: {}, 수량: {}", oldProductName, oldQuantity);
+                }
+                // 새 상품 재고 예약
+                inventoryService.reserveStock(newProductName, newQuantity);
+                ContextLogger.info("새 상품 재고 예약 완료 - 상품: {}, 수량: {}", newProductName, newQuantity);
+            } 
+            // 2. 상품명은 동일하지만 수량 변경 처리
+            else if (!oldQuantity.equals(newQuantity)) {
+                int quantityDifference = newQuantity - oldQuantity;
+                if (quantityDifference > 0) {
+                    // 수량 증가: 추가 재고 예약
+                    inventoryService.reserveStock(newProductName, quantityDifference);
+                    ContextLogger.info("상품 수량 증가로 추가 재고 예약 완료 - 상품: {}, 수량: {}", newProductName, quantityDifference);
+                } else {
+                    // 수량 감소: 재고 예약 해제
+                    inventoryService.releaseReservation(newProductName, Math.abs(quantityDifference));
+                    ContextLogger.info("상품 수량 감소로 재고 예약 해제 완료 - 상품: {}, 수량: {}", newProductName, Math.abs(quantityDifference));
                 }
             }
             
             // 주문 정보 업데이트
             existingOrder.setCustomerName(req.getCustomerName());
             existingOrder.setAmount(req.getAmount());
-            existingOrder.setProductName(req.getProductName());
-            existingOrder.setQuantity(req.getQuantity());
+            existingOrder.setProductName(newProductName); // DTO에서 가져온 새 상품명으로 업데이트
+            existingOrder.setQuantity(newQuantity);     // DTO에서 가져온 새 수량으로 업데이트
             
             orders.update(existingOrder);
             ContextLogger.info("주문 수정 완료 - ID: {}", id);

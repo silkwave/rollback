@@ -7,7 +7,6 @@ import com.example.rollback.event.OrderFailed;
 import com.example.rollback.repository.OrderRepository;
 import com.example.rollback.util.ContextHolder;
 import com.example.rollback.util.ContextLogger;
-import com.example.rollback.util.GuidQueueUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,8 +22,6 @@ public class OrderService {
     private final OrderRepository orders;
     private final PaymentClient paymentClient;
     private final ApplicationEventPublisher events;
-    private final GuidQueueUtil guidQueueUtil;
-
     // 주문 생성 처리 - 트랜잭션 경계
     @Transactional
     public Order create(OrderRequest req) {

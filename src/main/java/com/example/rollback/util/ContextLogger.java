@@ -3,16 +3,16 @@ package com.example.rollback.util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.logging.Logger;
 
 /**
  * 컨텍스트를 인식하는 로깅 유틸리티 클래스.
  * 모든 로그 메시지에 자동으로 컨텍스트 정보(GUID 등)를 포함하여 추적성을 높입니다.
  */
 @Component
+@Slf4j
 public class ContextLogger {
     
-    private static final Logger log = Logger.getLogger(ContextLogger.class.getName());
+    // private static final Logger log = Logger.getLogger(ContextLogger.class.getName());
 
             /**
      * INFO 레벨 로그를 기록합니다. 컨텍스트 정보를 자동으로 포함합니다.
@@ -33,7 +33,7 @@ public class ContextLogger {
      */
     public static void error(String message, Object... args) {
         String formattedMessage = formatMessage(message, args);
-        log.severe(formattedMessage);
+        log.error(formattedMessage);
     }
 
     /**
@@ -45,10 +45,7 @@ public class ContextLogger {
      */
     public static void error(String message, Throwable throwable, Object... args) {
         String formattedMessage = formatMessage(message, args);
-        log.severe(formattedMessage);
-        if (throwable != null) {
-            log.severe("Exception: " + throwable.getMessage());
-        }
+        log.error(formattedMessage, throwable);
     }
 
     /**
@@ -59,7 +56,7 @@ public class ContextLogger {
      */
     public static void warn(String message, Object... args) {
         String formattedMessage = formatMessage(message, args);
-        log.warning(formattedMessage);
+        log.warn(formattedMessage);
     }
 
     /**
@@ -70,7 +67,7 @@ public class ContextLogger {
      */
     public static void debug(String message, Object... args) {
         String formattedMessage = formatMessage(message, args);
-        log.fine(formattedMessage);
+        log.debug(formattedMessage);
     }
 
     /**
@@ -81,7 +78,7 @@ public class ContextLogger {
      */
     public static void trace(String message, Object... args) {
         String formattedMessage = formatMessage(message, args);
-        log.finest(formattedMessage);
+        log.trace(formattedMessage);
     }
 
     /**

@@ -91,7 +91,8 @@ public class OrderController {
             ContextHolder.initializeContext(guid);
             
             String clientIp = getClientIp(httpRequest);
-            ContextHolder.addClientInfo(clientIp, null, null);
+            String userAgent = httpRequest.getHeader("User-Agent");
+            ContextHolder.addClientInfo(clientIp, userAgent, null);
             
             ContextLogger.info("\n\n\n\n=======================================================");
             ContextLogger.info("GET /api/orders - 모든 주문 조회 요청");
@@ -111,7 +112,8 @@ public class OrderController {
             ContextHolder.initializeContext(guid);
             
             String clientIp = getClientIp(httpRequest);
-            ContextHolder.addClientInfo(clientIp, null, null);
+            String userAgent = httpRequest.getHeader("User-Agent");
+            ContextHolder.addClientInfo(clientIp, userAgent, null);
             
             ContextLogger.info("\n\n\n\n=======================================================");
             ContextLogger.info("주문 조회 요청: {}", id);

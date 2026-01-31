@@ -68,7 +68,9 @@ public class CtxMap implements Serializable {
      * @return 메소드 체이닝을 위한 현재 인스턴스
      */
     public CtxMap put(String key, Object value) {
-        storage.put(key, value);
+        if (key != null) {
+            storage.put(key, value);
+        }
         return this;
     }
 

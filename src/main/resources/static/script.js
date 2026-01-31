@@ -100,6 +100,14 @@ class RollbackDemo {
     }
 
     async createOrder() {
+        // 상품 선택 유효성 검사
+        const productNameSelect = document.getElementById('productName');
+        if (productNameSelect.selectedIndex === 0) {
+            this.addLog('⚠️ 상품을 선택해주세요', 'warning');
+            productNameSelect.focus();
+            return;
+        }
+
         const formData = new FormData(document.getElementById('orderForm'));
         const orderData = {
             customerName: formData.get('customerName'),
@@ -125,7 +133,7 @@ class RollbackDemo {
 
             const result = await response.json();
 
-            if (result.success) {
+            if (response.ok && result.success) {
                 this.addLog(`✅ 주문 생성 성공: ${result.order.id}번 주문`, 'success');
                 document.getElementById('orderForm').reset();
                 this.loadOrders();
@@ -136,6 +144,7 @@ class RollbackDemo {
             this.addLog(`🚨 주문 생성 오류: ${error.message}`, 'error');
         }
     }
+    
 
     async createInventory() {
         const formData = new FormData(document.getElementById('inventoryForm'));

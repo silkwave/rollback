@@ -14,46 +14,186 @@
         </header>
 
         <main>
-            <section class="order-form">
-                <h2>주문 생성</h2>
-                <form id="orderForm">
-                    <div class="form-group">
-                        <label for="customerName">고객명:</label>
-                        <input type="text" id="customerName" name="customerName" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="amount">금액:</label>
-                        <input type="number" id="amount" name="amount" min="1000" required>
-                    </div>
-                    
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="forceFailure" name="forcePaymentFailure">
-                        <label for="forceFailure">결제 실패 강제 발생</label>
-                    </div>
-                    
-                    <button type="submit">주문 생성</button>
-                </form>
+            <section class="tabs">
+                <button class="tab-btn active" data-tab="orders">주문 관리</button>
+                <button class="tab-btn" data-tab="inventory">재고 관리</button>
+                <button class="tab-btn" data-tab="shipping">배송 관리</button>
             </section>
 
-            <section class="orders-list">
-                <h2>주문 목록</h2>
-                <div class="table-container">
-                    <table id="ordersTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>고객명</th>
-                                <th>금액</th>
-                                <th>상태</th>
-                                <th>생성일</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-                <button id="refreshBtn" class="refresh-btn">🔄 목록 새로고침</button>
+            <!-- 주문 관리 탭 -->
+            <section id="orders-tab" class="tab-content active">
+                <section class="order-form">
+                    <h2>주문 생성</h2>
+                    <form id="orderForm">
+                        <div class="form-group">
+                            <label for="customerName">고객명:</label>
+                            <input type="text" id="customerName" name="customerName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="productName">상품명:</label>
+                            <select id="productName" name="productName" required>
+                                <option value="">상품 선택</option>
+                                <option value="노트북">노트북</option>
+                                <option value="스마트폰">스마트폰</option>
+                                <option value="태블릿">태블릿</option>
+                                <option value="스마트워치">스마트워치</option>
+                                <option value="이어폰">이어폰</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantity">수량:</label>
+                            <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount">금액:</label>
+                            <input type="number" id="amount" name="amount" min="1000" required>
+                        </div>
+                        
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="forceFailure" name="forcePaymentFailure">
+                            <label for="forceFailure">결제 실패 강제 발생</label>
+                        </div>
+                        
+                        <button type="submit">주문 생성</button>
+                    </form>
+                </section>
+
+                <section class="orders-list">
+                    <h2>주문 목록</h2>
+                    <div class="table-container">
+                        <table id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>고객명</th>
+                                    <th>상품명</th>
+                                    <th>수량</th>
+                                    <th>금액</th>
+                                    <th>상태</th>
+                                    <th>생성일</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="refreshBtn" class="refresh-btn">🔄 목록 새로고침</button>
+                </section>
+            </section>
+
+            <!-- 재고 관리 탭 -->
+            <section id="inventory-tab" class="tab-content">
+                <section class="inventory-form">
+                    <h2>신규 재고 등록</h2>
+                    <form id="inventoryForm">
+                        <div class="form-group">
+                            <label for="newProductName">상품명:</label>
+                            <input type="text" id="newProductName" name="productName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="currentStock">초기 재고:</label>
+                            <input type="number" id="currentStock" name="currentStock" min="0" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="minStockLevel">최소 재고:</label>
+                            <input type="number" id="minStockLevel" name="minStockLevel" min="0" value="10">
+                        </div>
+                        
+                        <button type="submit">재고 등록</button>
+                    </form>
+                </section>
+
+                <section class="inventory-list">
+                    <h2>재고 목록</h2>
+                    <div class="table-container">
+                        <table id="inventoryTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>상품명</th>
+                                    <th>현재 재고</th>
+                                    <th>예약된 재고</th>
+                                    <th>가용 재고</th>
+                                    <th>최소 재고</th>
+                                    <th>상태</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="refreshInventoryBtn" class="refresh-btn">🔄 재고 새로고침</button>
+                </section>
+
+                <section class="low-stock-list">
+                    <h2>재고 부족 목록</h2>
+                    <div class="table-container">
+                        <table id="lowStockTable">
+                            <thead>
+                                <tr>
+                                    <th>상품명</th>
+                                    <th>현재 재고</th>
+                                    <th>예약된 재고</th>
+                                    <th>가용 재고</th>
+                                    <th>최소 재고</th>
+                                    <th>부족 수량</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="refreshLowStockBtn" class="refresh-btn">🔄 부족 재고 새로고침</button>
+                </section>
+            </section>
+
+            <!-- 배송 관리 탭 -->
+            <section id="shipping-tab" class="tab-content">
+                <section class="shipment-form">
+                    <h2>배송 생성</h2>
+                    <form id="shipmentForm">
+                        <div class="form-group">
+                            <label for="shipmentOrderId">주문 ID:</label>
+                            <input type="number" id="shipmentOrderId" name="orderId" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="shippingAddress">배송지 주소:</label>
+                            <textarea id="shippingAddress" name="shippingAddress" rows="3" required></textarea>
+                        </div>
+                        
+                        <button type="submit">배송 생성</button>
+                    </form>
+                </section>
+
+                <section class="shipment-list">
+                    <h2>배송 목록</h2>
+                    <div class="table-container">
+                        <table id="shipmentTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>주문 ID</th>
+                                    <th>운송장번호</th>
+                                    <th>운송사</th>
+                                    <th>상태</th>
+                                    <th>배송지</th>
+                                    <th>예상 배송일</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="refreshShipmentBtn" class="refresh-btn">🔄 배송 새로고침</button>
+                </section>
             </section>
 
             <section class="logs">

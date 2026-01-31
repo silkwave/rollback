@@ -4,144 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spring Boot Transaction Rollback Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🔄 Spring Boot Transaction Rollback Demo</h1>
+            <h1><i class="fas fa-sync-alt"></i> Spring Boot Transaction Rollback Demo</h1>
             <p>결제 실패 시 트랜잭션 롤백과 실패 알림 처리 예제</p>
         </header>
 
         <main>
-            <section class="tabs">
-                <button class="tab-btn active" data-tab="orders">주문 관리</button>
-                <button class="tab-btn" data-tab="inventory">재고 관리</button>
-                <button class="tab-btn" data-tab="shipping">배송 관리</button>
-            </section>
+            <nav class="tabs">
+                <button class="tab-btn active" data-tab="orders"><i class="fas fa-shopping-cart"></i> 주문 관리</button>
+                <button class="tab-btn" data-tab="inventory"><i class="fas fa-boxes"></i> 재고 관리</button>
+                <button class="tab-btn" data-tab="shipping"><i class="fas fa-truck"></i> 배송 관리</button>
+            </nav>
 
             <!-- 주문 관리 탭 -->
             <section id="orders-tab" class="tab-content active">
-                <section class="order-form">
-                    <h2>주문 생성</h2>
-                    <form id="orderForm">
-                        <div class="form-group">
-                            <label for="customerName">고객명:</label>
-                            <input type="text" id="customerName" name="customerName" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="productName">상품명:</label>
-                            <select id="productName" name="productName" required>
-                                <option value="">상품 선택</option>
-                                <option value="노트북">노트북</option>
-                                <option value="스마트폰">스마트폰</option>
-                                <option value="태블릿">태블릿</option>
-                                <option value="스마트워치">스마트워치</option>
-                                <option value="이어폰">이어폰</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="quantity">수량:</label>
-                            <input type="number" id="quantity" name="quantity" min="1" value="1" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="amount">금액:</label>
-                            <input type="number" id="amount" name="amount" min="1000" required>
-                        </div>
-                        
-                        <div class="form-group checkbox">
-                            <input type="checkbox" id="forceFailure" name="forcePaymentFailure">
-                            <label for="forceFailure">결제 실패 강제 발생</label>
-                        </div>
-                        
-                        <button type="submit">주문 생성</button>
-                    </form>
-                </section>
-
-                <section class="orders-list">
-                    <h2>주문 목록</h2>
-                    <div class="table-container">
-                        <table id="ordersTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>고객명</th>
-                                    <th>상품명</th>
-                                    <th>수량</th>
-                                    <th>금액</th>
-                                    <th>상태</th>
-                                    <th>생성일</th>
-                                    <th>작업</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
+                <div class="content-grid">
+                    <div class="card order-form">
+                        <h2><i class="fas fa-plus-circle"></i> 주문 생성</h2>
+                        <form id="orderForm">
+                            <div class="form-group">
+                                <label for="customerName">고객명</label>
+                                <input type="text" id="customerName" name="customerName" required placeholder="예: 홍길동">
+                            </div>
+                            <div class="form-group">
+                                <label for="productName">상품명</label>
+                                <select id="productName" name="productName" required>
+                                    <option value="" disabled selected>상품을 선택하세요</option>
+                                    <option value="노트북">노트북</option>
+                                    <option value="스마트폰">스마트폰</option>
+                                    <option value="태블릿">태블릿</option>
+                                    <option value="스마트워치">스마트워치</option>
+                                    <option value="이어폰">이어폰</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="quantity">수량</label>
+                                <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="amount">금액</label>
+                                <input type="number" id="amount" name="amount" min="1000" step="100" required placeholder="예: 15000">
+                            </div>
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="forceFailure" name="forcePaymentFailure">
+                                <label for="forceFailure">결제 실패 강제 발생</label>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fas fa-check"></i> 주문 생성</button>
+                        </form>
                     </div>
-                    <button id="refreshBtn" class="refresh-btn">🔄 목록 새로고침</button>
-                </section>
+
+                    <div class="card orders-list">
+                        <div class="card-header">
+                            <h2><i class="fas fa-list-ul"></i> 주문 목록</h2>
+                            <button id="refreshBtn" class="btn-icon refresh-btn" title="목록 새로고침"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                        <div class="table-container">
+                            <table id="ordersTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>고객명</th>
+                                        <th>상품명</th>
+                                        <th>수량</th>
+                                        <th>금액</th>
+                                        <th>상태</th>
+                                        <th>생성일</th>
+                                        <th>작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- 재고 관리 탭 -->
             <section id="inventory-tab" class="tab-content">
-                <section class="inventory-form">
-                    <h2>신규 재고 등록</h2>
-                    <form id="inventoryForm">
-                        <div class="form-group">
-                            <label for="newProductName">상품명:</label>
-                            <input type="text" id="newProductName" name="productName" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="currentStock">초기 재고:</label>
-                            <input type="number" id="currentStock" name="currentStock" min="0" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="minStockLevel">최소 재고:</label>
-                            <input type="number" id="minStockLevel" name="minStockLevel" min="0" value="10">
-                        </div>
-                        
-                        <button type="submit">재고 등록</button>
-                    </form>
-                </section>
-
-                <section class="inventory-list">
-                    <h2>재고 목록</h2>
-                    <div class="table-container">
-                        <table id="inventoryTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>상품명</th>
-                                    <th>현재 재고</th>
-                                    <th>예약된 재고</th>
-                                    <th>가용 재고</th>
-                                    <th>최소 재고</th>
-                                    <th>상태</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
+                <div class="content-grid">
+                    <div class="card inventory-form">
+                        <h2><i class="fas fa-plus-circle"></i> 신규 재고 등록</h2>
+                        <form id="inventoryForm">
+                            <div class="form-group">
+                                <label for="newProductName">상품명</label>
+                                <input type="text" id="newProductName" name="productName" required placeholder="예: 무선 키보드">
+                            </div>
+                            <div class="form-group">
+                                <label for="currentStock">초기 재고</label>
+                                <input type="number" id="currentStock" name="currentStock" min="0" required placeholder="예: 100">
+                            </div>
+                            <div class="form-group">
+                                <label for="minStockLevel">최소 재고</label>
+                                <input type="number" id="minStockLevel" name="minStockLevel" min="0" value="10" placeholder="예: 10">
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fas fa-check"></i> 재고 등록</button>
+                        </form>
                     </div>
-                    <button id="refreshInventoryBtn" class="refresh-btn">🔄 재고 새로고침</button>
-                </section>
 
-                <section class="low-stock-list">
-                    <h2>재고 부족 목록</h2>
+                    <div class="card inventory-list">
+                         <div class="card-header">
+                            <h2><i class="fas fa-list-ul"></i> 재고 목록</h2>
+                            <button id="refreshInventoryBtn" class="btn-icon refresh-btn" title="재고 새로고침"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                        <div class="table-container">
+                            <table id="inventoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>상품명</th>
+                                        <th>현재고</th>
+                                        <th>예약</th>
+                                        <th>가용</th>
+                                        <th>최소</th>
+                                        <th>상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                 <div class="card low-stock-list full-width">
+                    <div class="card-header">
+                        <h2><i class="fas fa-exclamation-triangle"></i> 재고 부족 목록</h2>
+                        <button id="refreshLowStockBtn" class="btn-icon refresh-btn" title="부족 재고 새로고침"><i class="fas fa-sync-alt"></i></button>
+                    </div>
                     <div class="table-container">
                         <table id="lowStockTable">
                             <thead>
                                 <tr>
                                     <th>상품명</th>
-                                    <th>현재 재고</th>
-                                    <th>예약된 재고</th>
-                                    <th>가용 재고</th>
-                                    <th>최소 재고</th>
+                                    <th>현재고</th>
+                                    <th>예약</th>
+                                    <th>가용</th>
+                                    <th>최소</th>
                                     <th>부족 수량</th>
                                 </tr>
                             </thead>
@@ -149,57 +152,60 @@
                             </tbody>
                         </table>
                     </div>
-                    <button id="refreshLowStockBtn" class="refresh-btn">🔄 부족 재고 새로고침</button>
-                </section>
+                </div>
             </section>
 
             <!-- 배송 관리 탭 -->
             <section id="shipping-tab" class="tab-content">
-                <section class="shipment-form">
-                    <h2>배송 생성</h2>
-                    <form id="shipmentForm">
-                        <div class="form-group">
-                            <label for="shipmentOrderId">주문 ID:</label>
-                            <input type="number" id="shipmentOrderId" name="orderId" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="shippingAddress">배송지 주소:</label>
-                            <textarea id="shippingAddress" name="shippingAddress" rows="3" required></textarea>
-                        </div>
-                        
-                        <button type="submit">배송 생성</button>
-                    </form>
-                </section>
-
-                <section class="shipment-list">
-                    <h2>배송 목록</h2>
-                    <div class="table-container">
-                        <table id="shipmentTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>주문 ID</th>
-                                    <th>운송장번호</th>
-                                    <th>운송사</th>
-                                    <th>상태</th>
-                                    <th>배송지</th>
-                                    <th>예상 배송일</th>
-                                    <th>작업</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
+                 <div class="content-grid">
+                    <div class="card shipment-form">
+                        <h2><i class="fas fa-plus-circle"></i> 배송 생성</h2>
+                        <form id="shipmentForm">
+                            <div class="form-group">
+                                <label for="shipmentOrderId">주문 ID</label>
+                                <input type="number" id="shipmentOrderId" name="orderId" required placeholder="배송할 주문의 ID">
+                            </div>
+                            <div class="form-group">
+                                <label for="shippingAddress">배송지 주소</label>
+                                <textarea id="shippingAddress" name="shippingAddress" rows="3" required placeholder="상세 주소 입력"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fas fa-check"></i> 배송 생성</button>
+                        </form>
                     </div>
-                    <button id="refreshShipmentBtn" class="refresh-btn">🔄 배송 새로고침</button>
-                </section>
+
+                    <div class="card shipment-list">
+                        <div class="card-header">
+                             <h2><i class="fas fa-list-ul"></i> 배송 목록</h2>
+                            <button id="refreshShipmentBtn" class="btn-icon refresh-btn" title="배송 새로고침"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                        <div class="table-container">
+                            <table id="shipmentTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>주문 ID</th>
+                                        <th>운송장번호</th>
+                                        <th>운송사</th>
+                                        <th>상태</th>
+                                        <th>배송지</th>
+                                        <th>배송일</th>
+                                        <th>작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <section class="logs">
-                <h2>실행 로그</h2>
+            <section class="card logs">
+                <div class="card-header">
+                    <h2><i class="fas fa-file-alt"></i> 실행 로그</h2>
+                    <button id="clearLogsBtn" class="btn-icon clear-btn" title="로그 지우기"><i class="fas fa-trash-alt"></i></button>
+                </div>
                 <div id="logs" class="log-container"></div>
-                <button id="clearLogsBtn" class="clear-btn">🗑️ 로그 지우기</button>
             </section>
         </main>
     </div>

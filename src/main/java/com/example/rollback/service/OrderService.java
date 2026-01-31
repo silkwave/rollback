@@ -33,8 +33,7 @@ public class OrderService {
             // 컨텍스트에서 GUID 가져오기 (Controller에서 이미 설정됨)
             String guid = ContextHolder.getCurrentGuid();
             
-            ContextLogger.debug("1. GUID 확인: {}", guid);
-            ContextLogger.debug("2. OrderRequest 확인: {}", req);
+            ContextLogger.debug("OrderService.create - GUID: {}, OrderRequest: {}", guid, req);
             
             // null 체크 추가
             if (req == null) {
@@ -49,7 +48,7 @@ public class OrderService {
             Integer amount = req.getAmount();
             boolean forceFailure = req.isForcePaymentFailure();
             
-            ContextLogger.debug("3. 추출된 값 - 고객: {}, 상품: {}, 수량: {}, 금액: {}, 실패유무: {}", 
+            ContextLogger.debug("추출된 값 - 고객: {}, 상품: {}, 수량: {}, 금액: {}, 실패유무: {}", 
                 customerName, productName, quantity, amount, forceFailure);
             
             ContextLogger.logOrderStart(customerName, amount);
@@ -167,11 +166,10 @@ public class OrderService {
 
             // 1. 상품명 변경 처리
             if (!oldProductName.equals(newProductName)) {
-                // 이전 상품의 재고 예약 해제 (null 체크 추가)
-                if (oldProductName != null && oldQuantity != null) {
-                    inventoryService.releaseReservation(oldProductName, oldQuantity);
-                    ContextLogger.info("이전 상품 재고 예약 해제 완료 - 상품: {}, 수량: {}", oldProductName, oldQuantity);
-                }
+                // 이전 상품의 재고 예약 해제
+                inventoryService.releaseReservation(oldProductName, oldQuantity);
+                ContextLogger.info("이전 상품 재고 예약 해제 완료 - 상품: {}, 수량: {}", oldProductName, oldQuantity);
+                
                 // 새 상품 재고 예약
                 inventoryService.reserveStock(newProductName, newQuantity);
                 ContextLogger.info("새 상품 재고 예약 완료 - 상품: {}, 수량: {}", newProductName, newQuantity);
@@ -179,12 +177,10 @@ public class OrderService {
             // 2. 상품명은 동일하지만 수량 변경 처리
             else if (!oldQuantity.equals(newQuantity)) {
                 int quantityDifference = newQuantity - oldQuantity;
-                if (quantityDifference > 0) {
-                    // 수량 증가: 추가 재고 예약
+                if (quantityDifference > 0) { // 수량 증가
                     inventoryService.reserveStock(newProductName, quantityDifference);
                     ContextLogger.info("상품 수량 증가로 추가 재고 예약 완료 - 상품: {}, 수량: {}", newProductName, quantityDifference);
-                } else {
-                    // 수량 감소: 재고 예약 해제
+                } else { // 수량 감소
                     inventoryService.releaseReservation(newProductName, Math.abs(quantityDifference));
                     ContextLogger.info("상품 수량 감소로 재고 예약 해제 완료 - 상품: {}, 수량: {}", newProductName, Math.abs(quantityDifference));
                 }
@@ -235,16 +231,14 @@ public class OrderService {
                 throw new IllegalStateException("배송완료된 주문은 취소할 수 없습니다: " + id);
             }
             
-            // 재고 복원 (결제 완료된 주문만)
+            // 재고 복원 (결제 완료, 배송 준비중, 배송 중 상태에서만)
             if (order.getStatus() == OrderStatus.PAID || 
                 order.getStatus() == OrderStatus.PREPARING || 
                 order.getStatus() == OrderStatus.SHIPPED) {
                 
-                if (order.getProductName() != null && order.getQuantity() != null) {
-                    inventoryService.releaseReservation(order.getProductName(), order.getQuantity());
-                    ContextLogger.info("재고 예약 해제 완료 - 상품: {}, 수량: {}", 
-                        order.getProductName(), order.getQuantity());
-                }
+                inventoryService.releaseReservation(order.getProductName(), order.getQuantity());
+                ContextLogger.info("재고 예약 해제 완료 - 상품: {}, 수량: {}", 
+                    order.getProductName(), order.getQuantity());
             }
             
             // 배송 취소 (배송이 시작된 경우)

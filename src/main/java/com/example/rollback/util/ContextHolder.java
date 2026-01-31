@@ -11,7 +11,6 @@ import java.util.UUID;
  * 각 스레드는 자신만의 컨텍스트를 가지며, 요청 처리 동안 유지됩니다.
  */
 @Slf4j
-@Component
 public class ContextHolder {
 
     /** ThreadLocal을 사용하여 각 스레드별 컨텍스트 저장 */
@@ -44,9 +43,8 @@ public class ContextHolder {
      */
     public static void setContext(CtxMap context) {
         if (context != null) {
-        contextHolder.set(context);
-        String guid = context.getString("guid", "unknown");
-        log.debug("[GUID: {}] 컨텍스트가 설정되었습니다. Thread: {}", guid, Thread.currentThread().getName());
+            contextHolder.set(context);
+            log.debug("[GUID: {}] 컨텍스트가 설정되었습니다. Thread: {}", context.getString("guid", "unknown"), Thread.currentThread().getName());
         }
     }
 

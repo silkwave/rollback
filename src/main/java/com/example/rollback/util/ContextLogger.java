@@ -9,9 +9,38 @@ import org.springframework.stereotype.Component;
  * 컨텍스트를 인식하는 로깅 유틸리티 클래스.
  * 모든 로그 메시지에 자동으로 컨텍스트 정보(GUID 등)를 포함하여 추적성을 높입니다.
  */
-@Component
 @Slf4j
 public class ContextLogger {
+    
+    // 로그 레벨을 나타내는 내부 enum
+    private enum LogLevel {
+        INFO, DEBUG, WARN, ERROR, TRACE
+    }
+
+    /**
+     * 중앙 집중식 로깅 헬퍼 메소드.
+     * 메시지를 포맷하고 해당 로그 레벨로 디스패치합니다.
+     */
+    private static void doLog(LogLevel level, String message, Object[] args, Throwable throwable) {
+        String formattedMessage = formatMessage(message, args);
+        switch (level) {
+            case INFO:
+                log.info(formattedMessage, throwable);
+                break;
+            case DEBUG:
+                log.debug(formattedMessage, throwable);
+                break;
+            case WARN:
+                log.warn(formattedMessage, throwable);
+                break;
+            case ERROR:
+                log.error(formattedMessage, throwable);
+                break;
+            case TRACE:
+                log.trace(formattedMessage, throwable);
+                break;
+        }
+    }
     
     /**
      * INFO 레벨 로그를 기록합니다. 컨텍스트 정보를 자동으로 포함합니다.
@@ -20,8 +49,7 @@ public class ContextLogger {
      * @param args 메시지 포맷팅을 위한 인자들
      */
     public static void info(String message, Object... args) {
-        String formattedMessage = formatMessage(message, args);
-        log.info(formattedMessage);
+        doLog(LogLevel.INFO, message, args, null);
     }
 
     /**
@@ -31,8 +59,7 @@ public class ContextLogger {
      * @param args 메시지 포맷팅을 위한 인자들
      */
     public static void error(String message, Object... args) {
-        String formattedMessage = formatMessage(message, args);
-        log.error(formattedMessage);
+        doLog(LogLevel.ERROR, message, args, null);
     }
 
     /**
@@ -43,8 +70,7 @@ public class ContextLogger {
      * @param args 메시지 포맷팅을 위한 인자들
      */
     public static void error(String message, Throwable throwable, Object... args) {
-        String formattedMessage = formatMessage(message, args);
-        log.error(formattedMessage, throwable);
+        doLog(LogLevel.ERROR, message, args, throwable);
     }
 
     /**
@@ -54,8 +80,7 @@ public class ContextLogger {
      * @param args 메시지 포맷팅을 위한 인자들
      */
     public static void warn(String message, Object... args) {
-        String formattedMessage = formatMessage(message, args);
-        log.warn(formattedMessage);
+        doLog(LogLevel.WARN, message, args, null);
     }
 
     /**
@@ -65,8 +90,7 @@ public class ContextLogger {
      * @param args 메시지 포맷팅을 위한 인자들
      */
     public static void debug(String message, Object... args) {
-        String formattedMessage = formatMessage(message, args);
-        log.debug(formattedMessage);
+        doLog(LogLevel.DEBUG, message, args, null);
     }
 
     /**
@@ -76,8 +100,7 @@ public class ContextLogger {
      * @param args 메시지 포맷팅을 위한 인자들
      */
     public static void trace(String message, Object... args) {
-        String formattedMessage = formatMessage(message, args);
-        log.trace(formattedMessage);
+        doLog(LogLevel.TRACE, message, args, null);
     }
 
     /**
@@ -87,8 +110,7 @@ public class ContextLogger {
      * @param amount 금액
      */
     public static void logOrderStart(String customerName, Integer amount) {
-        String message = "주문 처리를 시작합니다 - 고객: {}, 금액: {}";
-        info(message, customerName, amount);
+        info("주문 처리를 시작합니다 - 고객: {}, 금액: {}", customerName, amount);
     }
 
     /**
@@ -97,8 +119,7 @@ public class ContextLogger {
      * @param orderId 주문 ID
      */
     public static void logOrderCreated(Long orderId) {
-        String message = "주문이 성공적으로 생성되었습니다 - 주문 ID: {}";
-        info(message, orderId);
+        info("주문이 성공적으로 생성되었습니다 - 주문 ID: {}", orderId);
     }
 
     /**
@@ -108,8 +129,7 @@ public class ContextLogger {
      * @param amount 금액
      */
     public static void logPaymentStart(Long orderId, Integer amount) {
-        String message = "결제 처리를 시작합니다 - 주문 ID: {}, 금액: {}";
-        info(message, orderId, amount);
+        info("결제 처리를 시작합니다 - 주문 ID: {}, 금액: {}", orderId, amount);
     }
 
     /**
@@ -118,8 +138,7 @@ public class ContextLogger {
      * @param orderId 주문 ID
      */
     public static void logPaymentSuccess(Long orderId) {
-        String message = "결제가 성공적으로 완료되었습니다 - 주문 ID: {}";
-        info(message, orderId);
+        info("결제가 성공적으로 완료되었습니다 - 주문 ID: {}", orderId);
     }
 
     /**
@@ -130,12 +149,7 @@ public class ContextLogger {
      * @param throwable 예외 객체 (선택사항)
      */
     public static void logPaymentFailure(Long orderId, String reason, Throwable throwable) {
-        String message = "결제에 실패했습니다 - 주문 ID: {}, 사유: {}";
-        if (throwable != null) {
-            error(message, throwable, orderId, reason);
-        } else {
-            error(message, orderId, reason);
-        }
+        error("결제에 실패했습니다 - 주문 ID: {}, 사유: {}", throwable, orderId, reason);
     }
 
     /**
@@ -145,8 +159,7 @@ public class ContextLogger {
      * @param reason 롤백 사유
      */
     public static void logRollback(Long orderId, String reason) {
-        String message = "트랜잭션 롤백이 수행되었습니다 - 주문 ID: {}, 사유: {}";
-        warn(message, orderId, reason);
+        warn("트랜잭션 롤백이 수행되었습니다 - 주문 ID: {}, 사유: {}", orderId, reason);
     }
 
     /**
@@ -156,8 +169,7 @@ public class ContextLogger {
      * @param message 알림 메시지
      */
     public static void logNotification(String notificationType, String message) {
-        String logMessage = "알림이 발송되었습니다 - 타입: {}, 메시지: {}";
-        info(logMessage, notificationType, message);
+        info("알림이 발송되었습니다 - 타입: {}, 메시지: {}", notificationType, message);
     }
 
     /**
@@ -167,8 +179,7 @@ public class ContextLogger {
      * @param description 단계 설명
      */
     public static void logStep(String step, String description) {
-        String message = "[{}] {}";
-        info(message, step, description);
+        info("[{}] {}", step, description);
     }
 
     /**
@@ -178,8 +189,7 @@ public class ContextLogger {
      * @param durationMs 소요 시간 (밀리초)
      */
     public static void logPerformance(String operation, long durationMs) {
-        String message = "성능: {} - 소요시간: {}ms";
-        info(message, operation, durationMs);
+        info("성능: {} - 소요시간: {}ms", operation, durationMs);
     }
 
     /**
@@ -195,10 +205,7 @@ public class ContextLogger {
         String guid = context.getString("guid");
 
         // SLF4J 포맷팅을 사용하여 메시지 본문 생성
-        String formattedBody = message;
-        if (args != null && args.length > 0) {
-            formattedBody = MessageFormatter.arrayFormat(message, args).getMessage();
-        }
+        String formattedBody = (args != null && args.length > 0) ? MessageFormatter.arrayFormat(message, args).getMessage() : message;
         
         return "[GUID: " + guid + "] " + formattedBody;
     }

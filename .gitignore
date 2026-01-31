@@ -19,6 +19,10 @@ Desktop.ini
 *.suo
 *.user
 *.sln.docstates
+.classpath
+.project
+.settings/
+.factorypath
 
 # Build Artifacts and Compiled Files
 # -------------------------------------------------------------------
@@ -33,6 +37,7 @@ Desktop.ini
 *.jar
 *.war
 *.ear
+*.jar.original
 
 # Dependency Directories
 # -------------------------------------------------------------------
@@ -73,3 +78,10 @@ __pycache__/
 /env/
 /.venv/
 /.env/
+
+# Gradle specific
+# -------------------------------------------------------------------
+.gradle/
+!gradlew
+!gradlew.bat
+/gradle/wrapper/gradle-wrapper.jar

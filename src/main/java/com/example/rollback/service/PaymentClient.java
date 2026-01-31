@@ -10,16 +10,16 @@ import org.springframework.stereotype.Service;
 public class PaymentClient {
 
     // 결제 처리 메서드
-    public void pay(Long orderId, Integer amount, boolean forceFailure) {
+    public void pay(String guid, Long orderId, Integer amount, boolean forceFailure) {
         log.info("\n\n\n\n=======================================================");
-        log.info("주문 {} 결제 처리 중 (금액: {})", orderId, amount);
+        log.info("[GUID: {}] 주문 {} 결제 처리 중 (금액: {})", guid, orderId, amount);
 
         // 테스트용 결제 실패 시뮬레이션
         if (forceFailure) {
-            log.warn("주문 {} 결제 실패 시뮬레이션", orderId);
+            log.warn("[GUID: {}] 주문 {} 결제 실패 시뮬레이션", guid, orderId);
             throw new PaymentException("결제 게이트웨이 오류: 연결 시간 초과");
         }
 
-        log.info("주문 {} 결제 성공", orderId);
+        log.info("[GUID: {}] 주문 {} 결제 성공", guid, orderId);
     }
 }

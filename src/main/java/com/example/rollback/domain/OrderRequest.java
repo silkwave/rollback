@@ -22,8 +22,8 @@ public class OrderRequest {
     private boolean forcePaymentFailure = false;
     
     // 주문 객체로 변환
-    public Order toOrder() {
-        log.info("주문 요청을 주문 객체로 변환 중 - 고객명: {}", this.customerName);
-        return Order.create(this.customerName, this.amount);
+    public Order toOrder(String guid) {
+        log.info("[GUID: {}] 주문 요청을 주문 객체로 변환 중 - 고객명: {}", guid, this.customerName);
+        return Order.create(guid, this.customerName, this.amount);
     }
 }

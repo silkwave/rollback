@@ -19,10 +19,10 @@ public class NotificationService {
     
     // 실패 알림 전송 - 새로운 트랜잭션에서 실행
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void sendFailure(Long orderId, String reason) {
-        String message = String.format("주문 %d 실패: %s - 고객에게 이메일 발송됨", orderId, reason);
+    public void sendFailure(String guid, Long orderId, String reason) {
+        String message = String.format("[GUID: %s] 주문 %d 실패: %s - 고객에게 이메일 발송됨", guid, orderId, reason);
         log.error(message);
-        notificationLogRepository.save(new NotificationLog(orderId, message, NotificationType.FAILURE));
+        notificationLogRepository.save(new NotificationLog(guid, orderId, message, NotificationType.FAILURE));
     }
     
     // 성공 알림 전송 - 새로운 트랜잭션에서 실행

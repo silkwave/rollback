@@ -8,25 +8,27 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class Order {
     private Long id;
+    private String guid;
     private String customerName;
     private Integer amount;
     private OrderStatus status = OrderStatus.CREATED;
     
     // 주문 생성 팩토리 메서드
-    public static Order create(String customerName, Integer amount) {
+    public static Order create(String guid, String customerName, Integer amount) {
         validateOrderData(customerName, amount);
         Order order = new Order();
+        order.guid = guid;
         order.customerName = customerName;
         order.amount = amount;
         order.status = OrderStatus.CREATED;
-        log.info("주문 객체 생성됨 - 고객: {}, 금액: {}", customerName, amount);
+        log.info("주문 객체 생성됨 - GUID: {}, 고객: {}, 금액: {}", guid, customerName, amount);
         return order;
     }
     
     // 주문을 결제 완료 상태로 변경
     public Order markAsPaid() {
         this.status = OrderStatus.PAID;
-        log.info("주문 {} 상태가 PAID로 변경됨", this.id);
+        log.info("주문 {} 상태가 PAID로 변경됨", this.guid);
         return this;
     }
     

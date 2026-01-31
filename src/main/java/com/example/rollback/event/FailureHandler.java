@@ -21,8 +21,8 @@ public class FailureHandler {
     @Async
     public void handle(OrderFailed event) {
         log.info("\n\n\n\n=======================================================");
-        log.info("롤백 후 실패 이벤트 처리 시작 - 주문 ID: {}", event.getOrderId());
-        notifier.sendFailure(event.getOrderId(), event.getReason());
-        log.info("롤백 후 실패 이벤트 처리 완료 - 주문 ID: {}", event.getOrderId());
+        log.info("[GUID: {}] 롤백 후 실패 이벤트 처리 시작 - 주문 ID: {}", event.getGuid(), event.getOrderId());
+        notifier.sendFailure(event.getGuid(), event.getOrderId(), event.getReason());
+        log.info("[GUID: {}] 롤백 후 실패 이벤트 처리 완료 - 주문 ID: {}", event.getGuid(), event.getOrderId());
     }
 }

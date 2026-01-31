@@ -8,13 +8,15 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class OrderFailed {
 
+    private final String guid;
     private final Long orderId;
     private final String reason;
 
     // 실패 이벤트 생성
-    public OrderFailed(Long orderId, String reason) {
+    public OrderFailed(String guid, Long orderId, String reason) {
         log.info("\n\n\n\n=======================================================");           
-        log.info("주문 ID {}에 대한 OrderFailed 이벤트가 생성되었습니다.", orderId);
+        log.info("[GUID: {}] 주문 ID {}에 대한 OrderFailed 이벤트가 생성되었습니다.", guid, orderId);
+        this.guid = guid;
         this.orderId = orderId;
         this.reason = reason;
     }

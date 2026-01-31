@@ -3,6 +3,8 @@ package com.example.rollback.domain;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDateTime;
+
 // 주문 엔티티
 @Slf4j
 @Data
@@ -11,7 +13,11 @@ public class Order {
     private String guid;
     private String customerName;
     private Integer amount;
+    private String productName;
+    private Integer quantity;
     private OrderStatus status = OrderStatus.CREATED;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     // public getter for id
     public Long getId() {
@@ -19,14 +25,19 @@ public class Order {
     }
     
     // 주문 생성 팩토리 메서드
-    public static Order create(String guid, String customerName, Integer amount) {
-        validateOrderData(customerName, amount);
+    public static Order create(String guid, String customerName, Integer amount, String productName, Integer quantity) {
+        validateOrderData(customerName, amount, productName, quantity);
         Order order = new Order();
         order.guid = guid;
         order.customerName = customerName;
         order.amount = amount;
+        order.productName = productName;
+        order.quantity = quantity;
         order.status = OrderStatus.CREATED;
-        log.info("주문 객체 생성됨 - GUID: {}, 고객: {}, 금액: {}", guid, customerName, amount);
+        order.createdAt = LocalDateTime.now();
+        order.updatedAt = LocalDateTime.now();
+        log.info("주문 객체 생성됨 - GUID: {}, 고객: {}, 금액: {}, 상품: {}, 수량: {}", 
+            guid, customerName, amount, productName, quantity);
         return order;
     }
     
@@ -48,17 +59,23 @@ public class Order {
     }
     
     // 주문 데이터 유효성 검사
-    private static void validateOrderData(String customerName, Integer amount) {
+    private static void validateOrderData(String customerName, Integer amount, String productName, Integer quantity) {
         if (customerName == null || customerName.trim().isEmpty()) {
             throw new IllegalArgumentException("고객 이름은 필수입니다");
         }
         if (amount == null || amount <= 0) {
             throw new IllegalArgumentException("금액은 0보다 커야 합니다");
         }
+        if (productName == null || productName.trim().isEmpty()) {
+            throw new IllegalArgumentException("상품명은 필수입니다");
+        }
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("수량은 0보다 커야 합니다");
+        }
     }
     
     // 주문 상태 열거형
     public enum OrderStatus {
-        CREATED, PAID, FAILED
+        CREATED, PAID, PREPARING, SHIPPED, DELIVERED, CANCELLED, FAILED
     }
 }

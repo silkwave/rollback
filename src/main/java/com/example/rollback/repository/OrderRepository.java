@@ -16,4 +16,6 @@ public interface OrderRepository {
     List<Order> findAll();
     
     void updateStatus(@Param("id") Long id, @Param("status") String status);
+    
+    void update(Order order);
 }

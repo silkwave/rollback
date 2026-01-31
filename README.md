@@ -4,20 +4,33 @@
 
 ## 📋 개요
 
-이 프로젝트는 외부 API 호출 실패 시 트랜잭션 롤백을 올바르게 처리하고, 롤백이 완료된 후에만 실패 알림을 실행하는 방법을 보여줍니다. 핵심 패턴은 **"롤백 후 알림"** 입니다:
+이 프로젝트는 전자상거래 주문 처리 시스템의 완전한 라이프사이클을 구현합니다. 핵심 기능들은 다음과 같습니다:
 
-1. 주문 데이터를 데이터베이스에 저장
-2. 외부 결제 API 호출
-3. 결제 실패 시 트랜잭션 롤백 (주문 데이터 제거)
-4. 롤백 성공 후에만 별도 트랜잭션으로 실패 알림 전송
+**주요 패턴들:**
+- **롤백 후 알림**: 결제 실패 시 트랜잭션 롤백과 롤백 완료 후 실패 알림
+- **재고 관리**: 주문 시 재고 예약, 결제 완료 시 재고 차감, 취소 시 재고 복원
+- **주문 상태 관리**: CREATED → PAID → PREPARING → SHIPPED → DELIVERED
+- **배송 추적**: 운송장번호 생성, 배송 상태 추적, 배송 완료 처리
+
+**전체 처리 흐름:**
+1. 주문 생성 (재고 확인 및 예약)
+2. 결제 처리
+3. 주문 상태 변경 및 재고 차감
+4. 배송 생성 및 시작
+5. 배송 완료 처리
+6. 주문 취소 시 재고 복원 및 배송 취소
 
 ## 🎯 학습 목표
 
 - **트랜잭션 관리**: Spring의 `@Transactional` 경계 이해
 - **이벤트 기반 아키텍처**: 롤백 후 처리를 위한 `@TransactionalEventListener` 사용
 - **트랜잭션 전파**: 독립적 트랜잭션을 위한 `REQUIRES_NEW`
+- **재고 관리 시스템**: 재고 예약, 차감, 복원 패턴
+- **주문 상태 머신**: 주문 라이프사이클 관리
+- **배송 추적 시스템**: 운송장번호, 배송 상태 관리
 - **에러 처리**: 롤백을 트리거하는 올바른 예외 처리
 - **비동기 처리**: 블로킹 없는 실패 알림
+- **REST API 설계**: CRUD operations와 상태 관리 API
 
 ## 🏗️ 아키텍처
 
@@ -27,23 +40,25 @@
 │             │    │              │    │                 │
 └─────────────┘    └──────┬───────┘    └─────────────────┘
                            │
-                           ▼
-                    ┌──────────────┐
-                    │ Repository   │
-                    │ (Orders)     │
-                    └──────────────┘
-                           │
-                           ▼ (실패 시)
-                    ┌──────────────┐
-                    │ Event        │
-                    │ Publisher    │
-                    └──────┬───────┘
-                           │
-                           ▼ (롤백 후)
-                    ┌──────────────┐    ┌─────────────────┐
-                    │ FailureHandler│───▶│ NotificationSvc │
-                    │ (Async)      │    │ (New Transaction)│
-                    └──────────────┘    └─────────────────┘
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+        ▼                  ▼                  ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ InventorySrv │   │ Repository   │   │ ShipmentSrv │
+│              │   │ (Orders)     │   │              │
+└──────┬───────┘   └──────────────┘   └──────┬───────┘
+       │                                   │
+       ▼                                   ▼ (롤백 후)
+┌──────────────┐                   ┌──────────────┐    ┌─────────────────┐
+│ Inventory   │                   │ Event        │    │ NotificationSvc │
+│ Repository  │                   │ Publisher    │    │ (New Transaction)│
+└──────────────┘                   └──────┬───────┘    └─────────────────┘
+                                        │
+                                        ▼
+                                ┌──────────────┐
+                                │ FailureHandler│
+                                │ (Async)      │
+                                └──────────────┘
 ```
 
 ## 🛠️ 기술 스택
@@ -83,16 +98,104 @@ cd rollback
 
 ## 📡 API 엔드포인트
 
-### 주문 생성
+### 주문 관리 API
+
+#### 주문 생성
 ```http
 POST /api/orders
 Content-Type: application/json
 
 {
   "customerName": "홍길동",
+  "productName": "노트북",
+  "quantity": 2,
   "amount": 15000,
   "forcePaymentFailure": false
 }
+```
+
+#### 주문 수정
+```http
+PUT /api/orders/{id}
+Content-Type: application/json
+
+{
+  "customerName": "홍길동",
+  "productName": "스마트폰",
+  "quantity": 1,
+  "amount": 80000
+}
+```
+
+#### 주문 취소
+```http
+POST /api/orders/{id}/cancel
+```
+
+#### 주문 목록 조회
+```http
+GET /api/orders
+```
+
+#### 특정 주문 조회
+```http
+GET /api/orders/{id}
+```
+
+### 재고 관리 API
+
+#### 전체 재고 조회
+```http
+GET /api/orders/inventory
+```
+
+#### 재고 부족 목록 조회
+```http
+GET /api/orders/inventory/low-stock
+```
+
+#### 신규 재고 등록
+```http
+POST /api/orders/inventory
+Content-Type: application/json
+
+{
+  "productName": "태블릿",
+  "currentStock": 100,
+  "minStockLevel": 10
+}
+```
+
+### 배송 관리 API
+
+#### 주문별 배송 조회
+```http
+GET /api/orders/{id}/shipment
+```
+
+#### 배송 생성
+```http
+POST /api/orders/{id}/shipment
+Content-Type: application/json
+
+{
+  "shippingAddress": "서울시 강남구 테헤란로 123"
+}
+```
+
+#### 배송 시작
+```http
+POST /api/orders/shipment/{shipmentId}/ship
+Content-Type: application/json
+
+{
+  "carrier": "CJ대한통운"
+}
+```
+
+#### 배송 완료
+```http
+POST /api/orders/shipment/{shipmentId}/deliver
 ```
 
 ### 응답 예시
@@ -101,10 +204,13 @@ Content-Type: application/json
 ```json
 {
   "success": true,
+  "guid": "abc-123-def",
   "message": "주문이 성공적으로 생성되었습니다",
   "order": {
     "id": 1,
     "customerName": "홍길동",
+    "productName": "노트북",
+    "quantity": 2,
     "amount": 15000,
     "status": "PAID"
   }
@@ -115,13 +221,9 @@ Content-Type: application/json
 ```json
 {
   "success": false,
-  "message": "주문 실패: Payment failed for order 1"
+  "message": "주문 실패: 재고가 부족합니다: 노트북"
 }
 ```
-
-### 기타 엔드포인트
-- `GET /api/orders` - 모든 주문 목록
-- `GET /api/orders/{id}` - 특정 주문 조회
 
 ## 🔧 핵심 컴포넌트
 
@@ -164,21 +266,64 @@ public void sendFailure(Long orderId, String reason) {
 
 ## 📊 데이터베이스 스키마
 
-### 주문 테이블
+### 주문 테이블 (orders)
 | 컬럼 | 타입 | 설명 |
 |--------|------|-------------|
 | id | BIGINT | 기본 키 (자동 증가) |
+| guid | VARCHAR(36) | 주문 추적 ID |
 | customer_name | VARCHAR(100) | 고객 이름 |
+| product_name | VARCHAR(200) | 상품명 |
 | amount | INTEGER | 주문 금액 |
-| status | VARCHAR(20) | 주문 상태 (CREATED, PAID) |
+| quantity | INTEGER | 주문 수량 |
+| status | VARCHAR(20) | 주문 상태 |
+| created_at | TIMESTAMP | 생성 시간 |
+| updated_at | TIMESTAMP | 수정 시간 |
 
-### 알림 로그 테이블
+### 재고 테이블 (inventory)
 | 컬럼 | 타입 | 설명 |
 |--------|------|-------------|
 | id | BIGINT | 기본 키 (자동 증가) |
+| product_name | VARCHAR(200) | 상품명 (UNIQUE) |
+| current_stock | INTEGER | 현재 재고 |
+| reserved_stock | INTEGER | 예약된 재고 |
+| min_stock_level | INTEGER | 최소 재고 레벨 |
+| created_at | TIMESTAMP | 생성 시간 |
+| updated_at | TIMESTAMP | 수정 시간 |
+
+### 배송 테이블 (shipments)
+| 컬럼 | 타입 | 설명 |
+|--------|------|-------------|
+| id | BIGINT | 기본 키 (자동 증가) |
+| order_id | BIGINT | 관련 주문 ID (FK) |
+| tracking_number | VARCHAR(100) | 운송장번호 (UNIQUE) |
+| carrier | VARCHAR(50) | 운송사 |
+| status | VARCHAR(20) | 배송 상태 |
+| shipping_address | VARCHAR(500) | 배송지 주소 |
+| estimated_delivery | DATE | 예상 배송일 |
+| shipped_at | TIMESTAMP | 배송 시작 시간 |
+| delivered_at | TIMESTAMP | 배송 완료 시간 |
+| created_at | TIMESTAMP | 생성 시간 |
+| updated_at | TIMESTAMP | 수정 시간 |
+
+### 주문 상품 테이블 (order_items)
+| 컬럼 | 타입 | 설명 |
+|--------|------|-------------|
+| id | BIGINT | 기본 키 (자동 증가) |
+| order_id | BIGINT | 관련 주문 ID (FK) |
+| product_name | VARCHAR(200) | 상품명 |
+| quantity | INTEGER | 수량 |
+| unit_price | INTEGER | 단가 |
+| total_price | INTEGER | 총 가격 |
+| created_at | TIMESTAMP | 생성 시간 |
+
+### 알림 로그 테이블 (notification_logs)
+| 컬럼 | 타입 | 설명 |
+|--------|------|-------------|
+| id | BIGINT | 기본 키 (자동 증가) |
+| guid | VARCHAR(36) | 주문 추적 ID |
 | order_id | BIGINT | 관련 주문 ID |
 | message | VARCHAR(255) | 알림 메시지 |
-| type | VARCHAR(50) | 알림 타입 (SUCCESS, FAILURE) |
+| type | VARCHAR(50) | 알림 타입 |
 | created_at | TIMESTAMP | 생성 타임스탬프 |
 
 ## 🔄 트랜잭션 흐름 분석

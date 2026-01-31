@@ -12,14 +12,14 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
 
 header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
     background: white;
     padding: 30px;
     border-radius: 10px;
@@ -37,21 +37,59 @@ header p {
     font-size: 1.1em;
 }
 
+/* 탭 스타일 */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: #f8f9fa;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    background: #e9ecef;
+}
+
+.tab-btn.active {
+    background: #007bff;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
 main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    display: block;
     margin-bottom: 30px;
 }
 
-.order-form, .orders-list {
+.order-form, .orders-list, .inventory-form, .inventory-list, .low-stock-list, .shipment-form, .shipment-list {
     background: white;
     padding: 25px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
 }
 
-.order-form h2, .orders-list h2, .logs h2 {
+.order-form h2, .orders-list h2, .logs h2, .inventory-form h2, .inventory-list h2, .low-stock-list h2, .shipment-form h2, .shipment-list h2 {
     color: #2c3e50;
     margin-bottom: 20px;
     font-size: 1.5em;
@@ -216,12 +254,128 @@ tr:hover {
     background: #c0392b;
 }
 
+/* 추가 스타일 */
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-right: 5px;
+    font-weight: 500;
+}
+
+.btn-cancel {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #c0392b;
+}
+
+.btn-ship {
+    background: #3498db;
+    color: white;
+}
+
+.btn-ship:hover {
+    background: #2980b9;
+}
+
+.btn-deliver {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-deliver:hover {
+    background: #229954;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-created { background: #e3f2fd; color: #1976d2; }
+.status-paid { background: #e8f5e8; color: #388e3c; }
+.status-preparing { background: #fff3e0; color: #f57c00; }
+.status-shipped { background: #e3f2fd; color: #1976d2; }
+.status-delivered { background: #e8f5e8; color: #388e3c; }
+.status-cancelled { background: #ffebee; color: #d32f2f; }
+.status-failed { background: #ffebee; color: #d32f2f; }
+
+.low-stock {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.good-stock {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.shortage {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.low-stock-row {
+    background-color: #ffebee !important;
+}
+
+/* 테이블 응답성 */
+.table-container {
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* 재고 및 배송 관리 섹션 그리드 */
+#inventory-tab {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+#inventory-tab .low-stock-list {
+    grid-column: 1 / -1;
+}
+
 @media (max-width: 768px) {
-    main {
+    #inventory-tab {
         grid-template-columns: 1fr;
     }
     
-    .logs {
-        grid-column: 1;
+    .tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        font-size: 14px;
+        padding: 10px 16px;
     }
 }

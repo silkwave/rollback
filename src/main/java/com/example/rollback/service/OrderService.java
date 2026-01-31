@@ -22,6 +22,8 @@ public class OrderService {
     private final OrderRepository orders;
     private final PaymentClient paymentClient;
     private final ApplicationEventPublisher events;
+    private final InventoryService inventoryService;
+    private final ShipmentService shipmentService;
     // 주문 생성 처리 - 트랜잭션 경계
     @Transactional
     public Order create(OrderRequest req) {
@@ -42,15 +44,28 @@ public class OrderService {
             
             // 비즈니스 정보를 컨텍스트에 추가
             String customerName = req.getCustomerName();
+            String productName = req.getProductName();
+            Integer quantity = req.getQuantity();
             Integer amount = req.getAmount();
             boolean forceFailure = req.isForcePaymentFailure();
             
-            ContextLogger.debug("3. 추출된 값 - 고객: {}, 금액: {}, 실패유무: {}", customerName, amount, forceFailure);
+            ContextLogger.debug("3. 추출된 값 - 고객: {}, 상품: {}, 수량: {}, 금액: {}, 실패유무: {}", 
+                customerName, productName, quantity, amount, forceFailure);
             
             ContextLogger.logOrderStart(customerName, amount);
+            ContextLogger.info("주문 상세 정보 - 상품: {}, 수량: {}", productName, quantity);
             ContextLogger.logStep("ORDER_CREATE", "주문 데이터 저장 시작");
             
-            // 1. 주문 데이터 저장 (아직 커밋 전)
+            // 1. 재고 확인 및 예약
+            ContextLogger.logStep("INVENTORY_CHECK", "재고 확인 시작");
+            if (!inventoryService.hasEnoughStock(productName, quantity)) {
+                throw new IllegalStateException("재고가 부족합니다: " + productName);
+            }
+            
+            inventoryService.reserveStock(productName, quantity);
+            ContextLogger.logStep("INVENTORY_CHECK", "재고 예약 완료");
+            
+            // 2. 주문 데이터 저장 (아직 커밋 전)
             Order order = req.toOrder(guid);
             ContextLogger.debug("4. 생성된 Order: {}", order);
             
@@ -68,14 +83,18 @@ public class OrderService {
                 ContextLogger.logStep("PAYMENT", "결제 처리 시작");
                 ContextLogger.logPaymentStart(orderId, amount);
                 
-                // 2. 외부 결제 API 호출
+                // 3. 외부 결제 API 호출
                 paymentClient.pay(guid, orderId, amount, forceFailure);
                 ContextLogger.debug("7. 결제 성공");
                 
-                // 3. 주문 상태 업데이트
+                // 4. 주문 상태 업데이트
                 order.markAsPaid();
                 orders.updateStatus(orderId, OrderStatus.PAID.name());
                 ContextLogger.debug("8. 상태 업데이트 완료");
+                
+                // 5. 재고 실제 차감
+                inventoryService.deductStock(productName, quantity);
+                ContextLogger.logStep("INVENTORY_DEDUCT", "재고 실제 차감 완료");
                 
                 ContextLogger.logPaymentSuccess(orderId);
                 ContextLogger.logStep("ORDER_COMPLETE", "주문 처리 완료");
@@ -114,6 +133,118 @@ public class OrderService {
             ContextHolder.addProcessingResult("ERROR", e.getMessage());
             
             throw new RuntimeException("주문 생성에 실패했습니다.", e);
+        }
+    }
+    
+    // 주문 수정 (트랜잭션)
+    @Transactional
+    public Order update(Long id, OrderRequest req) {
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            String guid = ContextHolder.getCurrentGuid();
+            ContextLogger.info("주문 수정 시작 - ID: {}, GUID: {}", id, guid);
+            
+            Order existingOrder = orders.findById(id);
+            if (existingOrder == null) {
+                throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + id);
+            }
+            
+            // 주문 상태 확인 (특정 상태에서는 수정 불가)
+            if (existingOrder.getStatus() == OrderStatus.DELIVERED || 
+                existingOrder.getStatus() == OrderStatus.CANCELLED) {
+                throw new IllegalStateException("배송완료되거나 취소된 주문은 수정할 수 없습니다: " + id);
+            }
+            
+            // 재고 확인 (상품 변경 시)
+            if (!existingOrder.getProductName().equals(req.getProductName())) {
+                if (!inventoryService.hasEnoughStock(req.getProductName(), req.getQuantity())) {
+                    throw new IllegalStateException("재고가 부족합니다: " + req.getProductName());
+                }
+            }
+            
+            // 주문 정보 업데이트
+            existingOrder.setCustomerName(req.getCustomerName());
+            existingOrder.setAmount(req.getAmount());
+            existingOrder.setProductName(req.getProductName());
+            existingOrder.setQuantity(req.getQuantity());
+            
+            orders.update(existingOrder);
+            ContextLogger.info("주문 수정 완료 - ID: {}", id);
+            
+            long duration = System.currentTimeMillis() - startTime;
+            ContextLogger.logPerformance("주문 수정", duration);
+            
+            return existingOrder;
+            
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            ContextLogger.logPerformance("주문 수정 (실패)", duration);
+            ContextLogger.error("주문 수정 중 예외 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("주문 수정에 실패했습니다.", e);
+        }
+    }
+    
+    // 주문 취소 (트랜잭션)
+    @Transactional
+    public void cancel(Long id) {
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            String guid = ContextHolder.getCurrentGuid();
+            ContextLogger.info("주문 취소 시작 - ID: {}, GUID: {}", id, guid);
+            
+            Order order = orders.findById(id);
+            if (order == null) {
+                throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + id);
+            }
+            
+            // 주문 상태 확인
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                throw new IllegalStateException("이미 취소된 주문입니다: " + id);
+            }
+            
+            if (order.getStatus() == OrderStatus.DELIVERED) {
+                throw new IllegalStateException("배송완료된 주문은 취소할 수 없습니다: " + id);
+            }
+            
+            // 재고 복원 (결제 완료된 주문만)
+            if (order.getStatus() == OrderStatus.PAID || 
+                order.getStatus() == OrderStatus.PREPARING || 
+                order.getStatus() == OrderStatus.SHIPPED) {
+                
+                if (order.getProductName() != null && order.getQuantity() != null) {
+                    inventoryService.releaseReservation(order.getProductName(), order.getQuantity());
+                    ContextLogger.info("재고 예약 해제 완료 - 상품: {}, 수량: {}", 
+                        order.getProductName(), order.getQuantity());
+                }
+            }
+            
+            // 배송 취소 (배송이 시작된 경우)
+            if (order.getStatus() == OrderStatus.SHIPPED) {
+                shipmentService.findByOrderId(id).ifPresent(shipment -> {
+                    try {
+                        shipmentService.cancelShipment(shipment.getId());
+                        ContextLogger.info("배송 취소 완료 - 배송 ID: {}", shipment.getId());
+                    } catch (Exception e) {
+                        ContextLogger.warn("배송 취소 실패 - 배송 ID: {}, 사유: {}", 
+                            shipment.getId(), e.getMessage());
+                    }
+                });
+            }
+            
+            // 주문 상태를 취소로 변경
+            orders.updateStatus(id, OrderStatus.CANCELLED.name());
+            ContextLogger.info("주문 취소 완료 - ID: {}", id);
+            
+            long duration = System.currentTimeMillis() - startTime;
+            ContextLogger.logPerformance("주문 취소", duration);
+            
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            ContextLogger.logPerformance("주문 취소 (실패)", duration);
+            ContextLogger.error("주문 취소 중 예외 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("주문 취소에 실패했습니다.", e);
         }
     }
 }

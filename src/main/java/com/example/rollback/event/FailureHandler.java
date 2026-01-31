@@ -4,6 +4,7 @@ import com.example.rollback.service.NotificationService;
 import com.example.rollback.util.ContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -21,6 +22,7 @@ public class FailureHandler {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
     @Async
     public void handle(OrderFailed event) {
+        MDC.put("guid", event.getGuid());
         try {
             // 이벤트에 포함된 컨텍스트 설정
             if (event.getContext() != null && !event.getContext().isEmpty()) {
@@ -32,21 +34,22 @@ public class FailureHandler {
             
             
             log.info("=======================================================");
-            log.info("[GUID: {}] [ROLLBACK_HANDLER] 롤백 후 실패 이벤트 처리 시작", event.getGuid());
-            log.info("[GUID: {}] 주문 ID: {}, 실패 사유: {}", event.getGuid(), event.getOrderId(), event.getReason());
+            log.info("[ROLLBACK_HANDLER] 롤백 후 실패 이벤트 처리 시작");
+            log.info("주문 ID: {}, 실패 사유: {}", event.getOrderId(), event.getReason());
             
             // 알림 발송
-            notifier.sendFailure(event.getGuid(), event.getOrderId(), event.getReason());
+            notifier.sendFailure(event.getOrderId(), event.getReason());
             
             
-            log.info("[GUID: {}] [ROLLBACK_HANDLER] 롤백 후 실패 이벤트 처리 완료", event.getGuid());
-            log.info("[GUID: {}] 알림이 발송되었습니다 - 타입: {}, 메시지: {}", event.getGuid(), "FAILURE_NOTIFICATION", "결제 실패 알림 발송 완료");
+            log.info("[ROLLBACK_HANDLER] 롤백 후 실패 이벤트 처리 완료");
+            log.info("알림이 발송되었습니다 - 타입: {}, 메시지: {}", "FAILURE_NOTIFICATION", "결제 실패 알림 발송 완료");
             
         } catch (Exception e) {
-            log.error("[GUID: {}] 실패 이벤트 처리 중 예외 발생: {}", event.getGuid(), e.getMessage(), e);
+            log.error("실패 이벤트 처리 중 예외 발생: {}", e.getMessage(), e);
         } finally {
             // 컨텍스트 정리
             ContextHolder.clearContext();
+            MDC.remove("guid");
         }
     }
 }

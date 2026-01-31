@@ -11,6 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.Arrays;
 import java.util.concurrent.Executor;
+import org.slf4j.MDC;
 
 /**
  * 비동기 처리를 위한 설정 클래스.
@@ -45,9 +46,11 @@ public class AsyncConfig {
             public void handleUncaughtException(Throwable ex, java.lang.reflect.Method method, Object... params) {
                 CtxMap context = ContextHolder.getCurrentContext();
                 String guid = context.getString("guid");
-                String message = String.format("비동기 메서드 실행 중 예외 발생 [GUID: %s] - 메서드: %s, 매개변수: %s",
-                                                guid, method.getName(), Arrays.toString(params));
+                MDC.put("guid", guid);
+                String message = String.format("비동기 메서드 실행 중 예외 발생 - 메서드: %s, 매개변수: %s",
+                                                method.getName(), Arrays.toString(params));
                 log.error(message, ex);
+                MDC.remove("guid");
             }
         };
     }

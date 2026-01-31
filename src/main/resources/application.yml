@@ -35,4 +35,4 @@ logging:
     '[org.springframework.transaction]': DEBUG
     # '[org.mybatis]': DEBUG  
   pattern:
-    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%-5level]){highlight} %clr(%logger{36}){cyan} %clr(%file:%line){faint} - %msg%n"
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%-5level]){highlight} %clr(%logger{36}){cyan} %clr(%file:%line){faint} %clr({%X{guid}}){yellow} - %msg%n"

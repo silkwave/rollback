@@ -18,14 +18,10 @@ public class ShipmentService {
     
     private final ShipmentRepository shipmentRepository;
     
-    private String getGuid() {
-        return ContextHolder.getCurrentContext().getString("guid");
-    }
-    
 
     // 주문 ID로 배송 조회
     public Optional<Shipment> findByOrderId(Long orderId) {
-        log.info("[GUID: {}] 주문별 배송 조회 요청 - 주문 ID: {}", getGuid(), orderId);
+        log.info("주문별 배송 조회 요청 - 주문 ID: {}", orderId);
         return shipmentRepository.findByOrderId(orderId);
     }
     
@@ -33,7 +29,7 @@ public class ShipmentService {
     // 새로운 배송 생성 (트랜잭션)
     @Transactional
     public Shipment createShipment(Long orderId, String shippingAddress) {
-        log.info("[GUID: {}] 신규 배송 생성 시작 - 주문 ID: {}, 배송지: {}", getGuid(), orderId, shippingAddress);
+        log.info("신규 배송 생성 시작 - 주문 ID: {}, 배송지: {}", orderId, shippingAddress);
         
         // 이미 해당 주문에 배송이 있는지 확인
         Optional<Shipment> existingShipment = shipmentRepository.findByOrderId(orderId);
@@ -52,7 +48,7 @@ public class ShipmentService {
         Shipment createdShipment = shipmentRepository.findById(shipment.getId())
             .orElseThrow(() -> new IllegalStateException("생성된 배송 정보를 조회할 수 없습니다"));
         
-        log.info("[GUID: {}] 신규 배송 생성 완료 - 주문 ID: {}, 배송 ID: {}", getGuid(), orderId, createdShipment.getId());
+        log.info("신규 배송 생성 완료 - 주문 ID: {}, 배송 ID: {}", orderId, createdShipment.getId());
         
         return createdShipment;
     }
@@ -60,7 +56,7 @@ public class ShipmentService {
     // 배송 시작 (트랜잭션)
     @Transactional
     public Shipment shipOrder(Long shipmentId, String carrier) {
-        log.info("[GUID: {}] 배송 시작 - 배송 ID: {}, 운송사: {}", getGuid(), shipmentId, carrier);
+        log.info("배송 시작 - 배송 ID: {}, 운송사: {}", shipmentId, carrier);
         
         Optional<Shipment> shipmentOpt = shipmentRepository.findById(shipmentId);
         if (shipmentOpt.isEmpty()) {
@@ -87,8 +83,8 @@ public class ShipmentService {
         Shipment updatedShipment = shipmentRepository.findById(shipmentId)
             .orElseThrow(() -> new IllegalStateException("업데이트된 배송 정보를 조회할 수 없습니다"));
         
-        log.info("[GUID: {}] 배송 시작 완료 - 배송 ID: {}, 운송장번호: {}, 운송사: {}", 
-            getGuid(), shipmentId, trackingNumber, carrier);
+        log.info("배송 시작 완료 - 배송 ID: {}, 운송장번호: {}, 운송사: {}", 
+            shipmentId, trackingNumber, carrier);
         
         return updatedShipment;
     }
@@ -96,7 +92,7 @@ public class ShipmentService {
     // 배송 완료 (트랜잭션)
     @Transactional
     public Shipment deliverOrder(Long shipmentId) {
-        log.info("[GUID: {}] 배송 완료 처리 - 배송 ID: {}", getGuid(), shipmentId);
+        log.info("배송 완료 처리 - 배송 ID: {}", shipmentId);
         
         Optional<Shipment> shipmentOpt = shipmentRepository.findById(shipmentId);
         if (shipmentOpt.isEmpty()) {
@@ -123,7 +119,7 @@ public class ShipmentService {
         Shipment updatedShipment = shipmentRepository.findById(shipmentId)
             .orElseThrow(() -> new IllegalStateException("업데이트된 배송 정보를 조회할 수 없습니다"));
         
-        log.info("[GUID: {}] 배송 완료 처리 완료 - 배송 ID: {}", getGuid(), shipmentId);
+        log.info("배송 완료 처리 완료 - 배송 ID: {}", shipmentId);
         
         return updatedShipment;
     }
@@ -131,7 +127,7 @@ public class ShipmentService {
     // 배송 취소 (트랜잭션)
     @Transactional
     public Shipment cancelShipment(Long shipmentId) {
-        log.info("[GUID: {}] 배송 취소 처리 - 배송 ID: {}", getGuid(), shipmentId);
+        log.info("배송 취소 처리 - 배송 ID: {}", shipmentId);
         
         Optional<Shipment> shipmentOpt = shipmentRepository.findById(shipmentId);
         if (shipmentOpt.isEmpty()) {
@@ -154,7 +150,7 @@ public class ShipmentService {
         Shipment updatedShipment = shipmentRepository.findById(shipmentId)
             .orElseThrow(() -> new IllegalStateException("업데이트된 배송 정보를 조회할 수 없습니다"));
         
-        log.info("[GUID: {}] 배송 취소 처리 완료 - 배송 ID: {}", getGuid(), shipmentId);
+        log.info("배송 취소 처리 완료 - 배송 ID: {}", shipmentId);
         
         return updatedShipment;
     }

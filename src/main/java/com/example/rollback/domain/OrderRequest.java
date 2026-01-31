@@ -21,6 +21,19 @@ public class OrderRequest {
     // 결제 실패 강제 여부 (테스트용)
     private boolean forcePaymentFailure = false;
     
+    // public getters
+    public String getCustomerName() {
+        return customerName;
+    }
+    
+    public Integer getAmount() {
+        return amount;
+    }
+    
+    public boolean isForcePaymentFailure() {
+        return forcePaymentFailure;
+    }
+    
     // 주문 객체로 변환
     public Order toOrder(String guid) {
         log.info("[GUID: {}] 주문 요청을 주문 객체로 변환 중 - 고객명: {}", guid, this.customerName);

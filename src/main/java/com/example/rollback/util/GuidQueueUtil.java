@@ -28,4 +28,16 @@ public class GuidQueueUtil {
         log.debug("Generated GUID: {}", guid);
         return guid;
     }
+
+    /**
+     * 간단한 조회용 GUID를 생성합니다. (큐 사용 안함)
+     * 주로 조회 API나 테스트용으로 사용됩니다.
+     * 
+     * @return 간단한 GUID 문자열
+     */
+    public static String generateSimpleGuid() {
+        return String.format("VIEW%s%d", 
+            System.currentTimeMillis() % 1000000, 
+            Thread.currentThread().hashCode() % 10000);
+    }
 }

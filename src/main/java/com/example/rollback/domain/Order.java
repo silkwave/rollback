@@ -13,6 +13,11 @@ public class Order {
     private Integer amount;
     private OrderStatus status = OrderStatus.CREATED;
     
+    // public getter for id
+    public Long getId() {
+        return id;
+    }
+    
     // 주문 생성 팩토리 메서드
     public static Order create(String guid, String customerName, Integer amount) {
         validateOrderData(customerName, amount);

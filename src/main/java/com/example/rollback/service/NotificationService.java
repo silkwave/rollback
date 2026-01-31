@@ -3,6 +3,7 @@ package com.example.rollback.service;
 import com.example.rollback.domain.NotificationLog;
 import com.example.rollback.domain.NotificationLog.NotificationType;
 import com.example.rollback.repository.NotificationLogRepository;
+import com.example.rollback.util.ContextLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,16 +21,24 @@ public class NotificationService {
     // 실패 알림 전송 - 새로운 트랜잭션에서 실행
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendFailure(String guid, Long orderId, String reason) {
-        String message = String.format("[GUID: %s] 주문 %d 실패: %s - 고객에게 이메일 발송됨", guid, orderId, reason);
-        log.error(message);
+        ContextLogger.logStep("NOTIFICATION", "실패 알림 전송 시작");
+        
+        String message = String.format("주문 %d 실패: %s - 고객에게 이메일 발송됨", orderId, reason);
+        ContextLogger.logNotification("FAILURE_EMAIL", message);
+        
         notificationLogRepository.save(new NotificationLog(guid, orderId, message, NotificationType.FAILURE));
+        ContextLogger.logStep("NOTIFICATION", "실패 알림 전송 완료 및 로그 저장");
     }
     
     // 성공 알림 전송 - 새로운 트랜잭션에서 실행
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendSuccess(Long orderId) {
+        ContextLogger.logStep("NOTIFICATION", "성공 알림 전송 시작");
+        
         String message = String.format("주문 %d 성공 - 고객에게 이메일 발송됨", orderId);
-        log.info(message);
+        ContextLogger.logNotification("SUCCESS_EMAIL", message);
+        
         notificationLogRepository.save(new NotificationLog(orderId, message, NotificationType.SUCCESS));
+        ContextLogger.logStep("NOTIFICATION", "성공 알림 전송 완료 및 로그 저장");
     }
 }

@@ -1,6 +1,7 @@
 package com.example.rollback.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.helpers.MessageFormatter;
 import org.springframework.stereotype.Component;
 
 
@@ -12,9 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ContextLogger {
     
-    // private static final Logger log = Logger.getLogger(ContextLogger.class.getName());
-
-            /**
+    /**
      * INFO 레벨 로그를 기록합니다. 컨텍스트 정보를 자동으로 포함합니다.
      * 
      * @param message 로그 메시지
@@ -191,44 +190,17 @@ public class ContextLogger {
      * @return 컨텍스트 정보가 포함된 포맷팅된 메시지
      */
     private static String formatMessage(String message, Object... args) {
-        StringBuilder sb = new StringBuilder();
-        
         // 컨텍스트 정보 추가
         CtxMap context = ContextHolder.getCurrentContext();
         String guid = context.getString("guid");
-        String requestId = context.getString("requestId");
-        
-        sb.append("[GUID: ").append(guid).append("]");
-        
-        if (!requestId.isEmpty()) {
-            sb.append("[REQ: ").append(requestId).append("]");
+
+        // SLF4J 포맷팅을 사용하여 메시지 본문 생성
+        String formattedBody = message;
+        if (args != null && args.length > 0) {
+            formattedBody = MessageFormatter.arrayFormat(message, args).getMessage();
         }
         
-        // 클라이언트 정보가 있으면 추가
-        String clientIp = context.getString("clientIp");
-        if (!clientIp.isEmpty()) {
-            sb.append("[IP: ").append(clientIp).append("]");
-        }
-        
-        sb.append(" ").append(message);
-        
-        // 메시지 포맷팅
-        if (args.length > 0) {
-            try {
-                return String.format(sb.toString(), args);
-            } catch (Exception e) {
-                // 포맷팅 실패 시 원본 메시지와 인자들을 결합
-                sb.append(" [");
-                for (int i = 0; i < args.length; i++) {
-                    if (i > 0) sb.append(", ");
-                    sb.append(args[i]);
-                }
-                sb.append("]");
-                return sb.toString();
-            }
-        }
-        
-        return sb.toString();
+        return "[GUID: " + guid + "] " + formattedBody;
     }
 
     /**

@@ -9,8 +9,6 @@ import java.io.IOException;
  * HTTP 요청에 컨텍스트 정보를 추가하는 필터.
  * 모든 요청에 대해 공통 컨텍스트 정보를 설정합니다.
  */
-// @Component
-// @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ContextFilter implements Filter {
 
     @Override

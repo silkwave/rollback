@@ -341,13 +341,7 @@ public class OrderController {
     }
 
     private String setupRequestContext(HttpServletRequest httpRequest, String operationMessage) {
-        String guid;
-        try {
-            guid = guidQueueUtil.getGUID();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore interrupt status
-            throw new RuntimeException("GUID 생성 중 인터럽트 발생", e);
-        }
+        String guid = guidQueueUtil.getGUID();
         ContextHolder.initializeContext(guid);
         MDC.put("guid", guid);
 
@@ -363,7 +357,8 @@ public class OrderController {
     }
 
     private String initializeContextAndLog(String operation, HttpServletRequest httpRequest) {
-        String guid = GuidQueueUtil.generateSimpleGuid();
+        String guid = guidQueueUtil.getGUID();
+        // String guid = GuidQueueUtil.generateSimpleGuid();
         ContextHolder.initializeContext(guid);
         MDC.put("guid", guid);
 

@@ -23,21 +23,19 @@ public class GuidQueueUtil {
      * @return 생성된 GUID 문자열
      * @throws InterruptedException 큐에서 GUID를 가져오는 동안 스레드가 중단될 경우
      */
-    public String getGUID() throws InterruptedException {
-        String guid = guidQueue.getGUID();
-        log.debug("Generated GUID: {}", guid);
-        return guid;
+    public String getGUID()  {
+
+        try {
+            log.debug("GUID를 큐에서 가져오는 중...");
+            String guid = guidQueue.getGUID();
+            log.debug("큐에서 GUID를 성공적으로 가져왔습니다: {}", guid);
+            return guid;
+        } catch (InterruptedException e) {
+            log.error("GUID를 큐에서 가져오는 중 인터럽트 발생", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("GUID 생성 중 인터럽트 발생", e);
+        }
+
     }
 
-    /**
-     * 간단한 조회용 GUID를 생성합니다. (큐 사용 안함)
-     * 주로 조회 API나 테스트용으로 사용됩니다.
-     * 
-     * @return 간단한 GUID 문자열
-     */
-    public static String generateSimpleGuid() {
-        return String.format("VIEW%s%d", 
-            System.currentTimeMillis() % 1000000, 
-            Thread.currentThread().hashCode() % 10000);
-    }
 }

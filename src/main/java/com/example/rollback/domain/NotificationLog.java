@@ -1,23 +1,29 @@
 package com.example.rollback.domain;
 
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
+// 알림 로그 엔티티
 @Data
 @NoArgsConstructor
 public class NotificationLog {
     private Long id;
     private Long orderId;
     private String message;
-    private String type; // SUCCESS or FAILURE
+    private NotificationType type;
     private LocalDateTime createdAt;
 
-    public NotificationLog(Long orderId, String message, String type) {
+    // 알림 로그 생성
+    public NotificationLog(Long orderId, String message, NotificationType type) {
         this.orderId = orderId;
         this.message = message;
         this.type = type;
         this.createdAt = LocalDateTime.now();
+    }
+    
+    // 알림 타입 열거형
+    public enum NotificationType {
+        SUCCESS, FAILURE
     }
 }

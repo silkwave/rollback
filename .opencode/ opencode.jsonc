@@ -1,0 +1,72 @@
+{
+  // AI 기본 동작 언어
+  "language": "ko",
+
+  "project": {
+    "stack": [
+      "spring-boot-3",
+      "jdk-21",
+      "gradle",
+      "mybatis-xml",
+      "redis",
+      "h2",
+      "vanilla-js"
+    ],
+    "architecture": [
+      "layered-architecture",
+      "rest-api",
+      "event-driven-rollback",
+      "mdc-logging"
+    ]
+  },
+
+  "style": {
+    "comments": "korean",
+    "explain": "detailed",
+    "priority": "readability"
+  },
+
+  "rules": {
+    "logging": {
+      "framework": "slf4j",
+      "config": "logback-spring.xml",
+      "mdc": ["traceId", "userId", "requestUri"],
+      "mandatory": true
+    },
+
+    "transaction": {
+      "framework": "spring",
+      "rules": [
+        "rollback is decided at transaction end",
+        "use TransactionalEventListener AFTER_ROLLBACK",
+        "external api failure must throw exception",
+        "recovery must be event driven"
+      ]
+    },
+
+    "mybatis": {
+      "mapper": "xml",
+      "rules": [
+        "sql must be in xml",
+        "readability first",
+        "clear parameter and result mapping"
+      ]
+    },
+
+    "controller": {
+      "rules": [
+        "restful api",
+        "standard json response",
+        "consistent error format"
+      ]
+    },
+
+    "frontend": {
+      "rules": [
+        "html css vanilla js",
+        "fetch api",
+        "simple crud ui"
+      ]
+    }
+  }
+}

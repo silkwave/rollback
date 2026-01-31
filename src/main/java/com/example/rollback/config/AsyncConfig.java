@@ -1,12 +1,15 @@
 package com.example.rollback.config;
 
-import com.example.rollback.util.ContextLogger;
+import com.example.rollback.util.ContextHolder;
+import com.example.rollback.util.CtxMap;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.Arrays;
 import java.util.concurrent.Executor;
 
 /**
@@ -15,6 +18,7 @@ import java.util.concurrent.Executor;
  */
 @Configuration
 @EnableAsync
+@Slf4j
 public class AsyncConfig {
 
     /**
@@ -39,8 +43,11 @@ public class AsyncConfig {
         return new AsyncUncaughtExceptionHandler() {
             @Override
             public void handleUncaughtException(Throwable ex, java.lang.reflect.Method method, Object... params) {
-                ContextLogger.error("비동기 메서드 실행 중 예외 발생 - 메서드: {}, 매개변수: {}", 
-                                 method.getName(), java.util.Arrays.toString(params), ex);
+                CtxMap context = ContextHolder.getCurrentContext();
+                String guid = context.getString("guid");
+                String message = String.format("비동기 메서드 실행 중 예외 발생 [GUID: %s] - 메서드: %s, 매개변수: %s",
+                                                guid, method.getName(), Arrays.toString(params));
+                log.error(message, ex);
             }
         };
     }

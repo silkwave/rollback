@@ -1,14 +1,18 @@
 package com.example.rollback.config;
 
-import com.example.rollback.util.ContextLogger;
+import com.example.rollback.util.ContextHolder;
+import com.example.rollback.util.CtxMap;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 
 /**
  * HTTP 요청에 컨텍스트 정보를 추가하는 필터.
  * 모든 요청에 대해 공통 컨텍스트 정보를 설정합니다.
  */
+@Slf4j
 public class ContextFilter implements Filter {
 
     @Override
@@ -24,20 +28,22 @@ public class ContextFilter implements Filter {
             String userAgent = httpRequest.getHeader("User-Agent");
             
             // 컨텍스트에 요청 정보 저장
-            com.example.rollback.util.ContextHolder.put("requestId", requestId);
-            com.example.rollback.util.ContextHolder.put("clientIp", clientIp);
+            ContextHolder.put("requestId", requestId);
+            ContextHolder.put("clientIp", clientIp);
             if (userAgent != null) {
-                com.example.rollback.util.ContextHolder.put("userAgent", userAgent);
+                ContextHolder.put("userAgent", userAgent);
             }
             
-            ContextLogger.debug("요청 필터 실행 - RequestID: {}, IP: {}", requestId, clientIp);
+            CtxMap context = ContextHolder.getCurrentContext();
+            String guid = context.getString("guid");
+            log.debug("[GUID: {}] 요청 필터 실행 - RequestID: {}, IP: {}", guid, requestId, clientIp);
             
             // 다음 필터로 체인 계속
             chain.doFilter(request, response);
             
         } finally {
             // 요청 처리 완료 후 컨텍스트 정리
-            com.example.rollback.util.ContextHolder.clearContext();
+            ContextHolder.clearContext();
         }
     }
 

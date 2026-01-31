@@ -9,7 +9,6 @@ import com.example.rollback.domain.ShipmentRequest;
 import com.example.rollback.repository.OrderRepository;
 import com.example.rollback.service.*;
 import com.example.rollback.util.ContextHolder;
-import com.example.rollback.util.ContextLogger;
 import com.example.rollback.util.GuidQueueUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -41,10 +40,9 @@ public class OrderController {
                                         HttpServletRequest httpRequest) {
         String guid = setupRequestContext(httpRequest, "POST /api/orders - 요청: " + request);
         try {
-            // 유효성 검사
             if (bindingResult.hasErrors()) {
                 String errorMessage = "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage();
-                ContextLogger.warn(errorMessage);
+                log.warn("[GUID: {}] {}", guid, errorMessage);
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "guid", guid,
@@ -54,7 +52,7 @@ public class OrderController {
 
             // 주문 생성
             Order order = orderService.create(request);
-            ContextLogger.info("주문 생성 성공: {}", order != null ? order.getId() : "null");
+            log.info("[GUID: {}] 주문 생성 성공: {}", guid, order != null ? order.getId() : "null");
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -64,7 +62,7 @@ public class OrderController {
             ));
             
         } catch (Exception e) {
-            ContextLogger.error("주문 생성 실패: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 주문 생성 실패: {}", guid, e.getMessage(), e);
             e.printStackTrace(); // 디버깅을 위해 스택트레이스 출력
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
@@ -79,8 +77,9 @@ public class OrderController {
     // 전체 주문 목록 조회
     @GetMapping
     public List<Order> getAllOrders(HttpServletRequest httpRequest) {
+        String guid = initializeContextAndLog("GET /api/orders - 모든 주문 조회 요청", httpRequest);
         try {
-            initializeContextAndLog("GET /api/orders - 모든 주문 조회 요청", httpRequest);
+            log.info("[GUID: {}] 모든 주문 목록 조회", guid);
             return orderRepository.findAll();
             
         } finally {
@@ -91,15 +90,15 @@ public class OrderController {
     // 특정 주문 조회
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrder(@PathVariable Long id, HttpServletRequest httpRequest) {
+        String guid = initializeContextAndLog("주문 조회 요청: " + id, httpRequest);
         try {
-            initializeContextAndLog("주문 조회 요청: " + id, httpRequest);
             Order order = orderRepository.findById(id);
             
             if (order != null) {
-                ContextLogger.info("주문 조회 성공: {}", id);
+                log.info("[GUID: {}] 주문 조회 성공: {}", guid, id);
                 return ResponseEntity.ok(order);
             } else {
-                ContextLogger.warn("주문을 찾을 수 없음: {}", id);
+                log.warn("[GUID: {}] 주문을 찾을 수 없음: {}", guid, id);
                 return ResponseEntity.notFound().build();
             }
             
@@ -118,7 +117,7 @@ public class OrderController {
         try {
             if (bindingResult.hasErrors()) {
                 String errorMessage = "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage();
-                ContextLogger.warn(errorMessage);
+                log.warn("[GUID: {}] {}", guid, errorMessage);
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "guid", guid,
@@ -127,7 +126,7 @@ public class OrderController {
             }
 
             Order order = orderService.update(id, request);
-            ContextLogger.info("주문 수정 성공: {}", order.getId());
+            log.info("[GUID: {}] 주문 수정 성공: {}", guid, order.getId());
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -137,7 +136,7 @@ public class OrderController {
             ));
             
         } catch (Exception e) {
-            ContextLogger.error("주문 수정 실패: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 주문 수정 실패: {}", guid, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "주문 수정 실패: " + e.getMessage()
@@ -153,7 +152,7 @@ public class OrderController {
         String guid = initializeContextAndLog("POST /api/orders/" + id + "/cancel - 주문 취소 요청", httpRequest);
         try {
             orderService.cancel(id);
-            ContextLogger.info("주문 취소 성공: {}", id);
+            log.info("[GUID: {}] 주문 취소 성공: {}", guid, id);
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -162,7 +161,7 @@ public class OrderController {
             ));
             
         } catch (Exception e) {
-            ContextLogger.error("주문 취소 실패: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 주문 취소 실패: {}", guid, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "주문 취소 실패: " + e.getMessage()
@@ -175,8 +174,9 @@ public class OrderController {
     // 재고 관련 APIs
     @GetMapping("/inventory")
     public List<Inventory> getAllInventory(HttpServletRequest httpRequest) {
+        String guid = initializeContextAndLog("GET /api/orders/inventory - 전체 재고 조회 요청", httpRequest);
         try {
-            initializeContextAndLog("GET /api/orders/inventory - 전체 재고 조회 요청", httpRequest);
+            log.info("[GUID: {}] 전체 재고 목록 조회", guid);
             return inventoryService.getAllInventory();
             
         } finally {
@@ -186,8 +186,9 @@ public class OrderController {
     
     @GetMapping("/inventory/low-stock")
     public List<Inventory> getLowStockItems(HttpServletRequest httpRequest) {
+        String guid = initializeContextAndLog("GET /api/orders/inventory/low-stock - 재고 부족 목록 조회 요청", httpRequest);
         try {
-            initializeContextAndLog("GET /api/orders/inventory/low-stock - 재고 부족 목록 조회 요청", httpRequest);
+            log.info("[GUID: {}] 재고 부족 목록 조회", guid);
             return inventoryService.getLowStockItems();
             
         } finally {
@@ -203,7 +204,7 @@ public class OrderController {
         try {
             if (bindingResult.hasErrors()) {
                 String errorMessage = "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage();
-                ContextLogger.warn(errorMessage);
+                log.warn("[GUID: {}] {}", guid, errorMessage);
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "guid", guid,
@@ -212,7 +213,7 @@ public class OrderController {
             }
 
             Inventory inventory = inventoryService.createInventory(request.getProductName(), request.getCurrentStock(), request.getMinStockLevel());
-            ContextLogger.info("신규 재고 생성 성공: {}", inventory.getId());
+            log.info("[GUID: {}] 신규 재고 생성 성공: {}", guid, inventory.getId());
 
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -222,7 +223,7 @@ public class OrderController {
             ));
 
         } catch (Exception e) {
-            ContextLogger.error("재고 생성 실패: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 재고 생성 실패: {}", guid, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "재고 생성 실패: " + e.getMessage()
@@ -235,11 +236,11 @@ public class OrderController {
     // 배송 관련 APIs
     @GetMapping("/{id}/shipment")
     public ResponseEntity<Shipment> getOrderShipment(@PathVariable Long id, HttpServletRequest httpRequest) {
+        String guid = initializeContextAndLog("주문별 배송 조회 요청: " + id, httpRequest);
         try {
-            initializeContextAndLog("주문별 배송 조회 요청: " + id, httpRequest);
             return shipmentService.findByOrderId(id)
                 .map(shipment -> {
-                    ContextLogger.info("배송 조회 성공: {}", shipment.getId());
+                    log.info("[GUID: {}] 배송 조회 성공: {}", guid, shipment.getId());
                     return ResponseEntity.ok(shipment);
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -258,7 +259,7 @@ public class OrderController {
         try {
             if (bindingResult.hasErrors()) {
                 String errorMessage = "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage();
-                ContextLogger.warn(errorMessage);
+                log.warn("[GUID: {}] {}", guid, errorMessage);
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "guid", guid,
@@ -267,7 +268,7 @@ public class OrderController {
             }
             
             Shipment shipment = shipmentService.createShipment(id, request.getShippingAddress());
-            ContextLogger.info("배송 생성 성공: {}", shipment.getId());
+            log.info("[GUID: {}] 배송 생성 성공: {}", guid, shipment.getId());
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -277,7 +278,7 @@ public class OrderController {
             ));
             
         } catch (Exception e) {
-            ContextLogger.error("배송 생성 실패: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 배송 생성 실패: {}", guid, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "배송 생성 실패: " + e.getMessage()
@@ -295,7 +296,7 @@ public class OrderController {
         try {
             String carrier = request.getOrDefault("carrier", "CJ대한통운");
             Shipment shipment = shipmentService.shipOrder(shipmentId, carrier);
-            ContextLogger.info("배송 시작 성공: {}", shipment.getTrackingNumber());
+            log.info("[GUID: {}] 배송 시작 성공: {}", guid, shipment.getTrackingNumber());
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -305,7 +306,7 @@ public class OrderController {
             ));
             
         } catch (Exception e) {
-            ContextLogger.error("배송 시작 실패: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 배송 시작 실패: {}", guid, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "배송 시작 실패: " + e.getMessage()
@@ -320,7 +321,7 @@ public class OrderController {
         String guid = initializeContextAndLog("POST /api/orders/shipment/" + shipmentId + "/deliver - 배송 완료 요청", httpRequest);
         try {
             Shipment shipment = shipmentService.deliverOrder(shipmentId);
-            ContextLogger.info("배송 완료 성공: {}", shipmentId);
+            log.info("[GUID: {}] 배송 완료 성공: {}", guid, shipmentId);
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -330,7 +331,7 @@ public class OrderController {
             ));
             
         } catch (Exception e) {
-            ContextLogger.error("배송 완료 실패: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 배송 완료 실패: {}", guid, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "배송 완료 실패: " + e.getMessage()
@@ -353,12 +354,13 @@ public class OrderController {
         String clientIp = getClientIp(httpRequest);
         String userAgent = httpRequest.getHeader("User-Agent");
         String sessionId = httpRequest.getSession().getId();
-        ContextHolder.addClientInfo(clientIp, userAgent, sessionId);
-        
-        ContextLogger.info("\n\n\n\n=======================================================");
-        ContextLogger.info(operationMessage);
-        return guid;
-    }
+                
+                ContextHolder.addClientInfo(clientIp, userAgent, sessionId);
+                
+                log.info("=======================================================");
+                log.info("[GUID: {}] {}", guid, operationMessage);
+                return guid;
+            }
 
     private String initializeContextAndLog(String operation, HttpServletRequest httpRequest) {
         String guid = GuidQueueUtil.generateSimpleGuid();
@@ -367,12 +369,13 @@ public class OrderController {
         String clientIp = getClientIp(httpRequest);
         String userAgent = httpRequest.getHeader("User-Agent");
         String sessionId = httpRequest.getSession().getId();
-        ContextHolder.addClientInfo(clientIp, userAgent, sessionId);
-        
-        ContextLogger.info("\n\n\n\n=======================================================");
-        ContextLogger.info(operation);
-        return guid;
-    }
+                
+                ContextHolder.addClientInfo(clientIp, userAgent, sessionId);
+                
+                log.info("=======================================================");
+                log.info("[GUID: {}] {}", guid, operation);
+                return guid;
+            }
     
     /**
      * 클라이언트 IP 주소를 추출하는 헬퍼 메서드.

@@ -2,7 +2,6 @@ package com.example.rollback.event;
 
 import com.example.rollback.service.NotificationService;
 import com.example.rollback.util.ContextHolder;
-import com.example.rollback.util.ContextLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -31,18 +30,20 @@ public class FailureHandler {
                 ContextHolder.initializeContext(event.getGuid());
             }
             
-            ContextLogger.info("\n\n\n\n=======================================================");
-            ContextLogger.logStep("ROLLBACK_HANDLER", "롤백 후 실패 이벤트 처리 시작");
-            ContextLogger.info("주문 ID: {}, 실패 사유: {}", event.getOrderId(), event.getReason());
+            
+            log.info("=======================================================");
+            log.info("[GUID: {}] [ROLLBACK_HANDLER] 롤백 후 실패 이벤트 처리 시작", event.getGuid());
+            log.info("[GUID: {}] 주문 ID: {}, 실패 사유: {}", event.getGuid(), event.getOrderId(), event.getReason());
             
             // 알림 발송
             notifier.sendFailure(event.getGuid(), event.getOrderId(), event.getReason());
             
-            ContextLogger.logStep("ROLLBACK_HANDLER", "롤백 후 실패 이벤트 처리 완료");
-            ContextLogger.logNotification("FAILURE_NOTIFICATION", "결제 실패 알림 발송 완료");
+            
+            log.info("[GUID: {}] [ROLLBACK_HANDLER] 롤백 후 실패 이벤트 처리 완료", event.getGuid());
+            log.info("[GUID: {}] 알림이 발송되었습니다 - 타입: {}, 메시지: {}", event.getGuid(), "FAILURE_NOTIFICATION", "결제 실패 알림 발송 완료");
             
         } catch (Exception e) {
-            ContextLogger.error("실패 이벤트 처리 중 예외 발생: {}", e.getMessage(), e);
+            log.error("[GUID: {}] 실패 이벤트 처리 중 예외 발생: {}", event.getGuid(), e.getMessage(), e);
         } finally {
             // 컨텍스트 정리
             ContextHolder.clearContext();

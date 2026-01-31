@@ -2,7 +2,6 @@ package com.example.rollback.service;
 
 import com.example.rollback.domain.Inventory;
 import com.example.rollback.repository.InventoryRepository;
-import com.example.rollback.util.ContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

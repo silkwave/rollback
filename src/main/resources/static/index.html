@@ -19,6 +19,7 @@
                 <button class="tab-btn active" data-tab="accounts"><i class="fas fa-piggy-bank"></i> 계좌 관리</button>
                 <button class="tab-btn" data-tab="customers"><i class="fas fa-users"></i> 고객 관리</button>
                 <button class="tab-btn" data-tab="transactions"><i class="fas fa-exchange-alt"></i> 거래 내역</button>
+                <button class="tab-btn" data-tab="notifications"><i class="fas fa-bell"></i> 알림 로그</button>
             </nav>
             
             <!-- 계좌 관리 탭 -->
@@ -105,45 +106,6 @@
                                 <label for="depositForceFailure">입금 실패 강제 발생</label>
                             </div>
                             <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> 입금</button>
-                        </form>
-                    </div>
-                    
-                    <div class="card transaction-form">
-                        <h2><i class="fas fa-exchange-alt"></i> 이체</h2>
-                        <form id="transferForm">
-                            <div class="form-group">
-                                <label for="fromAccountId">출금 계좌 ID</label>
-                                <input type="number" id="fromAccountId" name="fromAccountId" required placeholder="예: 1">
-                            </div>
-                            <div class="form-group">
-                                <label for="toAccountId">입금 계좌 ID</label>
-                                <input type="number" id="toAccountId" name="toAccountId" required placeholder="예: 2">
-                            </div>
-                            <div class="form-group">
-                                <label for="transferCustomerId">고객 ID</label>
-                                <input type="number" id="transferCustomerId" name="customerId" required placeholder="예: 1">
-                            </div>
-                            <div class="form-group">
-                                <label for="transferAmount">이체금액</label>
-                                <input type="number" id="transferAmount" name="amount" min="1000" step="100" required placeholder="예: 100000">
-                            </div>
-                            <div class="form-group">
-                                <label for="transferCurrency">통화</label>
-                                <select id="transferCurrency" name="currency" required>
-                                    <option value="KRW" selected>KRW (원)</option>
-                                    <option value="USD">USD (달러)</option>
-                                    <option value="EUR">EUR (유로)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="transferDescription">설명</label>
-                                <input type="text" id="transferDescription" name="description" placeholder="예: 계좌 이체">
-                            </div>
-                            <div class="form-group checkbox">
-                                <input type="checkbox" id="transferForceFailure" name="forceFailure">
-                                <label for="transferForceFailure">이체 실패 강제 발생</label>
-                            </div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-exchange-alt"></i> 이체</button>
                         </form>
                     </div>
                 </div>
@@ -267,6 +229,34 @@
                                     <th>상태</th>
                                     <th>참조번호</th>
                                     <th>설명</th>
+                                    <th>생성일</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 알림 로그 탭 -->
+            <section id="notifications-tab" class="tab-content">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h2><i class="fas fa-bell"></i> 알림 로그</h2>
+                        <button id="refreshNotificationsBtn" class="btn-icon refresh-btn" title="알림 로그 새로고침"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    <div class="table-container">
+                        <table id="notificationsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>GUID</th>
+                                    <th>계좌 ID</th>
+                                    <th>거래 ID</th>
+                                    <th>고객 ID</th>
+                                    <th>메시지</th>
+                                    <th>타입</th>
                                     <th>생성일</th>
                                 </tr>
                             </thead>

@@ -3,10 +3,11 @@ package com.example.rollback.controller;
 import com.example.rollback.domain.Account;
 import com.example.rollback.domain.AccountRequest;
 import com.example.rollback.domain.DepositRequest;
-
+import com.example.rollback.domain.NotificationLog;
 import com.example.rollback.domain.Transaction;
 import com.example.rollback.service.AccountService;
 import com.example.rollback.repository.AccountRepository;
+import com.example.rollback.repository.NotificationLogRepository;
 import com.example.rollback.repository.TransactionRepository;
 import com.example.rollback.util.ContextHolder;
 import com.example.rollback.util.GuidQueueUtil;
@@ -32,6 +33,7 @@ public class BankingController {
     private final AccountService accountService;
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final NotificationLogRepository notificationLogRepository;
     private final GuidQueueUtil guidQueueUtil;
 
     // 계좌 개설 엔드포인트
@@ -162,6 +164,20 @@ public class BankingController {
         try {
             log.info("모든 거래 내역 조회");
             return transactionRepository.findAll();
+
+        } finally {
+            ContextHolder.clearContext();
+            MDC.remove("guid");
+        }
+    }
+
+    // 전체 알림 로그 조회
+    @GetMapping("/notifications")
+    public List<NotificationLog> getAllNotifications(HttpServletRequest httpRequest) {
+        initializeContextAndLog("GET /api/banking/notifications - 모든 알림 로그 조회 요청", httpRequest);
+        try {
+            log.info("모든 알림 로그 조회");
+            return notificationLogRepository.findAll();
 
         } finally {
             ContextHolder.clearContext();

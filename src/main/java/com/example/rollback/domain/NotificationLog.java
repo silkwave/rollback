@@ -15,6 +15,7 @@ public class NotificationLog {
     private String guid;
     private Long accountId;
     private Long transactionId;
+    private Long customerId;
     private Long orderId;
     private String message;
     private String type;

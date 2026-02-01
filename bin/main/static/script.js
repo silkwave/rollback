@@ -19,17 +19,6 @@ class BankingSystem {
         console.log('[TRACE] init() 메서드 완료');
     }
 
-    showLoading() {
-        console.log('[TRACE] showLoading() 호출');
-        document.getElementById('loadingOverlay').classList.add('visible');
-    }
-
-    hideLoading() {
-        console.log('[TRACE] hideLoading() 호출');
-        document.getElementById('loadingOverlay').classList.remove('visible');
-    }
-
-
     setupEventListeners() {
         console.log('[TRACE] setupEventListeners() 시작');
         
@@ -49,8 +38,6 @@ class BankingSystem {
             e.preventDefault();
             this.processDeposit();
         });
-
-
 
         const customerForm = document.getElementById('customerForm');
         console.log('[TRACE] customerForm 요소:', customerForm ? '찾음' : '없음');
@@ -80,6 +67,13 @@ class BankingSystem {
         refreshTransactionsBtn?.addEventListener('click', () => {
             console.log('[TRACE] refreshTransactionsBtn 클릭');
             this.loadTransactions();
+        });
+
+        const refreshNotificationsBtn = document.getElementById('refreshNotificationsBtn');
+        console.log('[TRACE] refreshNotificationsBtn 요소:', refreshNotificationsBtn ? '찾음' : '없음');
+        refreshNotificationsBtn?.addEventListener('click', () => {
+            console.log('[TRACE] refreshNotificationsBtn 클릭');
+            this.loadNotifications();
         });
 
         // Clear logs
@@ -137,6 +131,10 @@ class BankingSystem {
             case 'transactions':
                 console.log('[TRACE] 거래내역 탭 데이터 로딩');
                 this.loadTransactions();
+                break;
+            case 'notifications':
+                console.log('[TRACE] 알림 로그 탭 데이터 로딩');
+                this.loadNotifications();
                 break;
             default:
                 console.log('[TRACE] 알 수 없는 탭:', tabName);
@@ -218,7 +216,6 @@ class BankingSystem {
             'CANCELLED': '취소',
             'DEPOSIT': '입금',
             'WITHDRAWAL': '출금',
-
             'CHECKING': '입출금',
             'SAVINGS': '적금',
             'CREDIT': '신용',
@@ -292,7 +289,6 @@ class BankingSystem {
 
     async makeRequest(url, options = {}) {
         console.log('[TRACE] makeRequest() 시작:', url, options.method || 'GET');
-        this.showLoading(); // 로딩 시작
         try {
             console.log('[TRACE] fetch 요청:', url);
             const response = await fetch(url, {
@@ -318,8 +314,6 @@ class BankingSystem {
             console.error('[TRACE] makeRequest() 오류:', error);
             this.addLog(`🚨 API 요청 실패: ${error.message}`, 'error');
             throw error;
-        } finally {
-            this.hideLoading(); // 로딩 종료 (성공 또는 실패 시)
         }
     }
 
@@ -357,72 +351,108 @@ class BankingSystem {
     }
 
     async loadAccounts() {
-        console.log('[TRACE] loadAccounts() 시작');
-        this.addLog('📋 계좌 목록 로딩 중...', 'info');
         try {
-            console.log('[TRACE] 계좌 목록 API 호출:', `${this.API_BASE}/accounts`);
-            const accounts = await this.makeRequest(`${this.API_BASE}/accounts`);
-            console.log('[TRACE] 계좌 목록 수신:', accounts.length, '개');
+            console.log('[DEBUG] loadAccounts 시작');
+            this.addLog('📋 계좌 목록 로딩 중...', 'info');
+            
+            const response = await fetch(`${this.API_BASE}/accounts`);
+            console.log('[DEBUG] API 응답 상태:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const accounts = await response.json();
+            console.log('[DEBUG] API 응답 데이터:', accounts);
+            
+            if (!Array.isArray(accounts)) {
+                console.error('[DEBUG] 응답이 배열이 아님:', accounts);
+                throw new Error('서버에서 올바른 형식의 데이터를 받지 못했습니다');
+            }
             
             this.renderAccountsTable(accounts);
-            this.populateAccountSelects(accounts); // accounts 인자로 전달
+            this.populateAccountSelects();
             
             this.addLog(`✅ 계좌 목록 로딩 완료 (${accounts.length}개 계좌)`, 'success');
-            return accounts; // loadInitialData에서 Promise.all을 위해 반환
+            console.log('[DEBUG] loadAccounts 완료');
+            
         } catch (error) {
-            console.error('[TRACE] loadAccounts() 오류:', error);
+            console.error('[DEBUG] loadAccounts 오류:', error);
             this.showError(`계좌 목록 로딩 실패: ${error.message}`);
-            throw error; // 에러 전파
         }
-        console.log('[TRACE] loadAccounts() 완료');
     }
 
     renderAccountsTable(accounts) {
-        console.log('[TRACE] renderAccountsTable() 시작:', accounts.length, '개 계좌');
+        console.log('[DEBUG] renderAccountsTable 호출, 데이터:', accounts);
+        
+        if (!Array.isArray(accounts)) {
+            console.error('[DEBUG] accounts가 배열이 아님:', accounts);
+            this.showError('계좌 데이터 형식이 올바르지 않습니다');
+            return;
+        }
+        
         const tbody = document.querySelector('#accountsTable tbody');
         if (!tbody) {
-            console.error('[TRACE] accountsTable tbody 요소를 찾을 수 없음');
+            console.error('[DEBUG] tbody 요소를 찾을 수 없음');
             return;
         }
         
         tbody.innerHTML = '';
-        console.log('[TRACE] 테이블 초기화 완료');
+        console.log('[DEBUG] 테이블 초기화 완료, 계좌 수:', accounts.length);
 
         accounts.forEach((account, index) => {
-            console.log(`[TRACE] 계좌 ${index + 1} 렌더링:`, account.id, account.accountNumber);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${account.id}</td>
-                <td><strong>${account.accountNumber}</strong></td>
-                <td>${account.accountHolderName || '-'}</td>
-                <td><span class="status-badge ${this.getStatusClass(account.accountType)}">${this.getStatusText(account.accountType)}</span></td>
-                <td><strong>${this.formatCurrency(account.balance, account.currency)}</strong></td>
-                <td>${account.currency}</td>
-                <td>${this.formatCurrency(account.overdraftLimit, account.currency)}</td>
-                <td><span class="status-badge ${this.getStatusClass(account.status)}">${this.getStatusText(account.status)}</span></td>
-                <td>${this.formatDate(account.createdAt)}</td>
-                <td>
-                    ${this.getAccountActions(account)}
-                </td>
-            `;
-            tbody.appendChild(row);
+            console.log(`[DEBUG] 계좌 ${index} 렌더링:`, account);
+            
+            if (!account || typeof account !== 'object') {
+                console.error(`[DEBUG] 계좌 ${index}가 유효하지 않음:`, account);
+                return;
+            }
+            
+            try {
+                const row = document.createElement('tr');
+                
+                // 상태 값 확인 및 변환
+                const status = account.status || 'ACTIVE';
+                const accountType = account.accountType || 'CHECKING';
+                
+                row.innerHTML = `
+                    <td>${account.id || '-'}</td>
+                    <td><strong>${account.accountNumber || '-'}</strong></td>
+                    <td>${account.accountHolderName || '-'}</td>
+                    <td><span class="status-badge ${this.getStatusClass(accountType)}">${this.getStatusText(accountType)}</span></td>
+                    <td><strong>${this.formatCurrency(account.balance || 0, account.currency || 'KRW')}</strong></td>
+                    <td>${account.currency || 'KRW'}</td>
+                    <td><span class="status-badge ${this.getStatusClass(status)}">${this.getStatusText(status)}</span></td>
+                    <td>${account.createdAt ? this.formatDate(account.createdAt) : '-'}</td>
+                    <td>${this.getAccountActions(account)}</td>
+                `;
+                
+                tbody.appendChild(row);
+                console.log(`[DEBUG] 계좌 ${index} 행 추가 완료`);
+            } catch (error) {
+                console.error(`[DEBUG] 계좌 ${index} 렌더링 중 오류:`, error);
+            }
         });
-        console.log('[TRACE] renderAccountsTable() 완료');
+        
+        console.log('[DEBUG] renderAccountsTable 완료');
     }
 
     getAccountActions(account) {
-        console.log('[TRACE] getAccountActions() 호출:', account.id, account.status);
-        let actions = '';
+        console.log('[DEBUG] getAccountActions 호출:', account);
         
-        if (account.status === 'ACTIVE') {
+        let actions = '';
+        const status = account.status || '';
+        
+        // 상태가 문자열이나 객체일 수 있으므로 toString() 사용
+        const statusStr = typeof status === 'object' && status !== null ? status.toString() : String(status);
+        
+        if (statusStr === 'ACTIVE' || statusStr === 'active') {
             actions += `<button class="btn-small btn-freeze" onclick="bankingSystem.freezeAccount(${account.id})">동결</button>`;
-            actions += `<button class="btn-small btn-deposit" onclick="bankingSystem.prefillDeposit(${account.id}, ${account.customerId})">입금</button>`; // 입금 버튼 추가
-
-        } else if (account.status === 'FROZEN') {
+        } else if (statusStr === 'FROZEN' || statusStr === 'frozen') {
             actions += `<button class="btn-small btn-activate" onclick="bankingSystem.activateAccount(${account.id})">활성화</button>`;
         }
         
-        console.log('[TRACE] getAccountActions() 결과:', actions);
+        console.log('[DEBUG] getAccountActions 결과:', actions);
         return actions;
     }
 
@@ -471,19 +501,6 @@ class BankingSystem {
             this.showError(`계좌 활성화 실패: ${error.message}`);
         }
     }
-    
-    prefillDeposit(accountId, customerId) {
-        console.log('[TRACE] prefillDeposit() 호출:', accountId, customerId);
-        document.getElementById('depositAccountId').value = accountId;
-        document.getElementById('depositCustomerId').value = customerId;
-        // 입금 폼 탭 활성화 (필요하다면)
-        document.querySelector('.tab-btn[data-tab="accounts"]').click();
-        // 입금 폼으로 스크롤 이동 (선택 사항)
-        document.getElementById('depositForm').scrollIntoView({ behavior: 'smooth' });
-        this.addLog(`➕ 계좌 ${accountId}에 대한 입금 폼을 준비했습니다.`, 'info');
-    }
-
-
 
     // Transaction Methods
     async processDeposit() {
@@ -492,9 +509,6 @@ class BankingSystem {
             const form = document.getElementById('depositForm');
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-            
-            // Convert checkbox to boolean
-            data.forceFailure = formData.has('forceFailure');
             
             console.log('[TRACE] 입금 데이터:', data);
             this.addLog(`💰 입금 처리 - 계좌ID: ${data.accountId}, 금액: ${this.formatCurrency(data.amount)}`, 'info');
@@ -517,8 +531,6 @@ class BankingSystem {
         }
         console.log('[TRACE] processDeposit() 완료');
     }
-
-
 
     async loadTransactions() {
         console.log('[TRACE] loadTransactions() 시작');
@@ -572,6 +584,75 @@ class BankingSystem {
         console.log('[TRACE] renderTransactionsTable() 완료');
     }
 
+    async loadNotifications() {
+        console.log('[TRACE] loadNotifications() 시작');
+        try {
+            this.addLog('🔔 알림 로그 로딩 중...', 'info');
+            
+            console.log('[TRACE] 알림 로그 API 호출:', `${this.API_BASE}/notifications`);
+            const notifications = await this.makeRequest(`${this.API_BASE}/notifications`);
+            console.log('[TRACE] 알림 로그 수신:', notifications.length, '개');
+            
+            this.renderNotificationsTable(notifications);
+            
+            this.addLog(`✅ 알림 로그 로딩 완료 (${notifications.length}개 알림)`, 'success');
+            
+        } catch (error) {
+            console.error('[TRACE] loadNotifications() 오류:', error);
+            this.showError(`알림 로그 로딩 실패: ${error.message}`);
+        }
+        console.log('[TRACE] loadNotifications() 완료');
+    }
+
+    renderNotificationsTable(notifications) {
+        console.log('[TRACE] renderNotificationsTable() 시작:', notifications.length, '개 알림');
+        const tbody = document.querySelector('#notificationsTable tbody');
+        if (!tbody) {
+            console.error('[TRACE] notificationsTable tbody 요소를 찾을 수 없음');
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        console.log('[TRACE] 알림 로그 테이블 초기화 완료');
+
+        notifications.forEach((notification, index) => {
+            console.log(`[TRACE] 알림 ${index + 1} 렌더링:`, notification.id, notification.guid);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${notification.id}</td>
+                <td><strong>${notification.guid || '-'}</strong></td>
+                <td>${notification.accountId || '-'}</td>
+                <td>${notification.transactionId || '-'}</td>
+                <td>${notification.customerId || '-'}</td>
+                <td>${notification.message || '-'}</td>
+                <td><span class="status-badge ${this.getNotificationStatusClass(notification.type)}">${this.getNotificationStatusText(notification.type)}</span></td>
+                <td>${this.formatDate(notification.createdAt)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        console.log('[TRACE] renderNotificationsTable() 완료');
+    }
+
+    getNotificationStatusClass(type) {
+        const statusMap = {
+            'SUCCESS': 'status-success',
+            'FAILURE': 'status-failure',
+            'INFO': 'status-info',
+            'WARNING': 'status-warning'
+        };
+        return statusMap[type] || 'status-info';
+    }
+
+    getNotificationStatusText(type) {
+        const statusMap = {
+            'SUCCESS': '성공',
+            'FAILURE': '실패',
+            'INFO': '정보',
+            'WARNING': '경고'
+        };
+        return statusMap[type] || type;
+    }
+
     // Customer Methods
     async createCustomer() {
         console.log('[TRACE] createCustomer() 시작');
@@ -611,7 +692,6 @@ class BankingSystem {
             console.log('[TRACE] 고객 목록 수신:', customers.length, '명');
             
             this.renderCustomersTable(customers);
-            this.populateCustomerSelects(customers);
             
             this.addLog(`✅ 고객 목록 로딩 완료 (${customers.length}명)`, 'success');
             
@@ -655,30 +735,6 @@ class BankingSystem {
         console.log('[TRACE] renderCustomersTable() 완료');
     }
 
-    populateCustomerSelects(customers) {
-        console.log('[TRACE] populateCustomerSelects() 시작');
-        const customerSelect = document.getElementById('customerId');
-        if (!customerSelect) {
-            console.error('[TRACE] customerId select 요소를 찾을 수 없음');
-            return;
-        }
-
-        // 기존 옵션을 모두 제거 (첫 번째 "고객을 선택하세요" 옵션 제외)
-        while (customerSelect.options.length > 1) {
-            customerSelect.remove(1);
-        }
-
-        customers.forEach(customer => {
-            const option = document.createElement('option');
-            option.value = customer.id;
-            option.textContent = `${customer.name} (${customer.customerNumber})`;
-            customerSelect.appendChild(option);
-        });
-        console.log(`[TRACE] customerId select에 고객 ${customers.length}명 추가`);
-        console.log('[TRACE] populateCustomerSelects() 완료');
-    }
-
-
     async suspendCustomer(customerId) {
         console.log('[TRACE] suspendCustomer() 호출:', customerId);
         if (!confirm('정말로 고객을 정지하시겠습니까?')) {
@@ -703,44 +759,85 @@ class BankingSystem {
     }
 
     // Utility Methods
-    populateAccountSelects(accounts) { // accounts 인자로 받음
-        console.log('[TRACE] populateAccountSelects() 시작');
-        const selects = ['depositAccountId', 'fromAccountId'];
+    populateAccountSelects() {
+        console.log('[DEBUG] populateAccountSelects 시작');
+        
+        const selects = ['depositAccountId', 'withdrawAccountId'];
         
         selects.forEach(selectId => {
-            console.log(`[TRACE] select 처리: ${selectId}`);
             const select = document.getElementById(selectId);
             if (!select) {
-                console.log(`[TRACE] ${selectId} 요소 없음, 건너뜀`);
+                console.log(`[DEBUG] ${selectId} 요소 없음, 건너뜀`);
                 return;
             }
             
-            console.log('[TRACE] 계좌 목록에서 선택 옵션 생성:', accounts.length, '개');
+            // Get current accounts from table
+            const tbody = document.querySelector('#accountsTable tbody');
+            if (!tbody) {
+                console.error('[DEBUG] accountsTable tbody 요소를 찾을 수 없음');
+                return;
+            }
             
-            // Clear existing options except the first one
+            const rows = tbody.querySelectorAll('tr');
+            console.log(`[DEBUG] 테이블에서 ${rows.length}개 행 발견`);
+            
+            const accounts = Array.from(rows).map((row, index) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 7) {
+                    console.warn(`[DEBUG] 행 ${index}에 셀이 부족함: ${cells.length}개`);
+                    return null;
+                }
+                return {
+                    id: cells[0]?.textContent || '',
+                    accountNumber: cells[1]?.textContent?.trim() || '',
+                    status: cells[6]?.textContent?.trim() || ''
+                };
+            }).filter(acc => acc !== null);
+            
+            console.log(`[DEBUG] ${selectId}용 계좌 ${accounts.length}개 추출`, accounts);
+            
+            // Save the first option if it exists
             const firstOption = select.querySelector('option');
+            const firstOptionClone = firstOption ? firstOption.cloneNode(true) : null;
+            
+            // Clear all options
             select.innerHTML = '';
-            if (firstOption) {
-                select.appendChild(firstOption);
+            
+            // Add the first option back if it existed
+            if (firstOptionClone) {
+                select.appendChild(firstOptionClone);
+                console.log(`[DEBUG] 첫 번째 옵션 추가: ${firstOptionClone.textContent}`);
+            } else {
+                // Create default placeholder if no first option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '계좌 선택';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                select.appendChild(defaultOption);
+                console.log(`[DEBUG] 기본 옵션 생성`);
             }
             
             // Add account options
-            let activeCount = 0;
+            let addedCount = 0;
             accounts.forEach(account => {
-                // Account.java의 status는 Enum이므로 직접 비교
-                if (account.status === 'ACTIVE') { 
+                const statusText = account.status || '';
+                if (statusText.includes('활성') || statusText.includes('ACTIVE')) {
                     const option = document.createElement('option');
                     option.value = account.id;
-                    option.textContent = `${account.accountNumber}`;
+                    option.textContent = account.accountNumber || `계좌 ${account.id}`;
                     select.appendChild(option);
-                    activeCount++;
+                    addedCount++;
                 }
             });
-            console.log(`[TRACE] ${selectId}에 활성 계좌 ${activeCount}개 추가`);
+            
+            console.log(`[DEBUG] ${selectId}에 활성 계좌 ${addedCount}개 추가`);
         });
-        console.log('[TRACE] populateAccountSelects() 완료');
+        
+        console.log('[DEBUG] populateAccountSelects 완료');
     }
 }
+
 // Initialize banking system when DOM is loaded
 console.log('[TRACE] DOMContentLoaded 리스너 등록');
 document.addEventListener('DOMContentLoaded', function() {

@@ -478,6 +478,31 @@ tr:hover { background: #e0f2fe; }
     border: 1px solid #fca5a5;
 }
 
+/* Notification Log Status Badges */
+.status-success { 
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); 
+    color: #065f46; 
+    border: 1px solid #a7f3d0;
+}
+
+.status-failure { 
+    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); 
+    color: #991b1b; 
+    border: 1px solid #fca5a5;
+}
+
+.status-info { 
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); 
+    color: #1e40af; 
+    border: 1px solid #93c5fd;
+}
+
+.status-warning { 
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); 
+    color: #92400e; 
+    border: 1px solid #fcd34d;
+}
+
 @media (max-width: 1200px) {
     .content-grid {
         grid-template-columns: 1fr;

@@ -39,14 +39,6 @@ class BankingSystem {
             this.processDeposit();
         });
 
-        const transferForm = document.getElementById('transferForm');
-        console.log('[TRACE] transferForm 요소:', transferForm ? '찾음' : '없음');
-        transferForm?.addEventListener('submit', (e) => {
-            console.log('[TRACE] transferForm submit 이벤트 발생');
-            e.preventDefault();
-            this.processTransfer();
-        });
-
         const customerForm = document.getElementById('customerForm');
         console.log('[TRACE] customerForm 요소:', customerForm ? '찾음' : '없음');
         customerForm?.addEventListener('submit', (e) => {
@@ -75,6 +67,13 @@ class BankingSystem {
         refreshTransactionsBtn?.addEventListener('click', () => {
             console.log('[TRACE] refreshTransactionsBtn 클릭');
             this.loadTransactions();
+        });
+
+        const refreshNotificationsBtn = document.getElementById('refreshNotificationsBtn');
+        console.log('[TRACE] refreshNotificationsBtn 요소:', refreshNotificationsBtn ? '찾음' : '없음');
+        refreshNotificationsBtn?.addEventListener('click', () => {
+            console.log('[TRACE] refreshNotificationsBtn 클릭');
+            this.loadNotifications();
         });
 
         // Clear logs
@@ -132,6 +131,10 @@ class BankingSystem {
             case 'transactions':
                 console.log('[TRACE] 거래내역 탭 데이터 로딩');
                 this.loadTransactions();
+                break;
+            case 'notifications':
+                console.log('[TRACE] 알림 로그 탭 데이터 로딩');
+                this.loadNotifications();
                 break;
             default:
                 console.log('[TRACE] 알 수 없는 탭:', tabName);
@@ -213,7 +216,6 @@ class BankingSystem {
             'CANCELLED': '취소',
             'DEPOSIT': '입금',
             'WITHDRAWAL': '출금',
-            'TRANSFER': '이체',
             'CHECKING': '입출금',
             'SAVINGS': '적금',
             'CREDIT': '신용',
@@ -530,41 +532,6 @@ class BankingSystem {
         console.log('[TRACE] processDeposit() 완료');
     }
 
-    async processTransfer() {
-        console.log('[TRACE] processTransfer() 시작');
-        try {
-            const form = document.getElementById('transferForm');
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            if (data.fromAccountId === data.toAccountId) {
-                console.error('[TRACE] 동일 계좌 이체 시도');
-                this.showError('출금계좌와 입금계좌가 동일합니다');
-                return;
-            }
-            
-            console.log('[TRACE] 이체 데이터:', data);
-            this.addLog(`🔄 이체 처리 - 출금: ${data.fromAccountId}, 입금: ${data.toAccountId}, 금액: ${this.formatCurrency(data.amount)}`, 'info');
-            
-            console.log('[TRACE] 이체 API 호출:', `${this.API_BASE}/transfer`);
-            const result = await this.makeRequest(`${this.API_BASE}/transfer`, {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            
-            console.log('[TRACE] 이체 성공:', result);
-            this.showSuccess(`이체 완료: ${this.formatCurrency(data.amount)}`);
-            form.reset();
-            this.loadAccounts();
-            this.loadTransactions();
-            
-        } catch (error) {
-            console.error('[TRACE] processTransfer() 오류:', error);
-            this.showError(`이체 실패: ${error.message}`);
-        }
-        console.log('[TRACE] processTransfer() 완료');
-    }
-
     async loadTransactions() {
         console.log('[TRACE] loadTransactions() 시작');
         try {
@@ -615,6 +582,75 @@ class BankingSystem {
             tbody.appendChild(row);
         });
         console.log('[TRACE] renderTransactionsTable() 완료');
+    }
+
+    async loadNotifications() {
+        console.log('[TRACE] loadNotifications() 시작');
+        try {
+            this.addLog('🔔 알림 로그 로딩 중...', 'info');
+            
+            console.log('[TRACE] 알림 로그 API 호출:', `${this.API_BASE}/notifications`);
+            const notifications = await this.makeRequest(`${this.API_BASE}/notifications`);
+            console.log('[TRACE] 알림 로그 수신:', notifications.length, '개');
+            
+            this.renderNotificationsTable(notifications);
+            
+            this.addLog(`✅ 알림 로그 로딩 완료 (${notifications.length}개 알림)`, 'success');
+            
+        } catch (error) {
+            console.error('[TRACE] loadNotifications() 오류:', error);
+            this.showError(`알림 로그 로딩 실패: ${error.message}`);
+        }
+        console.log('[TRACE] loadNotifications() 완료');
+    }
+
+    renderNotificationsTable(notifications) {
+        console.log('[TRACE] renderNotificationsTable() 시작:', notifications.length, '개 알림');
+        const tbody = document.querySelector('#notificationsTable tbody');
+        if (!tbody) {
+            console.error('[TRACE] notificationsTable tbody 요소를 찾을 수 없음');
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        console.log('[TRACE] 알림 로그 테이블 초기화 완료');
+
+        notifications.forEach((notification, index) => {
+            console.log(`[TRACE] 알림 ${index + 1} 렌더링:`, notification.id, notification.guid);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${notification.id}</td>
+                <td><strong>${notification.guid || '-'}</strong></td>
+                <td>${notification.accountId || '-'}</td>
+                <td>${notification.transactionId || '-'}</td>
+                <td>${notification.customerId || '-'}</td>
+                <td>${notification.message || '-'}</td>
+                <td><span class="status-badge ${this.getNotificationStatusClass(notification.type)}">${this.getNotificationStatusText(notification.type)}</span></td>
+                <td>${this.formatDate(notification.createdAt)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        console.log('[TRACE] renderNotificationsTable() 완료');
+    }
+
+    getNotificationStatusClass(type) {
+        const statusMap = {
+            'SUCCESS': 'status-success',
+            'FAILURE': 'status-failure',
+            'INFO': 'status-info',
+            'WARNING': 'status-warning'
+        };
+        return statusMap[type] || 'status-info';
+    }
+
+    getNotificationStatusText(type) {
+        const statusMap = {
+            'SUCCESS': '성공',
+            'FAILURE': '실패',
+            'INFO': '정보',
+            'WARNING': '경고'
+        };
+        return statusMap[type] || type;
     }
 
     // Customer Methods
@@ -726,7 +762,7 @@ class BankingSystem {
     populateAccountSelects() {
         console.log('[DEBUG] populateAccountSelects 시작');
         
-        const selects = ['depositAccountId', 'withdrawAccountId', 'fromAccountId', 'toAccountId'];
+        const selects = ['depositAccountId', 'withdrawAccountId'];
         
         selects.forEach(selectId => {
             const select = document.getElementById(selectId);

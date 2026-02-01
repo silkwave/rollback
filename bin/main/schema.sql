@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (to_account_id) REFERENCES accounts(id),
     FOREIGN KEY (customer_id) REFERENCES customers(id),
     -- 추가 제약조건
-    CONSTRAINT chk_transaction_type CHECK (transaction_type IN ('DEPOSIT', 'WITHDRAWAL', 'TRANSFER', 'FEE', 'INTEREST', 'PENALTY')),
+    CONSTRAINT chk_transaction_type CHECK (transaction_type IN ('DEPOSIT', 'WITHDRAWAL', 'FEE', 'INTEREST', 'PENALTY')),
     CONSTRAINT chk_transaction_status CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REVERSED')),
     CONSTRAINT chk_amount_positive CHECK (amount > 0),
     CONSTRAINT chk_fee_non_negative CHECK (fee_amount >= 0),

@@ -119,54 +119,6 @@ INSERT INTO accounts (account_number, customer_id, account_type, currency, balan
 ('ACC003', 2, 'CHECKING', 'KRW', 2000000.00, 500000.00, '이영희'),
 ('ACC004', 3, 'BUSINESS', 'KRW', 10000000.00, 2000000.00, '박상조');
 
--- 계좌 감사 로그 테이블
-CREATE TABLE IF NOT EXISTS account_audit_log (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    account_id BIGINT NOT NULL,
-    operation_type VARCHAR(20) NOT NULL, -- INSERT, UPDATE, DELETE, FREEZE, ACTIVATE
-    old_values JSON,
-    new_values JSON,
-    changed_by VARCHAR(50),
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(45),
-    session_id VARCHAR(100),
-    reason VARCHAR(500),
-    FOREIGN KEY (account_id) REFERENCES accounts(id),
-    CONSTRAINT chk_audit_operation CHECK (operation_type IN ('INSERT', 'UPDATE', 'DELETE', 'FREEZE', 'ACTIVATE', 'CLOSE', 'SUSPEND'))
-);
-
--- 거래 감사 로그 테이블
-CREATE TABLE IF NOT EXISTS transaction_audit_log (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    transaction_id BIGINT NOT NULL,
-    account_id BIGINT,
-    operation_type VARCHAR(20) NOT NULL, -- CREATE, COMPLETE, FAIL, CANCEL, REVERSE
-    old_status VARCHAR(20),
-    new_status VARCHAR(20),
-    changed_by VARCHAR(50),
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(45),
-    session_id VARCHAR(100),
-    reason VARCHAR(500),
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id),
-    FOREIGN KEY (account_id) REFERENCES accounts(id),
-    CONSTRAINT chk_txn_audit_operation CHECK (operation_type IN ('CREATE', 'COMPLETE', 'FAIL', 'CANCEL', 'REVERSE', 'APPROVE', 'REJECT'))
-);
-
--- 로그인 기록 테이블
-CREATE TABLE IF NOT EXISTS login_logs (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    customer_id BIGINT NOT NULL,
-    login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(45),
-    user_agent VARCHAR(500),
-    login_status VARCHAR(20) NOT NULL, -- SUCCESS, FAILED, LOCKED
-    failure_reason VARCHAR(200),
-    session_id VARCHAR(100),
-    FOREIGN KEY (customer_id) REFERENCES customers(id),
-    CONSTRAINT chk_login_status CHECK (login_status IN ('SUCCESS', 'FAILED', 'LOCKED', 'SUSPICIOUS'))
-);
-
 -- 성능 최적화를 위한 인덱스 생성
 -- 고객 관련 인덱스
 CREATE INDEX idx_customers_customer_number ON customers(customer_number);
@@ -191,17 +143,9 @@ CREATE INDEX idx_transactions_type ON transactions(transaction_type);
 CREATE INDEX idx_transactions_guid ON transactions(guid);
 CREATE INDEX idx_transactions_reference ON transactions(reference_number);
 
--- 감사 로그 인덱스
-CREATE INDEX idx_account_audit_account_id ON account_audit_log(account_id);
-CREATE INDEX idx_account_audit_changed_at ON account_audit_log(changed_at);
-CREATE INDEX idx_account_audit_operation ON account_audit_log(operation_type);
-
-CREATE INDEX idx_transaction_audit_transaction_id ON transaction_audit_log(transaction_id);
-CREATE INDEX idx_transaction_audit_account_id ON transaction_audit_log(account_id);
-CREATE INDEX idx_transaction_audit_changed_at ON transaction_audit_log(changed_at);
-
-CREATE INDEX idx_login_logs_customer_id ON login_logs(customer_id);
-CREATE INDEX idx_login_logs_login_at ON login_logs(login_at);
-CREATE INDEX idx_login_logs_status ON login_logs(login_status);
-CREATE INDEX idx_login_logs_ip_address ON login_logs(ip_address);
+-- 알림 로그 인덱스
+CREATE INDEX idx_notification_logs_account_id ON notification_logs(account_id);
+CREATE INDEX idx_notification_logs_transaction_id ON notification_logs(transaction_id);
+CREATE INDEX idx_notification_logs_customer_id ON notification_logs(customer_id);
+CREATE INDEX idx_notification_logs_created_at ON notification_logs(created_at);
 

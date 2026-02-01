@@ -1,12 +1,12 @@
 package com.example.rollback.exception;
 
-public class PaymentException extends OrderException {
+public class PaymentException extends RuntimeException {
     
     public PaymentException(String message) {
-        super("PAYMENT_ERROR", message);
+        super(message);
     }
     
     public PaymentException(String message, Throwable cause) {
-        super("PAYMENT_ERROR", message, cause);
+        super(message, cause);
     }
 }

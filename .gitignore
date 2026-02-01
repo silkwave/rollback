@@ -29,6 +29,7 @@ Desktop.ini
 /build/
 /dist/
 /out/
+/bin/
 /target/
 *.o
 *.a

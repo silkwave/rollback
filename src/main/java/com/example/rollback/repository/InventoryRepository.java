@@ -70,7 +70,7 @@ public interface InventoryRepository {
     List<Inventory> findLowStockItems();
     
     // 특정 수량만큼 재고가 있는지 확인
-    @Select("SELECT CASE WHEN (current_stock - reserved_stock) >= #{quantity} " +
+    @Select("SELECT CASE WHEN COUNT(*) > 0 AND (current_stock - reserved_stock) >= #{quantity} " +
             "THEN true ELSE false END " +
             "FROM inventory WHERE product_name = #{productName}")
     boolean hasEnoughStock(@Param("productName") String productName, @Param("quantity") int quantity);

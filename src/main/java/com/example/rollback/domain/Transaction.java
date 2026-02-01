@@ -75,28 +75,6 @@ public class Transaction {
         return transaction;
     }
 
-    // 이체 거래 생성
-    public static Transaction createTransfer(String guid, Long fromAccountId, Long toAccountId, Long customerId,
-                                           java.math.BigDecimal amount, String currency, String description) {
-        Transaction transaction = new Transaction();
-        transaction.guid = guid;
-        transaction.fromAccountId = fromAccountId;
-        transaction.toAccountId = toAccountId;
-        transaction.customerId = customerId;
-        transaction.transactionType = TransactionType.TRANSFER;
-        transaction.amount = amount;
-        transaction.currency = currency;
-        transaction.description = description;
-        transaction.status = TransactionStatus.PENDING;
-        transaction.transactionChannel = "ONLINE";
-        transaction.feeAmount = java.math.BigDecimal.ZERO;
-        transaction.createdAt = LocalDateTime.now();
-        
-        log.info("이체 거래 생성 - GUID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}", 
-            guid, fromAccountId, toAccountId, amount);
-        return transaction;
-    }
-
     // 거래 완료 처리
     public Transaction complete() {
         this.status = TransactionStatus.COMPLETED;
@@ -144,15 +122,5 @@ public class Transaction {
     // 실패한 거래 확인
     public boolean isFailed() {
         return TransactionStatus.FAILED.equals(this.status);
-    }
-
-    // 대기 중인 거래 확인
-    public boolean isPending() {
-        return TransactionStatus.PENDING.equals(this.status);
-    }
-
-    // 이체 거래 확인
-    public boolean isTransfer() {
-        return TransactionType.TRANSFER.equals(this.transactionType);
     }
 }

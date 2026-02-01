@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="/banking-style.css">
 </head>
 <body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
     <div class="container">
         <header>
             <h1><i class="fas fa-university"></i> Spring Boot Banking System</h1>
@@ -31,9 +34,6 @@
                                 <label for="customerId">고객 ID</label>
                                 <select id="customerId" name="customerId" required>
                                     <option value="" disabled selected>고객을 선택하세요</option>
-                                    <option value="1">김철수 (CUST001)</option>
-                                    <option value="2">이영희 (CUST002)</option>
-                                    <option value="3">박상조 (CUST003)</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -100,44 +100,7 @@
                         </form>
                     </div>
                     
-                    <div class="card transaction-form">
-                        <h2><i class="fas fa-exchange-alt"></i> 이체</h2>
-                        <form id="transferForm">
-                            <div class="form-group">
-                                <label for="fromAccountId">출금 계좌 ID</label>
-                                <input type="number" id="fromAccountId" name="fromAccountId" required placeholder="예: 1">
-                            </div>
-                            <div class="form-group">
-                                <label for="toAccountId">입금 계좌 ID</label>
-                                <input type="number" id="toAccountId" name="toAccountId" required placeholder="예: 2">
-                            </div>
-                            <div class="form-group">
-                                <label for="transferCustomerId">고객 ID</label>
-                                <input type="number" id="transferCustomerId" name="customerId" required placeholder="예: 1">
-                            </div>
-                            <div class="form-group">
-                                <label for="transferAmount">이체금액</label>
-                                <input type="number" id="transferAmount" name="amount" min="1000" step="100" required placeholder="예: 100000">
-                            </div>
-                            <div class="form-group">
-                                <label for="transferCurrency">통화</label>
-                                <select id="transferCurrency" name="currency" required>
-                                    <option value="KRW" selected>KRW (원)</option>
-                                    <option value="USD">USD (달러)</option>
-                                    <option value="EUR">EUR (유로)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="transferDescription">설명</label>
-                                <input type="text" id="transferDescription" name="description" placeholder="예: 계좌 이체">
-                            </div>
-                            <div class="form-group checkbox">
-                                <input type="checkbox" id="transferForceFailure" name="forceFailure">
-                                <label for="transferForceFailure">이체 실패 강제 발생</label>
-                            </div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-exchange-alt"></i> 이체</button>
-                        </form>
-                    </div>
+
                 </div>
                 
                 <div class="card accounts-list">
@@ -151,10 +114,10 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>계좌번호</th>
-                                    <th>고객ID</th>
+                                    <th>예금주</th>
                                     <th>계좌유형</th>
-                                    <th>통화</th>
                                     <th>잔액</th>
+                                    <th>통화</th>
                                     <th>초과한도</th>
                                     <th>상태</th>
                                     <th>생성일</th>

@@ -19,6 +19,17 @@ class BankingSystem {
         console.log('[TRACE] init() 메서드 완료');
     }
 
+    showLoading() {
+        console.log('[TRACE] showLoading() 호출');
+        document.getElementById('loadingOverlay').classList.add('visible');
+    }
+
+    hideLoading() {
+        console.log('[TRACE] hideLoading() 호출');
+        document.getElementById('loadingOverlay').classList.remove('visible');
+    }
+
+
     setupEventListeners() {
         console.log('[TRACE] setupEventListeners() 시작');
         
@@ -39,13 +50,7 @@ class BankingSystem {
             this.processDeposit();
         });
 
-        const transferForm = document.getElementById('transferForm');
-        console.log('[TRACE] transferForm 요소:', transferForm ? '찾음' : '없음');
-        transferForm?.addEventListener('submit', (e) => {
-            console.log('[TRACE] transferForm submit 이벤트 발생');
-            e.preventDefault();
-            this.processTransfer();
-        });
+
 
         const customerForm = document.getElementById('customerForm');
         console.log('[TRACE] customerForm 요소:', customerForm ? '찾음' : '없음');
@@ -213,7 +218,7 @@ class BankingSystem {
             'CANCELLED': '취소',
             'DEPOSIT': '입금',
             'WITHDRAWAL': '출금',
-            'TRANSFER': '이체',
+
             'CHECKING': '입출금',
             'SAVINGS': '적금',
             'CREDIT': '신용',
@@ -287,6 +292,7 @@ class BankingSystem {
 
     async makeRequest(url, options = {}) {
         console.log('[TRACE] makeRequest() 시작:', url, options.method || 'GET');
+        this.showLoading(); // 로딩 시작
         try {
             console.log('[TRACE] fetch 요청:', url);
             const response = await fetch(url, {
@@ -312,6 +318,8 @@ class BankingSystem {
             console.error('[TRACE] makeRequest() 오류:', error);
             this.addLog(`🚨 API 요청 실패: ${error.message}`, 'error');
             throw error;
+        } finally {
+            this.hideLoading(); // 로딩 종료 (성공 또는 실패 시)
         }
     }
 
@@ -350,21 +358,21 @@ class BankingSystem {
 
     async loadAccounts() {
         console.log('[TRACE] loadAccounts() 시작');
+        this.addLog('📋 계좌 목록 로딩 중...', 'info');
         try {
-            this.addLog('📋 계좌 목록 로딩 중...', 'info');
-            
             console.log('[TRACE] 계좌 목록 API 호출:', `${this.API_BASE}/accounts`);
             const accounts = await this.makeRequest(`${this.API_BASE}/accounts`);
             console.log('[TRACE] 계좌 목록 수신:', accounts.length, '개');
             
             this.renderAccountsTable(accounts);
-            this.populateAccountSelects();
+            this.populateAccountSelects(accounts); // accounts 인자로 전달
             
             this.addLog(`✅ 계좌 목록 로딩 완료 (${accounts.length}개 계좌)`, 'success');
-            
+            return accounts; // loadInitialData에서 Promise.all을 위해 반환
         } catch (error) {
             console.error('[TRACE] loadAccounts() 오류:', error);
             this.showError(`계좌 목록 로딩 실패: ${error.message}`);
+            throw error; // 에러 전파
         }
         console.log('[TRACE] loadAccounts() 완료');
     }
@@ -390,6 +398,7 @@ class BankingSystem {
                 <td><span class="status-badge ${this.getStatusClass(account.accountType)}">${this.getStatusText(account.accountType)}</span></td>
                 <td><strong>${this.formatCurrency(account.balance, account.currency)}</strong></td>
                 <td>${account.currency}</td>
+                <td>${this.formatCurrency(account.overdraftLimit, account.currency)}</td>
                 <td><span class="status-badge ${this.getStatusClass(account.status)}">${this.getStatusText(account.status)}</span></td>
                 <td>${this.formatDate(account.createdAt)}</td>
                 <td>
@@ -407,6 +416,8 @@ class BankingSystem {
         
         if (account.status === 'ACTIVE') {
             actions += `<button class="btn-small btn-freeze" onclick="bankingSystem.freezeAccount(${account.id})">동결</button>`;
+            actions += `<button class="btn-small btn-deposit" onclick="bankingSystem.prefillDeposit(${account.id}, ${account.customerId})">입금</button>`; // 입금 버튼 추가
+
         } else if (account.status === 'FROZEN') {
             actions += `<button class="btn-small btn-activate" onclick="bankingSystem.activateAccount(${account.id})">활성화</button>`;
         }
@@ -460,6 +471,19 @@ class BankingSystem {
             this.showError(`계좌 활성화 실패: ${error.message}`);
         }
     }
+    
+    prefillDeposit(accountId, customerId) {
+        console.log('[TRACE] prefillDeposit() 호출:', accountId, customerId);
+        document.getElementById('depositAccountId').value = accountId;
+        document.getElementById('depositCustomerId').value = customerId;
+        // 입금 폼 탭 활성화 (필요하다면)
+        document.querySelector('.tab-btn[data-tab="accounts"]').click();
+        // 입금 폼으로 스크롤 이동 (선택 사항)
+        document.getElementById('depositForm').scrollIntoView({ behavior: 'smooth' });
+        this.addLog(`➕ 계좌 ${accountId}에 대한 입금 폼을 준비했습니다.`, 'info');
+    }
+
+
 
     // Transaction Methods
     async processDeposit() {
@@ -468,6 +492,9 @@ class BankingSystem {
             const form = document.getElementById('depositForm');
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
+            
+            // Convert checkbox to boolean
+            data.forceFailure = formData.has('forceFailure');
             
             console.log('[TRACE] 입금 데이터:', data);
             this.addLog(`💰 입금 처리 - 계좌ID: ${data.accountId}, 금액: ${this.formatCurrency(data.amount)}`, 'info');
@@ -491,40 +518,7 @@ class BankingSystem {
         console.log('[TRACE] processDeposit() 완료');
     }
 
-    async processTransfer() {
-        console.log('[TRACE] processTransfer() 시작');
-        try {
-            const form = document.getElementById('transferForm');
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            if (data.fromAccountId === data.toAccountId) {
-                console.error('[TRACE] 동일 계좌 이체 시도');
-                this.showError('출금계좌와 입금계좌가 동일합니다');
-                return;
-            }
-            
-            console.log('[TRACE] 이체 데이터:', data);
-            this.addLog(`🔄 이체 처리 - 출금: ${data.fromAccountId}, 입금: ${data.toAccountId}, 금액: ${this.formatCurrency(data.amount)}`, 'info');
-            
-            console.log('[TRACE] 이체 API 호출:', `${this.API_BASE}/transfer`);
-            const result = await this.makeRequest(`${this.API_BASE}/transfer`, {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            
-            console.log('[TRACE] 이체 성공:', result);
-            this.showSuccess(`이체 완료: ${this.formatCurrency(data.amount)}`);
-            form.reset();
-            this.loadAccounts();
-            this.loadTransactions();
-            
-        } catch (error) {
-            console.error('[TRACE] processTransfer() 오류:', error);
-            this.showError(`이체 실패: ${error.message}`);
-        }
-        console.log('[TRACE] processTransfer() 완료');
-    }
+
 
     async loadTransactions() {
         console.log('[TRACE] loadTransactions() 시작');
@@ -617,6 +611,7 @@ class BankingSystem {
             console.log('[TRACE] 고객 목록 수신:', customers.length, '명');
             
             this.renderCustomersTable(customers);
+            this.populateCustomerSelects(customers);
             
             this.addLog(`✅ 고객 목록 로딩 완료 (${customers.length}명)`, 'success');
             
@@ -660,6 +655,30 @@ class BankingSystem {
         console.log('[TRACE] renderCustomersTable() 완료');
     }
 
+    populateCustomerSelects(customers) {
+        console.log('[TRACE] populateCustomerSelects() 시작');
+        const customerSelect = document.getElementById('customerId');
+        if (!customerSelect) {
+            console.error('[TRACE] customerId select 요소를 찾을 수 없음');
+            return;
+        }
+
+        // 기존 옵션을 모두 제거 (첫 번째 "고객을 선택하세요" 옵션 제외)
+        while (customerSelect.options.length > 1) {
+            customerSelect.remove(1);
+        }
+
+        customers.forEach(customer => {
+            const option = document.createElement('option');
+            option.value = customer.id;
+            option.textContent = `${customer.name} (${customer.customerNumber})`;
+            customerSelect.appendChild(option);
+        });
+        console.log(`[TRACE] customerId select에 고객 ${customers.length}명 추가`);
+        console.log('[TRACE] populateCustomerSelects() 완료');
+    }
+
+
     async suspendCustomer(customerId) {
         console.log('[TRACE] suspendCustomer() 호출:', customerId);
         if (!confirm('정말로 고객을 정지하시겠습니까?')) {
@@ -684,9 +703,9 @@ class BankingSystem {
     }
 
     // Utility Methods
-    populateAccountSelects() {
+    populateAccountSelects(accounts) { // accounts 인자로 받음
         console.log('[TRACE] populateAccountSelects() 시작');
-        const selects = ['depositAccountId', 'withdrawAccountId', 'fromAccountId', 'toAccountId'];
+        const selects = ['depositAccountId', 'fromAccountId'];
         
         selects.forEach(selectId => {
             console.log(`[TRACE] select 처리: ${selectId}`);
@@ -695,22 +714,6 @@ class BankingSystem {
                 console.log(`[TRACE] ${selectId} 요소 없음, 건너뜀`);
                 return;
             }
-            
-            // Get current accounts
-            const tbody = document.querySelector('#accountsTable tbody');
-            if (!tbody) {
-                console.error('[TRACE] accountsTable tbody 요소를 찾을 수 없음');
-                return;
-            }
-            
-            const accounts = Array.from(tbody.querySelectorAll('tr')).map(row => {
-                const cells = row.querySelectorAll('td');
-                return {
-                    id: cells[0].textContent,
-                    accountNumber: cells[1].textContent.trim(),
-                    status: cells[6].textContent.trim()
-                };
-            });
             
             console.log('[TRACE] 계좌 목록에서 선택 옵션 생성:', accounts.length, '개');
             
@@ -724,7 +727,8 @@ class BankingSystem {
             // Add account options
             let activeCount = 0;
             accounts.forEach(account => {
-                if (account.status.includes('활성')) {
+                // Account.java의 status는 Enum이므로 직접 비교
+                if (account.status === 'ACTIVE') { 
                     const option = document.createElement('option');
                     option.value = account.id;
                     option.textContent = `${account.accountNumber}`;
@@ -737,7 +741,6 @@ class BankingSystem {
         console.log('[TRACE] populateAccountSelects() 완료');
     }
 }
-
 // Initialize banking system when DOM is loaded
 console.log('[TRACE] DOMContentLoaded 리스너 등록');
 document.addEventListener('DOMContentLoaded', function() {

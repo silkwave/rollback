@@ -4,7 +4,6 @@ import com.example.rollback.domain.Account;
 import com.example.rollback.domain.AccountRequest;
 import com.example.rollback.domain.DepositRequest;
 import com.example.rollback.domain.Transaction;
-import com.example.rollback.domain.TransferRequest;
 import com.example.rollback.event.TransactionFailed;
 import com.example.rollback.repository.AccountRepository;
 import com.example.rollback.repository.TransactionRepository;
@@ -140,77 +139,6 @@ events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnly
             long duration = System.currentTimeMillis() - startTime;
             log.error("입금 처리 실패 - 소요시간: {}ms, 사유: {}", duration, e.getMessage(), e);
             throw new RuntimeException("입금 처리에 실패했습니다.", e);
-        }
-    }
-
-    // 이체 처리
-    @Transactional
-    public Transaction transfer(TransferRequest request) {
-        long startTime = System.currentTimeMillis();
-        final String guid = ContextHolder.getCurrentGuid();
-        MDC.put("guid", guid);
-
-        try {
-            log.info("이체 처리 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
-                request.getFromAccountId(), request.getToAccountId(), request.getAmount());
-
-            // 1. 계좌 확인
-            Account fromAccount = accountRepository.findById(request.getFromAccountId());
-            Account toAccount = accountRepository.findById(request.getToAccountId());
-            
-            if (fromAccount == null) {
-                throw new IllegalArgumentException("출금 계좌를 찾을 수 없습니다: " + request.getFromAccountId());
-            }
-            if (toAccount == null) {
-                throw new IllegalArgumentException("입금 계좌를 찾을 수 없습니다: " + request.getToAccountId());
-            }
-
-            if (!fromAccount.isActive() || !toAccount.isActive()) {
-                throw new IllegalStateException("계좌가 활성 상태가 아닙니다");
-            }
-
-            if (!fromAccount.hasSufficientFunds(request.getAmount())) {
-                throw new IllegalStateException("출금 계좌의 잔액이 부족합니다");
-            }
-
-            // 2. 거래 생성
-            Transaction transaction = request.toTransaction(guid);
-            transaction.generateReferenceNumber();
-            transactionRepository.save(transaction);
-            log.info("이체 거래 생성 완료 - 거래ID: {}", transaction.getId());
-
-            // 3. 이체 처리
-            try {
-                paymentClient.processPayment(guid, transaction.getId(), request.getAmount(), request.isForceFailure());
-                
-                // 4. 계좌 잔액 업데이트 (원자성 보장)
-                fromAccount.withdraw(request.getAmount());
-                toAccount.deposit(request.getAmount());
-                accountRepository.updateBalance(fromAccount);
-                accountRepository.updateBalance(toAccount);
-                
-                // 5. 거래 완료 처리
-                transaction.complete();
-                transactionRepository.updateStatus(transaction.getId(), "COMPLETED");
-                
-                long duration = System.currentTimeMillis() - startTime;
-                log.info("이체 처리 완료 - 거래ID: {}, 소요시간: {}ms", transaction.getId(), duration);
-                return transaction;
-
-            } catch (Exception e) {
-                log.error("이체 처리 실패 - 거래ID: {}, 사유: {}", transaction.getId(), e.getMessage(), e);
-                transaction.fail("이체 처리 실패: " + e.getMessage());
-                transactionRepository.updateStatus(transaction.getId(), "FAILED");
-                
-                // 롤백 후 이벤트 발행
-                events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(), transaction.getId(), e.getMessage()));
-                throw e;
-            }
-
-        } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            log.error("이체 처리 실패 - 소요시간: {}ms, 사유: {}", duration, e.getMessage(), e);
-            throw new RuntimeException("이체 처리에 실패했습니다.", e);
         }
     }
 

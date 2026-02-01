@@ -3,7 +3,7 @@ package com.example.rollback.controller;
 import com.example.rollback.domain.Account;
 import com.example.rollback.domain.AccountRequest;
 import com.example.rollback.domain.DepositRequest;
-import com.example.rollback.domain.TransferRequest;
+
 import com.example.rollback.domain.Transaction;
 import com.example.rollback.service.AccountService;
 import com.example.rollback.repository.AccountRepository;
@@ -104,40 +104,7 @@ public class BankingController {
         }
     }
 
-    // 이체 엔드포인트
-    @PostMapping("/transfer")
-    public ResponseEntity<?> transfer(@Valid @RequestBody TransferRequest request, BindingResult bindingResult,
-                                 HttpServletRequest httpRequest) {
-        String guid = setupRequestContext(httpRequest, "POST /api/banking/transfer - 이체 요청: " + request);
-        try {
-            if (bindingResult.hasErrors()) {
-                String errorMessage = "유효성 검사 실패: " + bindingResult.getAllErrors().get(0).getDefaultMessage();
-                log.warn("{}", errorMessage);
-                return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "guid", guid,
-                        "message", errorMessage));
-            }
 
-            Transaction transaction = accountService.transfer(request);
-            log.info("이체 성공: {}", transaction.getReferenceNumber());
-
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "guid", guid,
-                    "message", "이체가 성공적으로 처리되었습니다",
-                    "transaction", transaction));
-
-        } catch (Exception e) {
-            log.error("이체 처리 실패: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "이체 처리 실패: " + e.getMessage()));
-        } finally {
-            ContextHolder.clearContext();
-            MDC.remove("guid");
-        }
-    }
 
     // 전체 계좌 목록 조회
     @GetMapping("/accounts")

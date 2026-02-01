@@ -37,7 +37,14 @@ public class AccountRequest {
             customerId, accountType, currency, initialDeposit);
         
         AccountType accType = AccountType.valueOf(accountType.toUpperCase());
-        return Account.create(accountNumber, customerId, accType, currency, initialDeposit, accountHolderName);
+        Account account = Account.create(accountNumber, customerId, accType, currency, initialDeposit, accountHolderName);
+        
+        // Set optional branch code if provided
+        if (branchCode != null && !branchCode.trim().isEmpty()) {
+            account.setBranchCode(branchCode);
+        }
+        
+        return account;
     }
     
     // Additional getter for account number (would be set by service)

@@ -107,7 +107,7 @@ public class Account {
 
     // 활성 계좌 확인
     public boolean isActive() {
-        return "ACTIVE".equals(this.status);
+        return AccountStatus.ACTIVE.equals(this.status);
     }
     
     // 계좌번호 getter

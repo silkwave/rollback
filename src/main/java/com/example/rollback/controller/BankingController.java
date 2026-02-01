@@ -202,6 +202,70 @@ public class BankingController {
         }
     }
 
+    // 계좌 동결
+    @PostMapping("/accounts/{id}/freeze")
+    public ResponseEntity<?> freezeAccount(@PathVariable Long id, HttpServletRequest httpRequest) {
+        initializeContextAndLog("POST /api/banking/accounts/" + id + "/freeze - 계좌 동결 요청", httpRequest);
+        try {
+            Account account = accountRepository.findById(id);
+            if (account == null) {
+                log.warn("동결할 계좌를 찾을 수 없음: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+            
+            account.freeze();
+            accountRepository.update(account);
+            log.info("계좌 동결 성공: {}", account.getAccountNumber());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "계좌가 동결되었습니다",
+                "account", account
+            ));
+        } catch (Exception e) {
+            log.error("계좌 동결 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "계좌 동결 실패: " + e.getMessage()
+            ));
+        } finally {
+            ContextHolder.clearContext();
+            MDC.remove("guid");
+        }
+    }
+
+    // 계좌 활성화
+    @PostMapping("/accounts/{id}/activate")
+    public ResponseEntity<?> activateAccount(@PathVariable Long id, HttpServletRequest httpRequest) {
+        initializeContextAndLog("POST /api/banking/accounts/" + id + "/activate - 계좌 활성화 요청", httpRequest);
+        try {
+            Account account = accountRepository.findById(id);
+            if (account == null) {
+                log.warn("활성화할 계좌를 찾을 수 없음: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+            
+            account.activate();
+            accountRepository.update(account);
+            log.info("계좌 활성화 성공: {}", account.getAccountNumber());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "계좌가 활성화되었습니다",
+                "account", account
+            ));
+        } catch (Exception e) {
+            log.error("계좌 활성화 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "계좌 활성화 실패: " + e.getMessage()
+            ));
+        } finally {
+            ContextHolder.clearContext();
+            MDC.remove("guid");
+        }
+    }
+
     private String setupRequestContext(HttpServletRequest httpRequest, String operationMessage) {
         String guid = guidQueueUtil.getGUID();
         ContextHolder.initializeContext(guid);

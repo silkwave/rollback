@@ -136,6 +136,40 @@ public class CustomerController {
         }
     }
 
+    // 고객 정지
+    @PostMapping("/{id}/suspend")
+    public ResponseEntity<?> suspendCustomer(@PathVariable Long id, HttpServletRequest httpRequest) {
+        String guid = initializeContextAndLog("POST /api/banking/customers/" + id + "/suspend - 고객 정지 요청", httpRequest);
+        try {
+            Customer customer = customerRepository.findById(id);
+            if (customer == null) {
+                log.warn("정지할 고객을 찾을 수 없음: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+            
+            customer.changeStatus("SUSPENDED");
+            customerRepository.update(customer);
+            log.info("고객 정지 성공: {}", customer.getCustomerNumber());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "guid", guid,
+                "message", "고객이 정지되었습니다",
+                "customer", customer
+            ));
+        } catch (Exception e) {
+            log.error("고객 정지 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "guid", guid,
+                "message", "고객 정지 실패: " + e.getMessage()
+            ));
+        } finally {
+            ContextHolder.clearContext();
+            MDC.remove("guid");
+        }
+    }
+
     private String setupRequestContext(HttpServletRequest httpRequest, String operationMessage) {
         String guid = guidQueueUtil.getGUID();
         ContextHolder.initializeContext(guid);

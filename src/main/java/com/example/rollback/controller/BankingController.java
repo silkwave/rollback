@@ -28,7 +28,7 @@ import org.slf4j.MDC;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/banking")
-public class BankingController {
+public class BankingController { 
 
     private final AccountService accountService;
     private final AccountRepository accountRepository;

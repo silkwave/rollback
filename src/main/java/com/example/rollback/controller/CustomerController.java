@@ -40,7 +40,7 @@ public class CustomerController {
                 log.warn("{}", errorMessage);
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
-                        "guid", guid,
+                        "guid", guid, 
                         "message", errorMessage));
             }
 

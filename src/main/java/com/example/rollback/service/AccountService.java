@@ -7,7 +7,6 @@ import com.example.rollback.domain.Transaction;
 import com.example.rollback.event.TransactionFailed;
 import com.example.rollback.repository.AccountRepository;
 import com.example.rollback.repository.TransactionRepository;
-import com.example.rollback.retry.LockRetryTemplate;
 import com.example.rollback.util.ContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,26 +50,27 @@ public class AccountService {
             // 3. 초기 입금 처리
             if (request.getInitialDeposit() != null && request.getInitialDeposit().compareTo(BigDecimal.ZERO) > 0) {
                 Transaction transaction = Transaction.createDeposit(
-                    guid, account.getId(), request.getCustomerId(), 
-                    request.getInitialDeposit(), request.getCurrency(), "초기입금"
-                );
+                        guid, account.getId(), request.getCustomerId(),
+                        request.getInitialDeposit(), request.getCurrency(), "초기입금");
                 transactionRepository.save(transaction);
 
                 try {
-                    paymentClient.processPayment(guid, transaction.getId(), request.getInitialDeposit(), request.isForceFailure());
+                    paymentClient.processPayment(guid, transaction.getId(), request.getInitialDeposit(),
+                            request.isForceFailure());
                     account.deposit(request.getInitialDeposit());
                     accountRepository.updateBalance(account);
                     transaction.complete();
                     transactionRepository.updateStatus(transaction.getId(), "COMPLETED");
-                    
+
                     log.info("초기 입금 완료 - 계좌: {}, 금액: {}", accountNumber, request.getInitialDeposit());
                 } catch (Exception e) {
                     log.error("초기 입금 실패 - 계좌: {}, 사유: {}", accountNumber, e.getMessage(), e);
                     transaction.fail("초기 입금 처리 실패: " + e.getMessage());
-                transactionRepository.updateStatus(transaction.getId(), "FAILED");
-                    
+                    transactionRepository.updateStatus(transaction.getId(), "FAILED");
+
                     // 롤백 후 이벤트 발행
-events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(), transaction.getId(), e.getMessage()));
+                    events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
+                            transaction.getId(), e.getMessage()));
                     throw e;
                 }
             }
@@ -102,9 +102,9 @@ events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnly
                 throw new IllegalArgumentException("계좌를 찾을 수 없습니다: " + request.getAccountId());
             }
 
-        if (!account.isActive()) {
-            throw new IllegalStateException("계좌가 활성 상태가 아닙니다");
-        }
+            if (!account.isActive()) {
+                throw new IllegalStateException("계좌가 활성 상태가 아닙니다");
+            }
 
             // 2. 거래 생성
             Transaction transaction = request.toTransaction(guid);
@@ -115,23 +115,24 @@ events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnly
             // 3. 결제 처리
             try {
                 paymentClient.processPayment(guid, transaction.getId(), request.getAmount(), request.isForceFailure());
-                
+
                 // 4. 계좌 잔액 업데이트
                 account.deposit(request.getAmount());
                 accountRepository.updateBalance(account);
-                
+
                 // 5. 거래 완료 처리
                 transaction.complete();
                 transactionRepository.updateStatus(transaction.getId(), "COMPLETED");
-                
+
                 long duration = System.currentTimeMillis() - startTime;
-                log.info("입금 처리 완료 - 계좌: {}, 금액: {}, 소요시간: {}ms", 
-                    account.getAccountNumber(), request.getAmount(), duration);
+                log.info("입금 처리 완료 - 계좌: {}, 금액: {}, 소요시간: {}ms",
+                        account.getAccountNumber(), request.getAmount(), duration);
                 return transaction;
 
             } catch (Exception e) {
                 log.error("입금 처리 실패 - 거래ID: {}, 사유: {}", transaction.getId(), e.getMessage(), e);
-                events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(), transaction.getId(), e.getMessage()));
+                events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
+                        transaction.getId(), e.getMessage()));
                 throw e;
             }
 
@@ -144,6 +145,6 @@ events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnly
 
     // 계좌번호 생성
     private String generateAccountNumber() {
-        return "ACC" + System.currentTimeMillis() + String.format("%04d", (int)(Math.random() * 10000));
+        return "ACC" + System.currentTimeMillis() + String.format("%04d", (int) (Math.random() * 10000));
     }
 }

@@ -545,6 +545,12 @@ class BankingSystem {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
+            // Convert string values to appropriate numeric types
+            data.accountId = parseInt(data.accountId);
+            data.customerId = parseInt(data.customerId);
+            data.amount = parseFloat(data.amount);
+            data.forceFailure = formData.has('forceFailure');
+            
             console.log('[TRACE] 입금 데이터:', data);
             this.addLog(`💰 입금 처리 - 계좌ID: ${data.accountId}, 금액: ${this.formatCurrency(data.amount)}`, 'info');
             

@@ -277,6 +277,31 @@
         </main>
     </div>
     
+    <!-- 에러 모달 팝업 -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error-modal">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>오류 발생</h3>
+                <button class="modal-close" onclick="bankingApp.closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="bankingApp.closeModal()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 성공 토스트 알림 -->
+    <div id="successToast" class="toast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle"></i>
+            <span id="successMessage"></span>
+        </div>
+    </div>
+
     <script src="/script.js"></script>
 </body>
 </html>

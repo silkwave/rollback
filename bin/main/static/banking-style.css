@@ -535,3 +535,145 @@ tr:hover { background: #e0f2fe; }
         font-size: 2rem;
     }
 }
+
+/* 모달 팝업 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 500px;
+    width: 90%;
+    animation: slideIn 0.3s ease;
+    overflow: hidden;
+}
+
+.error-modal {
+    border-top: 4px solid #dc2626;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-bottom: 1px solid #fecaca;
+}
+
+.modal-header i {
+    font-size: 28px;
+    color: #dc2626;
+    margin-right: 12px;
+}
+
+.modal-header h3 {
+    flex: 1;
+    margin: 0;
+    color: #991b1b;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #991b1b;
+    cursor: pointer;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.modal-body {
+    padding: 24px;
+    color: #374151;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.modal-footer {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* 토스트 알림 스타일 */
+.toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 1001;
+    transform: translateX(150%);
+    transition: transform 0.3s ease;
+}
+
+.toast.active {
+    transform: translateX(0);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2);
+    padding: 16px 20px;
+    min-width: 300px;
+    border-left: 4px solid #10b981;
+}
+
+.toast-content i {
+    font-size: 24px;
+    color: #10b981;
+    margin-right: 12px;
+}
+
+.toast-content span {
+    color: #065f46;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

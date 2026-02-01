@@ -279,12 +279,47 @@ class BankingSystem {
     showError(message) {
         console.error('[TRACE] showError() 호출:', message);
         this.addLog(`❌ ${message}`, 'error');
-        alert(message);
+        
+        // 모달 팝업 표시
+        const modal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        if (modal && errorMessage) {
+            errorMessage.textContent = message;
+            modal.classList.add('active');
+            console.log('[TRACE] 에러 모달 표시');
+        } else {
+            // 폴백: 모달이 없으면 alert 사용
+            alert(message);
+        }
+    }
+
+    closeModal() {
+        console.log('[TRACE] closeModal() 호출');
+        const modal = document.getElementById('errorModal');
+        if (modal) {
+            modal.classList.remove('active');
+            console.log('[TRACE] 모달 닫힘');
+        }
     }
 
     showSuccess(message) {
         console.log('[TRACE] showSuccess() 호출:', message);
         this.addLog(`✅ ${message}`, 'success');
+        
+        // 토스트 알림 표시
+        const toast = document.getElementById('successToast');
+        const successMessage = document.getElementById('successMessage');
+        if (toast && successMessage) {
+            successMessage.textContent = message;
+            toast.classList.add('active');
+            console.log('[TRACE] 성공 토스트 표시');
+            
+            // 3초 후 자동으로 닫기
+            setTimeout(() => {
+                toast.classList.remove('active');
+                console.log('[TRACE] 토스트 자동 닫힘');
+            }, 3000);
+        }
     }
 
     async makeRequest(url, options = {}) {

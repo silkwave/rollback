@@ -25,7 +25,7 @@ public class OrderService {
     private final InventoryService inventoryService;
     private final ShipmentService shipmentService;
 
-    // 주문 생성 처리 - 트랜잭션 경계
+    // 주문 생성 처리 - 트랜잭션 경계 
     @Transactional
     public Order create(OrderRequest req) {
         long startTime = System.currentTimeMillis();

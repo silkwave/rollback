@@ -39,7 +39,7 @@ public class FailureHandler {
             
             // 알림 발송
             notifier.sendFailure(event.getOrderId(), event.getReason());
-            
+              
             
             log.info("[ROLLBACK_HANDLER] 롤백 후 실패 이벤트 처리 완료");
             log.info("알림이 발송되었습니다 - 타입: {}, 메시지: {}", "FAILURE_NOTIFICATION", "결제 실패 알림 발송 완료");

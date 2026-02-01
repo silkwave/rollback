@@ -74,6 +74,7 @@
 - **Lombok & Slf4j** (코드 생성 및 로깅)
 - **Strategy Pattern** (재시도 전략 구현)
 - **Linear Backoff** (선형 증가 재시도)
+- **XML Mapping** (MyBatis XML 매핑 전환)
 
 ## 🚀 빠른 시작
 
@@ -188,13 +189,15 @@ Content-Type: application/json
 }
 ```
 
-#### 배송 시작
+##### 배송 시작
 ```http
 POST /api/orders/shipment/{shipmentId}/ship
 Content-Type: application/json
 
 {
-  "carrier": "CJ대한통운"
+  "trackingNumber": "CJ123456789",
+  "carrier": "CJ대한통운",
+  "estimatedDelivery": "2026-02-05"
 }
 ```
 
@@ -466,6 +469,13 @@ http://localhost:8080에 접속하여 내장된 웹 인터페이스 사용:
 - **예외 필터링**: `PaymentException`만 재시도 대상, 다른 예외는 즉시 실패 처리
 - **최대 재시도**: 5회로 설정하여 무한 재시도 방지
 
+### MyBatis XML 매핑
+- **XML 기반 매핑**: 모든 Repository가 XML 매핑으로 전환
+- **필드 이름 변환**: camelCase ↔ snake_case 자동 변환 (`productName` ↔ `product_name`)
+- **타입 변환**: `LocalDateTime` ↔ `TIMESTAMP`, `LocalDate` ↔ `DATE` 자동 처리
+- **성능 최적화**: `resultType` 명시적 지정으로 N+1 문제 방지
+- **유지보수성**: 복잡한 쿼리를 XML에서 분리 관리
+
 ### 이벤트 기반 롤백 처리
 - `@TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)`이 롤백 후 실행 보장
 - 이벤트는 롤백 전에 발행되지만 롤백 후에 실행
@@ -481,6 +491,8 @@ http://localhost:8080에 접속하여 내장된 웹 인터페이스 사용:
 1. **`throw e` 누락**: 예외를 다시 던지지 않으면 Spring이 롤백하지 않음
 2. **재시도 로직 오류**: 무한 재시도로 서버 자원 고갈 발생
 3. **잘못된 예외 필터링**: 모든 예외를 재시도 대상으로 설정하여 비즈니스 오류 반복
+4. **XML 매핑 오류**: 필드 이름 불일치로 데이터 변환 실패
+5. **resultType 누락**: N+1 문제로 성능 저하 발생
 4. **잘못된 이벤트 단계**: `AFTER_ROLLBACK` 대신 `AFTER_COMMIT` 사용
 5. **트랜잭션 전파**: 알림 영속성을 위한 `REQUIRES_NEW` 누락
 6. **비동기 설정**: 메인 애플리케이션 클래스에 `@EnableAsync` 누락
@@ -510,10 +522,10 @@ src/main/java/com/example/rollback/
 │   ├── OrderException.java          # 주문 관련 예외
 │   └── PaymentException.java        # 결제 관련 예외
 ├── repository/
-│   ├── OrderRepository.java         # 주문 MyBatis 매퍼
-│   ├── InventoryRepository.java     # 재고 MyBatis 매퍼
-│   ├── ShipmentRepository.java      # 배송 MyBatis 매퍼
-│   └── NotificationLogRepository.java # 알림 로그 매퍼
+│   ├── OrderRepository.java         # 주문 MyBatis 매퍼 (애노테이션)
+│   ├── InventoryRepository.java     # 재고 MyBatis 매퍼 (XML 매핑)
+│   ├── ShipmentRepository.java      # 배송 MyBatis 매퍼 (XML 매핑)
+│   └── NotificationLogRepository.java # 알림 로그 매퍼 (애노테이션)
 ├── retry/
 │   ├── RetryStrategy.java           # 재시도 전략 인터페이스
 │   ├── LinearBackoffRetryStrategy.java # 선형 증가 재시도 전략
@@ -533,6 +545,11 @@ src/main/java/com/example/rollback/
 └── resources/
     ├── application.yml              # 애플리케이션 설정
     ├── schema.sql                   # 데이터베이스 스키마
+    ├── mapper/
+    │   ├── OrderMapper.xml          # 주문 SQL 매핑
+    │   ├── InventoryMapper.xml      # 재고 SQL 매핑
+    │   ├── ShipmentMapper.xml        # 배송 SQL 매핑
+    │   └── NotificationLogMapper.xml # 알림 로그 SQL 매핑
     └── static/
         ├── index.html               # 웹 인터페이스
         ├── script.js                # 프론트엔드 로직

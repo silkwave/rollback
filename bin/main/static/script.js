@@ -879,6 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[TRACE] DOMContentLoaded 콜백 실행 - BankingSystem 인스턴스 생성 시작');
     try {
         window.bankingSystem = new BankingSystem();
+        window.bankingApp = window.bankingSystem; // HTML onclick 핸들러용 별칭
         console.log('[TRACE] BankingSystem 인스턴스 생성 완료, window.bankingSystem:', window.bankingSystem);
     } catch (error) {
         console.error('[TRACE] BankingSystem 인스턴스 생성 오류:', error);

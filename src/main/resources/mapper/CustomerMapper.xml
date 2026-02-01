@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.rollback.repository.CustomerRepository">
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO customers (customer_number, name, email, phone_number, date_of_birth, gender, id_number, 
+                           customer_type, risk_level, status, address, city, country, postal_code)
+        VALUES (#{customerNumber}, #{name}, #{email}, #{phoneNumber}, #{dateOfBirth}, #{gender}, #{idNumber}, 
+                #{customerType}, #{riskLevel}, #{status}, #{address}, #{city}, #{country}, #{postalCode})
+    </insert>
+
+    <select id="findById" resultType="com.example.rollback.domain.Customer">
+        SELECT id, customer_number as customerNumber, name, email, phone_number as phoneNumber, date_of_birth as dateOfBirth,
+               gender, id_number as idNumber, customer_type as customerType, risk_level as riskLevel, status,
+               address, city, country, postal_code as postalCode, created_at as createdAt, updated_at as updatedAt,
+               last_login_at as lastLoginAt
+        FROM customers
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByCustomerNumber" resultType="com.example.rollback.domain.Customer">
+        SELECT id, customer_number as customerNumber, name, email, phone_number as phoneNumber, date_of_birth as dateOfBirth,
+               gender, id_number as idNumber, customer_type as customerType, risk_level as riskLevel, status,
+               address, city, country, postal_code as postalCode, created_at as createdAt, updated_at as updatedAt,
+               last_login_at as lastLoginAt
+        FROM customers
+        WHERE customer_number = #{customerNumber}
+    </select>
+
+    <select id="findAll" resultType="com.example.rollback.domain.Customer">
+        SELECT id, customer_number as customerNumber, name, email, phone_number as phoneNumber, date_of_birth as dateOfBirth,
+               gender, id_number as idNumber, customer_type as customerType, risk_level as riskLevel, status,
+               address, city, country, postal_code as postalCode, created_at as createdAt, updated_at as updatedAt,
+               last_login_at as lastLoginAt
+        FROM customers
+        ORDER BY id DESC
+    </select>
+
+    <update id="update">
+        UPDATE customers
+        SET name = #{name},
+            email = #{email},
+            phone_number = #{phoneNumber},
+            address = #{address},
+            city = #{city},
+            country = #{country},
+            postal_code = #{postalCode},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM customers WHERE id = #{id}
+    </delete>
+
+</mapper>

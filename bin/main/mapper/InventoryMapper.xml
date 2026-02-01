@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.rollback.repository.InventoryRepository">
+
+    <!-- 전체 재고 목록 조회 -->
+    <select id="findAll" resultType="com.example.rollback.domain.Inventory">
+        SELECT id, 
+               product_name as productName, 
+               current_stock as currentStock, 
+               reserved_stock as reservedStock, 
+               min_stock_level as minStockLevel,
+               created_at as createdAt, 
+               updated_at as updatedAt
+        FROM inventory 
+        ORDER BY product_name
+    </select>
+
+    <!-- 상품명으로 재고 조회 -->
+    <select id="findByProductName" resultType="com.example.rollback.domain.Inventory">
+        SELECT id, 
+               product_name as productName, 
+               current_stock as currentStock, 
+               reserved_stock as reservedStock, 
+               min_stock_level as minStockLevel,
+               created_at as createdAt, 
+               updated_at as updatedAt
+        FROM inventory 
+        WHERE product_name = #{productName}
+    </select>
+
+    <!-- ID로 재고 조회 -->
+    <select id="findById" resultType="com.example.rollback.domain.Inventory">
+        SELECT id, 
+               product_name as productName, 
+               current_stock as currentStock, 
+               reserved_stock as reservedStock, 
+               min_stock_level as minStockLevel,
+               created_at as createdAt, 
+               updated_at as updatedAt
+        FROM inventory 
+        WHERE id = #{id}
+    </select>
+
+    <!-- 재고 생성 -->
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO inventory (
+            product_name, 
+            current_stock, 
+            reserved_stock, 
+            min_stock_level
+        ) VALUES (
+            #{productName}, 
+            #{currentStock}, 
+            #{reservedStock}, 
+            #{minStockLevel}
+        )
+    </insert>
+
+    <!-- 재고 정보 업데이트 -->
+    <update id="update">
+        UPDATE inventory SET 
+            current_stock = #{currentStock}, 
+            reserved_stock = #{reservedStock}, 
+            min_stock_level = #{minStockLevel},
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id}
+    </update>
+
+    <!-- 재고 차감 (예약 제외) -->
+    <update id="deductStock">
+        UPDATE inventory SET 
+            current_stock = current_stock - #{quantity}, 
+            reserved_stock = reserved_stock - #{quantity}, 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id} 
+        AND reserved_stock >= #{quantity} 
+        AND current_stock >= #{quantity}
+    </update>
+
+    <!-- 재고 예약 -->
+    <update id="reserveStock">
+        UPDATE inventory SET 
+            reserved_stock = reserved_stock + #{quantity}, 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id} 
+        AND (current_stock - reserved_stock) >= #{quantity}
+    </update>
+
+    <!-- 재고 예약 해제 -->
+    <update id="releaseReservation">
+        UPDATE inventory SET 
+            reserved_stock = reserved_stock - #{quantity}, 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id} 
+        AND reserved_stock >= #{quantity}
+    </update>
+
+    <!-- 재고 부족 목록 조회 -->
+    <select id="findLowStockItems" resultType="com.example.rollback.domain.Inventory">
+        SELECT id, 
+               product_name as productName, 
+               current_stock as currentStock, 
+               reserved_stock as reservedStock, 
+               min_stock_level as minStockLevel,
+               created_at as createdAt, 
+               updated_at as updatedAt
+        FROM inventory 
+        WHERE (current_stock - reserved_stock) &lt;= min_stock_level 
+        ORDER BY (current_stock - reserved_stock)
+    </select>
+
+    <!-- 특정 수량만큼 재고가 있는지 확인 -->
+    <select id="hasEnoughStock" resultType="boolean">
+        SELECT CASE 
+                   WHEN COUNT(*) > 0 AND (current_stock - reserved_stock) >= #{quantity} 
+                   THEN true 
+                   ELSE false 
+               END 
+        FROM inventory 
+        WHERE product_name = #{productName}
+    </select>
+
+</mapper>

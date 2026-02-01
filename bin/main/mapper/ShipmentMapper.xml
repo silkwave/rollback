@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.rollback.repository.ShipmentRepository">
+
+    <!-- 주문 ID로 배송 조회 -->
+    <select id="findByOrderId" resultType="com.example.rollback.domain.Shipment">
+        SELECT id, 
+               order_id as orderId, 
+               tracking_number as trackingNumber, 
+               carrier, 
+               status, 
+               shipping_address as shippingAddress, 
+               estimated_delivery as estimatedDelivery,
+               shipped_at as shippedAt, 
+               delivered_at as deliveredAt, 
+               created_at as createdAt, 
+               updated_at as updatedAt
+        FROM shipments 
+        WHERE order_id = #{orderId}
+    </select>
+
+    <!-- ID로 배송 조회 -->
+    <select id="findById" resultType="com.example.rollback.domain.Shipment">
+        SELECT id, 
+               order_id as orderId, 
+               tracking_number as trackingNumber, 
+               carrier, 
+               status, 
+               shipping_address as shippingAddress, 
+               estimated_delivery as estimatedDelivery,
+               shipped_at as shippedAt, 
+               delivered_at as deliveredAt, 
+               created_at as createdAt, 
+               updated_at as updatedAt
+        FROM shipments 
+        WHERE id = #{id}
+    </select>
+
+    <!-- 배송 생성 -->
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shipments (
+            order_id, 
+            tracking_number, 
+            carrier, 
+            status, 
+            shipping_address, 
+            estimated_delivery
+        ) VALUES (
+            #{orderId}, 
+            #{trackingNumber}, 
+            #{carrier}, 
+            #{status}, 
+            #{shippingAddress}, 
+            #{estimatedDelivery}
+        )
+    </insert>
+
+    <!-- 배송 정보 업데이트 -->
+    <update id="update">
+        UPDATE shipments SET 
+            tracking_number = #{trackingNumber}, 
+            carrier = #{carrier}, 
+            status = #{status}, 
+            shipping_address = #{shippingAddress}, 
+            estimated_delivery = #{estimatedDelivery}, 
+            shipped_at = #{shippedAt}, 
+            delivered_at = #{deliveredAt}, 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id}
+    </update>
+
+    <!-- 배송 상태 업데이트 -->
+    <update id="updateStatus">
+        UPDATE shipments SET 
+            status = #{status}, 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id}
+    </update>
+
+    <!-- 배송 시작 (운송장번호, 운송사, 배송 시작 시간 업데이트) -->
+    <update id="markAsShipped">
+        UPDATE shipments SET 
+            tracking_number = #{trackingNumber}, 
+            carrier = #{carrier}, 
+            status = 'SHIPPED', 
+            shipped_at = CURRENT_TIMESTAMP, 
+            estimated_delivery = #{estimatedDelivery}, 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id}
+    </update>
+
+    <!-- 배송 완료 -->
+    <update id="markAsDelivered">
+        UPDATE shipments SET 
+            status = 'DELIVERED', 
+            delivered_at = CURRENT_TIMESTAMP, 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id}
+    </update>
+
+    <!-- 배송 취소 -->
+    <update id="markAsCancelled">
+        UPDATE shipments SET 
+            status = 'CANCELLED', 
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{id}
+    </update>
+
+</mapper>

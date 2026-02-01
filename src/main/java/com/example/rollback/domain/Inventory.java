@@ -17,6 +17,27 @@ public class Inventory {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
+    // Additional getters for IDE support
+    public Long getId() {
+        return id;
+    }
+    
+    public Integer getReservedStock() {
+        return reservedStock;
+    }
+    
+    public Integer getCurrentStock() {
+        return currentStock;
+    }
+    
+    public void setCurrentStock(Integer currentStock) {
+        this.currentStock = currentStock;
+    }
+    
+    public void setReservedStock(Integer reservedStock) {
+        this.reservedStock = reservedStock;
+    }
+    
     // 사용 가능한 재고 계산
     public int getAvailableStock() {
         return currentStock - reservedStock;

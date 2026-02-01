@@ -3,75 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spring Boot Transaction Rollback Demo</title>
+    <title>Spring Boot Banking System Demo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/banking-style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-sync-alt"></i> Spring Boot Transaction Rollback Demo</h1>
-            <p>결제 실패 시 트랜잭션 롤백과 실패 알림 처리 예제</p>
+            <h1><i class="fas fa-university"></i> Spring Boot Banking System</h1>
+            <p>은행 계좌 관리 시스템 - 트랜잭션 롤백 및 이벤트 처리 데모</p>
         </header>
-
+        
         <main>
             <nav class="tabs">
-                <button class="tab-btn active" data-tab="orders"><i class="fas fa-shopping-cart"></i> 주문 관리</button>
-                <button class="tab-btn" data-tab="inventory"><i class="fas fa-boxes"></i> 재고 관리</button>
-                <button class="tab-btn" data-tab="shipping"><i class="fas fa-truck"></i> 배송 관리</button>
+                <button class="tab-btn active" data-tab="accounts"><i class="fas fa-piggy-bank"></i> 계좌 관리</button>
+                <button class="tab-btn" data-tab="customers"><i class="fas fa-users"></i> 고객 관리</button>
+                <button class="tab-btn" data-tab="transactions"><i class="fas fa-exchange-alt"></i> 거래 내역</button>
             </nav>
-
-            <!-- 주문 관리 탭 -->
-            <section id="orders-tab" class="tab-content active">
+            
+            <!-- 계좌 관리 탭 -->
+            <section id="accounts-tab" class="tab-content active">
                 <div class="content-grid">
-                    <div class="card order-form">
-                        <h2><i class="fas fa-plus-circle"></i> 주문 생성</h2>
-                        <form id="orderForm">
+                    <div class="card account-form">
+                        <h2><i class="fas fa-plus-circle"></i> 계좌 개설</h2>
+                        <form id="accountForm">
                             <div class="form-group">
-                                <label for="customerName">고객명</label>
-                                <input type="text" id="customerName" name="customerName" required placeholder="예: 홍길동">
-                            </div>
-                            <div class="form-group">
-                                <label for="productName">상품명</label>
-                                <select id="productName" name="productName" required>
-                                    <option value="" disabled selected>상품을 선택하세요</option>
-                                    <option value="노트북">노트북</option>
-                                    <option value="스마트폰">스마트폰</option>
-                                    <option value="태블릿">태블릿</option>
-                                    <option value="스마트워치">스마트워치</option>
-                                    <option value="이어폰">이어폰</option>
+                                <label for="customerId">고객 ID</label>
+                                <select id="customerId" name="customerId" required>
+                                    <option value="" disabled selected>고객을 선택하세요</option>
+                                    <option value="1">김철수 (CUST001)</option>
+                                    <option value="2">이영희 (CUST002)</option>
+                                    <option value="3">박상조 (CUST003)</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="quantity">수량</label>
-                                <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+                                <label for="accountType">계좌 유형</label>
+                                <select id="accountType" name="accountType" required>
+                                    <option value="" disabled selected>계좌 유형을 선택하세요</option>
+                                    <option value="CHECKING">당좌</option>
+                                    <option value="SAVINGS">예금 계좌</option>
+                                    <option value="CREDIT">신용 계좌</option>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label for="amount">금액</label>
-                                <input type="number" id="amount" name="amount" min="1000" step="100" required placeholder="예: 15000">
+                                <label for="currency">통화</label>
+                                <select id="currency" name="currency" required>
+                                    <option value="KRW" selected>KRW (원)</option>
+                                    <option value="USD">USD (달러)</option>
+                                    <option value="EUR">EUR (유로)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="initialDeposit">초기 입금액</label>
+                                <input type="number" id="initialDeposit" name="initialDeposit" min="0" step="100" placeholder="예: 100000">
                             </div>
                             <div class="form-group checkbox">
-                                <input type="checkbox" id="forceFailure" name="forcePaymentFailure">
-                                <label for="forceFailure">결제 실패 강제 발생</label>
+                                <input type="checkbox" id="forceFailure" name="forceFailure">
+                                <label for="forceFailure">거래 실패 강제 발생</label>
                             </div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-check"></i> 주문 생성</button>
+                            <button type="submit" class="btn-primary"><i class="fas fa-check"></i> 계좌 개설</button>
                         </form>
                     </div>
-
-                    <div class="card orders-list">
+                    
+                    <div class="card transaction-form">
+                        <h2><i class="fas fa-plus-circle"></i> 입금</h2>
+                        <form id="depositForm">
+                            <div class="form-group">
+                                <label for="depositAccountId">계좌 ID</label>
+                                <input type="number" id="depositAccountId" name="accountId" required placeholder="예: 1">
+                            </div>
+                            <div class="form-group">
+                                <label for="depositCustomerId">고객 ID</label>
+                                <input type="number" id="depositCustomerId" name="customerId" required placeholder="예: 1">
+                            </div>
+                            <div class="form-group">
+                                <label for="depositAmount">입금액</label>
+                                <input type="number" id="depositAmount" name="amount" min="1000" step="100" required placeholder="예: 50000">
+                            </div>
+                            <div class="form-group">
+                                <label for="depositCurrency">통화</label>
+                                <select id="depositCurrency" name="currency" required>
+                                    <option value="KRW" selected>KRW (원)</option>
+                                    <option value="USD">USD (달러)</option>
+                                    <option value="EUR">EUR (유로)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="depositDescription">설명</label>
+                                <input type="text" id="depositDescription" name="description" placeholder="예: 월급 입금">
+                            </div>
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="depositForceFailure" name="forceFailure">
+                                <label for="depositForceFailure">입금 실패 강제 발생</label>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> 입금</button>
+                        </form>
+                    </div>
+                    
+                    <div class="card transaction-form">
+                        <h2><i class="fas fa-exchange-alt"></i> 이체</h2>
+                        <form id="transferForm">
+                            <div class="form-group">
+                                <label for="fromAccountId">출금 계좌 ID</label>
+                                <input type="number" id="fromAccountId" name="fromAccountId" required placeholder="예: 1">
+                            </div>
+                            <div class="form-group">
+                                <label for="toAccountId">입금 계좌 ID</label>
+                                <input type="number" id="toAccountId" name="toAccountId" required placeholder="예: 2">
+                            </div>
+                            <div class="form-group">
+                                <label for="transferCustomerId">고객 ID</label>
+                                <input type="number" id="transferCustomerId" name="customerId" required placeholder="예: 1">
+                            </div>
+                            <div class="form-group">
+                                <label for="transferAmount">이체금액</label>
+                                <input type="number" id="transferAmount" name="amount" min="1000" step="100" required placeholder="예: 100000">
+                            </div>
+                            <div class="form-group">
+                                <label for="transferCurrency">통화</label>
+                                <select id="transferCurrency" name="currency" required>
+                                    <option value="KRW" selected>KRW (원)</option>
+                                    <option value="USD">USD (달러)</option>
+                                    <option value="EUR">EUR (유로)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transferDescription">설명</label>
+                                <input type="text" id="transferDescription" name="description" placeholder="예: 계좌 이체">
+                            </div>
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="transferForceFailure" name="forceFailure">
+                                <label for="transferForceFailure">이체 실패 강제 발생</label>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fas fa-exchange-alt"></i> 이체</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card accounts-list">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list-ul"></i> 계좌 목록</h2>
+                        <button id="refreshAccountsBtn" class="btn-icon refresh-btn" title="계좌 새로고침"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    <div class="table-container">
+                        <table id="accountsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>계좌번호</th>
+                                    <th>고객ID</th>
+                                    <th>계좌유형</th>
+                                    <th>통화</th>
+                                    <th>잔액</th>
+                                    <th>초과한도</th>
+                                    <th>상태</th>
+                                    <th>생성일</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 고객 관리 탭 -->
+            <section id="customers-tab" class="tab-content">
+                <div class="content-grid">
+                    <div class="card customer-form">
+                        <h2><i class="fas fa-user-plus"></i> 고객 등록</h2>
+                        <form id="customerForm">
+                            <div class="form-group">
+                                <label for="customerName">고객명</label>
+                                <input type="text" id="customerName" name="name" required placeholder="예: 김철수">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerEmail">이메일</label>
+                                <input type="email" id="customerEmail" name="email" required placeholder="예: user@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPhone">전화번호</label>
+                                <input type="tel" id="customerPhone" name="phoneNumber" required placeholder="예: 010-1234-5678">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerType">고객 유형</label>
+                                <select id="customerType" name="customerType" required>
+                                    <option value="" disabled selected>고객 유형을 선택하세요</option>
+                                    <option value="INDIVIDUAL">개인</option>
+                                    <option value="BUSINESS">법인</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dateOfBirth">생년월일 (개인)</label>
+                                <input type="date" id="dateOfBirth" name="dateOfBirth" placeholder="예: 1990-01-01">
+                            </div>
+                            <div class="form-group">
+                                <label for="idNumber">주민/사업자번호</label>
+                                <input type="text" id="idNumber" name="idNumber" required placeholder="예: 900101-1234567 또는 123-45-67890">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerAddress">주소</label>
+                                <textarea id="customerAddress" name="address" rows="3" placeholder="상세 주소 입력"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fas fa-user-check"></i> 고객 등록</button>
+                        </form>
+                    </div>
+                    
+                    <div class="card customers-list">
                         <div class="card-header">
-                            <h2><i class="fas fa-list-ul"></i> 주문 목록</h2>
-                            <button id="refreshBtn" class="btn-icon refresh-btn" title="목록 새로고침"><i class="fas fa-sync-alt"></i></button>
+                            <h2><i class="fas fa-users"></i> 고객 목록</h2>
+                            <button id="refreshCustomersBtn" class="btn-icon refresh-btn" title="고객 새로고침"><i class="fas fa-sync-alt"></i></button>
                         </div>
                         <div class="table-container">
-                            <table id="ordersTable">
+                            <table id="customersTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>고객명</th>
-                                        <th>상품명</th>
-                                        <th>수량</th>
-                                        <th>금액</th>
+                                        <th>고객번호</th>
+                                        <th>이름</th>
+                                        <th>이메일</th>
+                                        <th>전화번호</th>
+                                        <th>유형</th>
                                         <th>상태</th>
                                         <th>생성일</th>
                                         <th>작업</th>
@@ -84,68 +237,29 @@
                     </div>
                 </div>
             </section>
-
-            <!-- 재고 관리 탭 -->
-            <section id="inventory-tab" class="tab-content">
-                <div class="content-grid">
-                    <div class="card inventory-form">
-                        <h2><i class="fas fa-plus-circle"></i> 신규 재고 등록</h2>
-                        <form id="inventoryForm">
-                            <div class="form-group">
-                                <label for="newProductName">상품명</label>
-                                <input type="text" id="newProductName" name="productName" required placeholder="예: 무선 키보드">
-                            </div>
-                            <div class="form-group">
-                                <label for="currentStock">초기 재고</label>
-                                <input type="number" id="currentStock" name="currentStock" min="0" required placeholder="예: 100">
-                            </div>
-                            <div class="form-group">
-                                <label for="minStockLevel">최소 재고</label>
-                                <input type="number" id="minStockLevel" name="minStockLevel" min="0" value="10" placeholder="예: 10">
-                            </div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-check"></i> 재고 등록</button>
-                        </form>
-                    </div>
-
-                    <div class="card inventory-list">
-                         <div class="card-header">
-                            <h2><i class="fas fa-list-ul"></i> 재고 목록</h2>
-                            <button id="refreshInventoryBtn" class="btn-icon refresh-btn" title="재고 새로고침"><i class="fas fa-sync-alt"></i></button>
-                        </div>
-                        <div class="table-container">
-                            <table id="inventoryTable">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>상품명</th>
-                                        <th>현재고</th>
-                                        <th>예약</th>
-                                        <th>가용</th>
-                                        <th>최소</th>
-                                        <th>상태</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                 <div class="card low-stock-list full-width">
+            
+            <!-- 거래 내역 탭 -->
+            <section id="transactions-tab" class="tab-content">
+                <div class="card full-width">
                     <div class="card-header">
-                        <h2><i class="fas fa-exclamation-triangle"></i> 재고 부족 목록</h2>
-                        <button id="refreshLowStockBtn" class="btn-icon refresh-btn" title="부족 재고 새로고침"><i class="fas fa-sync-alt"></i></button>
+                        <h2><i class="fas fa-exchange-alt"></i> 거래 내역</h2>
+                        <button id="refreshTransactionsBtn" class="btn-icon refresh-btn" title="거래 내역 새로고침"><i class="fas fa-sync-alt"></i></button>
                     </div>
                     <div class="table-container">
-                        <table id="lowStockTable">
+                        <table id="transactionsTable">
                             <thead>
                                 <tr>
-                                    <th>상품명</th>
-                                    <th>현재고</th>
-                                    <th>예약</th>
-                                    <th>가용</th>
-                                    <th>최소</th>
-                                    <th>부족 수량</th>
+                                    <th>ID</th>
+                                    <th>거래번호</th>
+                                    <th>출금계좌</th>
+                                    <th>입금계좌</th>
+                                    <th>거래유형</th>
+                                    <th>금액</th>
+                                    <th>통화</th>
+                                    <th>상태</th>
+                                    <th>참조번호</th>
+                                    <th>설명</th>
+                                    <th>생성일</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -154,52 +268,7 @@
                     </div>
                 </div>
             </section>
-
-            <!-- 배송 관리 탭 -->
-            <section id="shipping-tab" class="tab-content">
-                 <div class="content-grid">
-                    <div class="card shipment-form">
-                        <h2><i class="fas fa-plus-circle"></i> 배송 생성</h2>
-                        <form id="shipmentForm">
-                            <div class="form-group">
-                                <label for="shipmentOrderId">주문 ID</label>
-                                <input type="number" id="shipmentOrderId" name="orderId" required placeholder="배송할 주문의 ID">
-                            </div>
-                            <div class="form-group">
-                                <label for="shippingAddress">배송지 주소</label>
-                                <textarea id="shippingAddress" name="shippingAddress" rows="3" required placeholder="상세 주소 입력"></textarea>
-                            </div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-check"></i> 배송 생성</button>
-                        </form>
-                    </div>
-
-                    <div class="card shipment-list">
-                        <div class="card-header">
-                             <h2><i class="fas fa-list-ul"></i> 배송 목록</h2>
-                            <button id="refreshShipmentBtn" class="btn-icon refresh-btn" title="배송 새로고침"><i class="fas fa-sync-alt"></i></button>
-                        </div>
-                        <div class="table-container">
-                            <table id="shipmentTable">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>주문 ID</th>
-                                        <th>운송장번호</th>
-                                        <th>운송사</th>
-                                        <th>상태</th>
-                                        <th>배송지</th>
-                                        <th>배송일</th>
-                                        <th>작업</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
+            
             <section class="card logs">
                 <div class="card-header">
                     <h2><i class="fas fa-file-alt"></i> 실행 로그</h2>
@@ -209,7 +278,7 @@
             </section>
         </main>
     </div>
-
-    <script src="script.js"></script>
+    
+    <script src="/script.js"></script>
 </body>
 </html>

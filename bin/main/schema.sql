@@ -104,10 +104,7 @@ CREATE TABLE IF NOT EXISTS notification_logs (
     customer_id BIGINT,
     message VARCHAR(255),
     type VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (account_id) REFERENCES accounts(id),
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id),
-    FOREIGN KEY (customer_id) REFERENCES customers(id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 초기 샘플 데이터

@@ -70,7 +70,6 @@ public class OrderController {
             // 컨텍스트 정리
             ContextHolder.clearContext();
             MDC.remove("guid");
-            MDC.remove("guid");
         }
     }
 

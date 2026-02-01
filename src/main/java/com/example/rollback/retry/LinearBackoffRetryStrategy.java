@@ -1,6 +1,7 @@
 package com.example.rollback.retry;
 
 import com.example.rollback.exception.PaymentException;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -13,13 +14,13 @@ public class LinearBackoffRetryStrategy implements RetryStrategy {
     private final int maxAttempts;
     private final long initialDelay;
     private final long increment;
-    private final Class<? extends Exception>[] retryableExceptions;
+    private final List<Class<? extends Exception>> retryableExceptions;
     
     public LinearBackoffRetryStrategy(int maxAttempts, long initialDelay, long increment) {
         this.maxAttempts = maxAttempts;
         this.initialDelay = initialDelay;
         this.increment = increment;
-        this.retryableExceptions = new Class[]{PaymentException.class};
+        this.retryableExceptions = List.of(PaymentException.class);
     }
     
     @Override

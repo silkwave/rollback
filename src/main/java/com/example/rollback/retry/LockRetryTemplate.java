@@ -1,16 +1,16 @@
 package com.example.rollback.retry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Supplier;
 
+@Slf4j
 @Component
 public class LockRetryTemplate {
-    
-    private static final Logger log = LoggerFactory.getLogger(LockRetryTemplate.class);
-    
+
+        
     private final RetryStrategy retryStrategy;
     
     public LockRetryTemplate(RetryStrategy retryStrategy) {

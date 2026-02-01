@@ -20,7 +20,7 @@ public class FailureHandler {
 
     // 롤백 완료 후 비동기적으로 이벤트 처리
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-    @Async
+    @Async 
     public void handle(OrderFailed event) {
         MDC.put("guid", event.getGuid());
         try {

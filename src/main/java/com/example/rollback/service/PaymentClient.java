@@ -2,18 +2,17 @@ package com.example.rollback.service;
 
 import com.example.rollback.exception.PaymentException;
 import com.example.rollback.retry.LockRetryTemplate;
-import com.example.rollback.retry.LinearBackoffRetryStrategy;
+
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+
 import org.springframework.stereotype.Service;
 
 // 외부 결제 시스템 클라이언트 (시뮬레이션)
+@Slf4j
 @Service
 public class PaymentClient {
-    
-    private static final Logger log = LoggerFactory.getLogger(PaymentClient.class);
-    
+   
     private final LockRetryTemplate retryTemplate;
     
     public PaymentClient(LockRetryTemplate retryTemplate) {

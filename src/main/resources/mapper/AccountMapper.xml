@@ -13,7 +13,7 @@
                account_holder_name as accountHolderName, branch_code as branchCode,
                created_at as createdAt, updated_at as updatedAt, last_transaction_at as lastTransactionAt
         FROM accounts
-        WHERE id = #{id}
+        WHERE id = #{id} FOR UPDATE NOWAIT
     </select>
 
     <select id="findByAccountNumber" resultType="com.example.rollback.domain.Account">

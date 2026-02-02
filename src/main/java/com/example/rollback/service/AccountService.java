@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.rollback.retry.LockRetryTemplate;
 
 import java.math.BigDecimal;
 
@@ -26,8 +27,8 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-    private final PaymentClient paymentClient;
     private final ApplicationEventPublisher events;
+    private final LockRetryTemplate lockRetryTemplate;
 
     // 계좌 개설
     @Transactional
@@ -56,8 +57,7 @@ public class AccountService {
                 transactionRepository.save(transaction);
 
                 try {
-                    paymentClient.processPayment(guid, transaction.getId(), request.getInitialDeposit(),
-                            request.isForceFailure());
+                    // 이전에 paymentClient.processPayment 로직이 있었으나 제거됨
                     account.deposit(request.getInitialDeposit());
                     accountRepository.updateBalance(account);
                     transaction.complete();
@@ -98,7 +98,9 @@ public class AccountService {
             log.info("입금 처리 시작 - 계좌ID: {}, 금액: {}", request.getAccountId(), request.getAmount());
 
             // 1. 계좌 확인
-            Account account = accountRepository.findById(request.getAccountId());
+            Account account = lockRetryTemplate.execute(() -> 
+                accountRepository.findById(request.getAccountId())
+            );
             if (account == null) {
                 throw new IllegalArgumentException("계좌를 찾을 수 없습니다: " + request.getAccountId());
             }
@@ -115,7 +117,7 @@ public class AccountService {
 
             // 3. 결제 처리
             try {
-                paymentClient.processPayment(guid, transaction.getId(), request.getAmount(), request.isForceFailure());
+                // 이전에 paymentClient.processPayment 로직이 있었으나 제거됨
 
                 // 4. 계좌 잔액 업데이트
                 account.deposit(request.getAmount());

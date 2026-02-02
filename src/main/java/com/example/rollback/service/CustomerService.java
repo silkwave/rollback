@@ -4,6 +4,7 @@ import com.example.rollback.domain.Customer;
 import com.example.rollback.domain.CustomerRequest;
 import com.example.rollback.repository.CustomerRepository;
 import com.example.rollback.util.ContextHolder;
+import com.example.rollback.util.IdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -29,7 +30,7 @@ public class CustomerService {
             log.info("고객 생성 시작 - 이름: {}, 유형: {}", request.getName(), request.getCustomerType());
 
             // 1. 고객번호 생성
-            String customerNumber = generateCustomerNumber();
+            String customerNumber = IdGenerator.generate("CUST");
             log.info("고객번호 생성: {}", customerNumber);
 
             // 2. 고객 생성
@@ -94,8 +95,4 @@ public class CustomerService {
         }
     }
 
-    // 고객번호 생성
-    private String generateCustomerNumber() {
-        return "CUST" + System.currentTimeMillis() + String.format("%04d", (int)(Math.random() * 10000));
-    }
 }

@@ -8,6 +8,7 @@ import com.example.rollback.event.TransactionFailed;
 import com.example.rollback.repository.AccountRepository;
 import com.example.rollback.repository.TransactionRepository;
 import com.example.rollback.util.ContextHolder;
+import com.example.rollback.util.IdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -39,7 +40,7 @@ public class AccountService {
             log.info("계좌 개설 시작 - 고객ID: {}, 유형: {}", request.getCustomerId(), request.getAccountType());
 
             // 1. 계좌번호 생성
-            String accountNumber = generateAccountNumber();
+            String accountNumber = IdGenerator.generate("ACC");
             log.info("계좌번호 생성: {}", accountNumber);
 
             // 2. 계좌 생성
@@ -143,8 +144,4 @@ public class AccountService {
         }
     }
 
-    // 계좌번호 생성
-    private String generateAccountNumber() {
-        return "ACC" + System.currentTimeMillis() + String.format("%04d", (int) (Math.random() * 10000));
-    }
 }

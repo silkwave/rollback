@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * 계좌 개설 요청 DTO 클래스
@@ -81,5 +82,22 @@ public class AccountRequest {
      */
     public String getAccountNumber() {
         return null;
+    }
+
+    /**
+     * 유효성 검사 실패 시 알림 로그 객체를 생성합니다
+     * 
+     * @param guid 요청 GUID
+     * @param errorMessage 에러 메시지
+     * @return 생성된 NotificationLog 객체
+     */
+    public NotificationLog toErrorLog(String guid, String errorMessage) {
+        NotificationLog log = new NotificationLog();
+        log.setGuid(guid);
+        log.setCustomerId(customerId);
+        log.setMessage(errorMessage);
+        log.setType("VALIDATION_ERROR");
+        log.setCreatedAt(LocalDateTime.now());
+        return log;
     }
 }

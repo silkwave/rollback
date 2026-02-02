@@ -21,6 +21,7 @@ import java.util.List;
  * @author Banking System Team
  * @version 1.0
  * @since 2026-02-02
+ * 알림 로그 데이터베이스 작업을 위한 MyBatis Mapper 인터페이스.
  */
 @Mapper
 public interface NotificationLogRepository {
@@ -70,4 +71,6 @@ public interface NotificationLogRepository {
      * @return 해당 고객의 알림 로그 목록
      */
     List<NotificationLog> findByCustomerId(@Param("customerId") Long customerId);
+
+
 }

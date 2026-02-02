@@ -11,6 +11,7 @@
 - `ThreadLocal` 및 GUID를 사용한 요청 컨텍스트 추적
 - 적절한 컨텍스트 전파를 통한 비동기 처리
 - 관심사의 명확한 분리 (MVC 패턴)
+- **중복 코드 제거를 통한 코드 품질 및 유지보수성 향상**
 
 ## 기술 스택
 
@@ -87,8 +88,8 @@
 src/main/java/com/example/rollback/
 ├── RollbackApplication.java          # 메인 애플리케이션
 ├── controller/
-│   ├── BankingController.java        # 뱅킹 REST API
-│   └── CustomerController.java       # 고객 REST API
+│   ├── BankingController.java        # 뱅킹 REST API (컨텍스트 및 예외 처리 로직 제거로 간소화됨)
+│   └── CustomerController.java       # 고객 REST API (컨텍스트 및 예외 처리 로직 제거로 간소화됨)
 ├── service/
 │   ├── AccountService.java           # 계좌 비즈니스 로직
 │   ├── CustomerService.java          # 고객 비즈니스 로직
@@ -115,12 +116,15 @@ src/main/java/com/example/rollback/
 │       └── DeadlockRetryCondition.java # 데드락 재시도 조건
 ├── util/
 │   ├── ContextHolder.java            # ThreadLocal 컨텍스트
-│   └── GuidQueueUtil.java            # GUID 생성
+│   ├── GuidQueueUtil.java            # GUID 생성
+│   └── IdGenerator.java              # 도메인별 고유 ID 생성 유틸리티
 ├── config/
 │   ├── AsyncConfig.java              # 비동기 설정
+│   ├── ContextFilter.java            # 요청 컨텍스트 및 MDC/GUID 관리 필터
 │   ├── RetryConfig.java              # 재시도 설정
 │   └── ...
 └── exception/
+    ├── GlobalExceptionHandler.java   # 전역 예외 처리기
     └── PaymentException.java         # 결제 예외
 ```
 
@@ -274,13 +278,22 @@ public RetryStrategy retryStrategy(List<RetryCondition> conditions) {
 ### 4. 컨텍스트 추적
 
 ```java
-// 요청 시작 시 컨텍스트 초기화
-ContextHolder.initializeContext(guid);
-MDC.put("guid", guid);
-
-// 동일 스레드 내 어디서든 접근 가능
-String guid = ContextHolder.getContext().getGuid();
+// 요청 시작 시 컨텍스트 초기화는 ContextFilter에서 처리됩니다.
+// MDC 및 ContextHolder는 필터에 의해 자동으로 관리됩니다.
+String guid = ContextHolder.getCurrentGuid(); // 서비스 로직 내에서 GUID 접근 예시
 ```
+
+### 5. 전역 예외 처리 및 요청 컨텍스트 관리
+
+- **`ContextFilter`**: 모든 HTTP 요청에 대해 공통적으로 GUID 생성, `MDC` 및 `ContextHolder` 초기화, 클라이언트 정보 추출 및 로깅, 그리고 요청 완료 후 컨텍스트 정리 작업을 수행합니다. 이 필터를 통해 컨트롤러의 모든 컨텍스트 관련 중복 코드가 제거되었습니다.
+- **`GlobalExceptionHandler`**: `@RestControllerAdvice`를 사용하여 애플리케이션 전반에 걸쳐 발생하는 예외(유효성 검사 실패, 비즈니스 로직 예외, 알 수 없는 서버 오류 등)를 중앙에서 처리하고, 표준화된 JSON 응답을 반환합니다. 이를 통해 컨트롤러에서 개별적으로 `try-catch` 블록을 작성하거나 `BindingResult`를 처리할 필요가 없어졌습니다.
+
+### 6. 비동기 처리
+
+- **`@EnableAsync`**와 커스텀 스레드 풀
+- 스레드 풀: 2-5개 스레드
+- 오류 처리를 위한 **`AsyncUncaughtExceptionHandler`**
+- 비동기 스레드로 컨텍스트 전파
 
 ## 시작하기
 

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.lang.NonNull;
 
 import java.util.Arrays;
 import java.util.concurrent.Executor;
@@ -43,7 +44,7 @@ public class AsyncConfig {
     public AsyncUncaughtExceptionHandler asyncUncaughtExceptionHandler() {
         return new AsyncUncaughtExceptionHandler() {
             @Override
-            public void handleUncaughtException(Throwable ex, java.lang.reflect.Method method, Object... params) {
+            public void handleUncaughtException(@NonNull Throwable ex, @NonNull java.lang.reflect.Method method, @NonNull Object... params) {
                 CtxMap context = ContextHolder.getCurrentContext();
                 String guid = context.getString("guid");
                 MDC.put("guid", guid);

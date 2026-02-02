@@ -1,88 +1,90 @@
-# ===================================================================
-# General .gitignore
-#
-# A good starting point for most projects.
-# For a project-specific file, use https://www.toptal.com/developers/gitignore
-# ===================================================================
+# IntelliJ-specific files
+.idea/
+*.iml
+*.ipr
+*.iws
 
-# Operating System Files
-# -------------------------------------------------------------------
+# Eclipse-specific files
+.project
+.classpath
+.settings/
+
+# VS Code-specific files
+.vscode/
+
+# Build artifacts
+/build/
+/out/
+.gradle/
+*.jar
+*.war
+*.ear
+*.class
+
+# Log files
+*.log
+logs/
+
+# Dependency directories
+/target/
+
+# Gradle
+.gradle
+gradle-app.setting
+!gradle/wrapper/gradle-wrapper.jar
+.apt_generated
+
+# Maven
+/target/
+
+# Operating System files
 .DS_Store
 Thumbs.db
-ehthumbs.db
-Desktop.ini
 
-# IDE and Editor Directories
-# -------------------------------------------------------------------
-.idea/
-.vscode/
-*.suo
-*.user
-*.sln.docstates
-.classpath
-.project
-.settings/
-.factorypath
+# Temporary files
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.externalNativeBuild
+.cxx
 
-# Build Artifacts and Compiled Files
-# -------------------------------------------------------------------
-/build/
-/dist/
-/out/
-/bin/
-/target/
-*.o
-*.a
-*.so
+# IDE-specific settings
+.vscode
+.settings
+nbproject
+*.form
+*.rej
+*.orig
+*.swp
+*.bak
+*.swo
+*.swn
+*.swnm
+*.swno
+*.orig
+*.rej
+*.log
 *.class
 *.jar
 *.war
 *.ear
-*.jar.original
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.exe
+*.pyc
+*.pyo
+*.pyd
+__pycache__
 
-# Dependency Directories
-# -------------------------------------------------------------------
-/node_modules/
-/vendor/
-/jspm_packages/
-
-# Log Files
-# -------------------------------------------------------------------
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Runtime Data
-# -------------------------------------------------------------------
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Sensitive Environment Variables (VERY IMPORTANT)
-# Never commit these files!
-# -------------------------------------------------------------------
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.*
-
-# Python specific
-# -------------------------------------------------------------------
-__pycache__/
-*.py[cod]
-*$py.class
-/venv/
-/env/
-/.venv/
-/.env/
-
-# Gradle specific
-# -------------------------------------------------------------------
-.gradle/
-!gradlew
-!gradlew.bat
-/gradle/wrapper/gradle-wrapper.jar
+# Project specific
+build/resolvedMainClassName

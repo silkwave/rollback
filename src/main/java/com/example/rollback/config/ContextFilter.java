@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Enumeration;
 
 /**
  * 모든 HTTP 요청을 가로채 컨텍스트 정보를 설정하고 관리하는 서블릿 필터

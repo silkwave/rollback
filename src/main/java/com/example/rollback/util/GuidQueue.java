@@ -1,5 +1,7 @@
 package com.example.rollback.util;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.*;
@@ -181,8 +183,13 @@ public class GuidQueue {
             // 1. HOSTNAME 환경 변수 (Kubernetes에서 Pod 이름으로 자동 설정됨)
             String hostname = System.getenv("HOSTNAME");
             if (hostname == null || hostname.isEmpty()) {
-                log.warn("HOSTNAME 환경 변수를 찾을 수 없습니다. 로컬 개발 환경으로 간주합니다.");
-                hostname = "localhost";
+
+                try {
+                    hostname = InetAddress.getLocalHost().getHostName();
+                } catch (UnknownHostException e) {
+                    hostname = "localhost";
+                }
+                log.warn("HOSTNAME 환경 변수를 찾을 수 없습니다. 로컬 개발 환경으로 간주합니다. [{}]", hostname);                
             }
 
             // 2. 애플리케이션 시작 시 생성되는 랜덤 UUID

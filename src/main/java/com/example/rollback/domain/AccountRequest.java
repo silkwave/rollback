@@ -92,12 +92,14 @@ public class AccountRequest {
      * @return 생성된 NotificationLog 객체
      */
     public NotificationLog toErrorLog(String guid, String errorMessage) {
-        NotificationLog log = new NotificationLog();
-        log.setGuid(guid);
-        log.setCustomerId(customerId);
-        log.setMessage(errorMessage);
-        log.setType("VALIDATION_ERROR");
-        log.setCreatedAt(LocalDateTime.now());
-        return log;
+        NotificationLog notificationLog = new NotificationLog();
+        notificationLog.setGuid(guid);
+        notificationLog.setCustomerId(customerId);
+        notificationLog.setMessage(errorMessage);
+        notificationLog.setType("VALIDATION_ERROR");
+        notificationLog.setCreatedAt(LocalDateTime.now());
+
+        log.info("유효성 검사 오류 로그 생성 - GUID: {}, 고객ID: {}, 메시지: {}", guid, customerId, errorMessage);
+        return notificationLog;
     }
 }

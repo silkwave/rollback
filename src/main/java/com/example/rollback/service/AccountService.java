@@ -19,18 +19,52 @@ import com.example.rollback.retry.LockRetryTemplate;
 
 import java.math.BigDecimal;
 
-// 은행 계좌 서비스 (핵심 트랜잭션 처리)
+/**
+ * 은행 계좌 서비스 (핵심 트랜잭션 처리)
+ * 
+ * <p>계좌 개설, 입금, 계좌 상태 관리 등 계좌와 관련된 모든 비즈니스 로직을 처리합니다.
+ * Spring의 트랜잭션 관리를 통해 ACID 속성을 보장하며, 실패 시 롤백과 이벤트 기반 알림을 처리합니다.
+ * LockRetryTemplate을 사용하여 동시성 문제를 방지합니다.</p>
+ * 
+ * <h3>주요 기능:</h3>
+ * <ul>
+ *   <li>계좌 개설 및 관리</li>
+ *   <li>입금 처리 (외부 결제 게이트웨이 연동)</li>
+ *   <li>계좌 상태 제어 (동결/활성화)</li>
+ *   <li>트랜잭션 롤백 및 실패 알림</li>
+ * </ul>
+ * 
+ * @author Banking System Team
+ * @version 1.0
+ * @since 2026-02-02
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountService {
 
+    /** 계좌 리포지토리 - 계좌 데이터 접근 */
     private final AccountRepository accountRepository;
+    
+    /** 거래 리포지토리 - 거래 내역 데이터 접근 */
     private final TransactionRepository transactionRepository;
+    
+    /** 이벤트 발행기 - 트랜잭션 실패 시 이벤트 발행 */
     private final ApplicationEventPublisher events;
+    
+    /** 락 재시도 템플릿 - 동시성 제어 및 재시도 처리 */
     private final LockRetryTemplate lockRetryTemplate;
 
-    // 계좌 개설
+    /**
+     * 새로운 은행 계좌를 개설합니다.
+     * 
+     * <p>트랜잭션 내에서 계좌번호를 생성하고 계좌를 저장한 후, 초기 거래 기록을 생성합니다.
+     * forceFailure가 true인 경우 트랜잭션을 강제로 롤백시켜 실패 시나리오를 시뮬레이션합니다.</p>
+     * 
+     * @param request 계좌 개설 요청 정보
+     * @return 생성된 계좌 정보
+     * @throws PaymentException forceFailure가 true인 경우 발생
+     */
     @Transactional
     public Account createAccount(AccountRequest request) {
         long startTime = System.currentTimeMillis();
@@ -87,7 +121,25 @@ public class AccountService {
         }
     }
 
-    // 입금 처리
+    /**
+     * 계좌에 입금을 처리합니다.
+     * 
+     * <p>계좌를 확인하고, 거래를 생성한 후, 입금을 처리합니다.
+     * LockRetryTemplate을 사용하여 동시성 문제를 방지합니다.
+     * 입금이 실패할 경우 TransactionFailed 이벤트를 발행합니다.</p>
+     * 
+     * <p><strong>처리 순서:</strong><br>
+     * 1. 계좌 존재 및 활성 상태 확인 (락으로 보호)<br>
+     * 2. 거래 생성 및 저장<br>
+     * 3. 계좌 잔액 증가<br>
+     * 4. 거래 상태를 COMPLETED로 변경</p>
+     * 
+     * @param request 입금 요청 정보 (계좌ID, 금액, 통화 등)
+     * @return 처리된 거래 정보
+     * @throws IllegalArgumentException 계좌를 찾을 수 없는 경우
+     * @throws IllegalStateException 계좌가 활성 상태가 아닌 경우
+     * @throws RuntimeException 입금 처리 실패 시
+     */
     @Transactional
     public Transaction deposit(DepositRequest request) {
         long startTime = System.currentTimeMillis();

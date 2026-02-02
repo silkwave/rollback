@@ -12,11 +12,11 @@ import java.util.function.BiFunction;
 import java.util.Objects;
 
 /**
- * CtxMap: Map<String,Object>를 래핑하여 타입-안전 접근자를 제공하는 스레드-안전 유틸리티 클래스.
+ * CtxMap: Map&lt;String,Object&gt;를 래핑하여 타입-안전 접근자를 제공하는 스레드-안전 유틸리티 클래스.
  * 실무 활용을 위해 내부적으로 ConcurrentHashMap을 사용하며, 데이터 조회 로직의 안정성을 높였습니다.
  *
- * @author Gemini
- * @since 2024-01-14
+ * @author Banking System Team
+ * @since 2026-02-02
  */
 public class CtxMap implements Serializable {
 

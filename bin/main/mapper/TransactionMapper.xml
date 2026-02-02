@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.rollback.repository.TransactionRepository">
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO transactions (guid, from_account_id, to_account_id, customer_id, transaction_type, amount, currency, description, status, reference_number)
+        VALUES (#{guid}, #{fromAccountId}, #{toAccountId}, #{customerId}, #{transactionType}, #{amount}, #{currency}, #{description}, #{status}, #{referenceNumber})
+    </insert>
+
+    <select id="findById" resultType="com.example.rollback.domain.Transaction">
+        SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
+               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
+        FROM transactions
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByGuid" resultType="com.example.rollback.domain.Transaction">
+        SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
+               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
+        FROM transactions
+        WHERE guid = #{guid}
+    </select>
+
+    <select id="findByAccountId" resultType="com.example.rollback.domain.Transaction">
+        SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
+               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
+        FROM transactions
+        WHERE from_account_id = #{accountId} OR to_account_id = #{accountId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByCustomerId" resultType="com.example.rollback.domain.Transaction">
+        SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
+               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
+        FROM transactions
+        WHERE customer_id = #{customerId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findAll" resultType="com.example.rollback.domain.Transaction">
+        SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
+               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
+        FROM transactions
+        ORDER BY created_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE transactions
+        SET status = #{status}, 
+            completed_at = CASE 
+                WHEN #{status} = 'COMPLETED' THEN CURRENT_TIMESTAMP
+                WHEN #{status} = 'FAILED' THEN CURRENT_TIMESTAMP
+                WHEN #{status} = 'CANCELLED' THEN CURRENT_TIMESTAMP
+                ELSE completed_at
+            END
+        WHERE id = #{id}
+    </update>
+
+    <update id="update">
+        UPDATE transactions
+        SET status = #{status},
+            description = #{description},
+            failure_reason = #{failureReason},
+            completed_at = CASE 
+                WHEN #{status} = 'COMPLETED' THEN CURRENT_TIMESTAMP
+                WHEN #{status} = 'FAILED' THEN CURRENT_TIMESTAMP
+                WHEN #{status} = 'CANCELLED' THEN CURRENT_TIMESTAMP
+                ELSE completed_at
+            END
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM transactions WHERE id = #{id}
+    </delete>
+
+</mapper>

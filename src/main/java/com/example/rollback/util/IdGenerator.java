@@ -16,7 +16,7 @@ public final class IdGenerator {
      * @return 생성된 고유 ID
      */
     public static String generate(String prefix) {
-        // 동시성 문제를 피하기 위해 ThreadLocalRandom 사용 고려 가능하지만,
+        // 동시성 문제를 피하기 위해 ThreadLocalRandom 사용을 고려할 수 있지만,
         // 현재 요구사항에서는 Math.random()으로도 충분합니다.
         String timePart = String.valueOf(System.currentTimeMillis());
         String randomPart = String.format("%04d", (int) (Math.random() * 10000));

@@ -1,6 +1,7 @@
-# Spring Boot 뱅킹 시스템 (트랜잭션 롤백)
+# 🏦 Spring Boot 뱅킹 시스템 (트랜잭션 롤백)
 
-스프링 부트(Spring Boot)로 구축된 포괄적인 뱅킹 시스템 데모로, 트랜잭션 롤백, 이벤트 기반 아키텍처, 최신 엔터프라이즈 자바 패턴을 시연합니다.
+> Spring Boot 3.2.0과 Java 21로 구축된 포괄적인 뱅킹 시스템 데모  
+> 트랜잭션 롤백, 이벤트 기반 아키텍처, 최신 엔터프라이즈 자바 패턴을 시연합니다.
 
 ## 개요
 
@@ -60,6 +61,7 @@
 - **`RandomBackoffRetryStrategy`**: 랜덤 지터(Jitter)를 포함한 백오프 전략을 사용하여 여러 인스턴스에서 동시에 재시도를 시작하여 발생하는 "Thundering Herd" 문제를 방지합니다.
     - 최대 재시도 횟수: 10회
     - 기본 대기 시간: 100ms
+    - 최대 대기 시간: 2000ms
 - **조건 기반 재시도 결정 (Composite Pattern)**: `RetryCondition` 인터페이스를 통해 재시도 조건을 동적으로 추가 및 조합할 수 있습니다.
     - `LockRetryCondition`: 비관적 락(Pessimistic Lock) 실패 또는 관련 DB 락 타임아웃 시 재시도합니다.
     - `DeadlockRetryCondition`: 데이터베이스 데드락 발생 시 재시도합니다.
@@ -82,23 +84,31 @@
 - 오류 처리를 위한 **`AsyncUncaughtExceptionHandler`**
 - 비동기 스레드로 컨텍스트 전파
 
+### 6. 알림 시스템
+
+- **NotificationService**: 실패 트랜잭션에 대한 알림 처리
+- **비동기 알림 전송**: 롤백 후 백그라운드에서 알림 발송
+- **알림 로깅**: 모든 알림 기록을 데이터베이스에 저장
+- **알림 조회 API**: 알림 내역 조회 및 모니터링
+
 ## 프로젝트 구조
 
 ```
 src/main/java/com/example/rollback/
 ├── RollbackApplication.java          # 메인 애플리케이션
 ├── controller/
-│   ├── BankingController.java        # 뱅킹 REST API (컨텍스트 및 예외 처리 로직 제거로 간소화됨)
-│   └── CustomerController.java       # 고객 REST API (컨텍스트 및 예외 처리 로직 제거로 간소화됨)
+│   ├── BankingController.java        # 뱅킹 REST API (140줄)
+│   └── CustomerController.java       # 고객 REST API (94줄)
 ├── service/
-│   ├── AccountService.java           # 계좌 비즈니스 로직
+│   ├── AccountService.java           # 계좌 비즈니스 로직 (149줄)
 │   ├── CustomerService.java          # 고객 비즈니스 로직
-│   ├── PaymentClient.java            # 결제 게이트웨이 시뮬레이션
-│   └── ...                           # 기타 서비스
+│   ├── NotificationService.java      # 알림 서비스
+│   └── PaymentClient.java            # 결제 게이트웨이 시뮬레이션
 ├── repository/
 │   ├── AccountRepository.java        # 데이터 접근 계층
-│   ├── CustomerRepository.java
-│   └── ...
+│   ├── CustomerRepository.java       # 고객 데이터 접근
+│   ├── TransactionRepository.java    # 거래 데이터 접근
+│   └── NotificationLogRepository.java # 알림 로그 데이터 접근
 ├── domain/
 │   ├── Account.java                  # 계좌 엔티티
 │   ├── Customer.java                 # 고객 엔티티
@@ -140,7 +150,10 @@ src/main/java/com/example/rollback/
 | `/api/banking/accounts/customer/{customerId}` | GET | 고객의 계좌 목록 조회 |
 | `/api/banking/deposit` | POST | 입금 |
 | `/api/banking/transfer` | POST | 계좌 이체 |
+| `/api/banking/accounts/{id}/freeze` | POST | 계좌 동결 |
+| `/api/banking/accounts/{id}/activate` | POST | 계좌 활성화 |
 | `/api/banking/transactions` | GET | 모든 거래 내역 조회 |
+| `/api/banking/notifications` | GET | 알림 로그 조회 |
 
 ### 고객 API (`/api/banking/customers`)
 
@@ -150,6 +163,7 @@ src/main/java/com/example/rollback/
 | `/api/banking/customers` | GET | 모든 고객 목록 조회 |
 | `/api/banking/customers/{id}` | GET | ID로 고객 조회 |
 | `/api/banking/customers/{id}` | PUT | 고객 정보 업데이트 |
+| `/api/banking/customers/{id}/suspend` | POST | 고객 정지 |
 
 ### 추가 엔드포인트
 
@@ -281,6 +295,12 @@ public RetryStrategy retryStrategy(List<RetryCondition> conditions) {
 // 요청 시작 시 컨텍스트 초기화는 ContextFilter에서 처리됩니다.
 // MDC 및 ContextHolder는 필터에 의해 자동으로 관리됩니다.
 String guid = ContextHolder.getCurrentGuid(); // 서비스 로직 내에서 GUID 접근 예시
+
+// ContextFilter는 모든 HTTP 요청에 대해 다음을 수행합니다:
+// - 고유 GUID 생성 및 MDC 설정
+// - 클라이언트 정보(IP, User-Agent) 추출 및 로깅
+// - ThreadLocal 기반 컨텍스트 관리
+// - 요청 완료 후 컨텍스트 자동 정리
 ```
 
 ### 5. 전역 예외 처리 및 요청 컨텍스트 관리
@@ -358,15 +378,34 @@ java -jar build/libs/*.jar
 
 ## 파일 통계
 
-- **총 Java 파일**: 49
-- **코드 라인 수**: 약 3,500+ (Java)
-- **프론트엔드**: HTML, CSS, JavaScript
-- **빌드 도구**: Gradle
+- **총 Java 파일**: 43개
+- **Java 코드 라인 수**: 2,659줄
+- **리소스 파일**: 8개 (HTML, CSS, JavaScript, 설정)
+- **프론트엔드**: 2,177줄 (HTML 533줄, CSS 332줄, JavaScript 896줄)
+- **빌드 도구**: Gradle 8.x
+- **데이터베이스**: H2 (인메모리, 4개 테이블)
 
 ## 라이선스
 
 이 프로젝트는 교육 및 데모 목적으로 제작되었습니다.
 
+## 기여 및 피드백
+
+이 프로젝트는 Spring Boot와 엔터프라이즈 자바 개발의 교육용 데모로 제작되었습니다. 
+버그 리포트, 기능 개선 제안, 코드 리뷰는 언제나 환영합니다.
+
+## 개발 참고사항
+
+### 트랜잭션 테스트 방법
+- 웹 UI에서 "실패 강제" 체크박스 사용
+- API 요청 시 `"forceFailure": true` 파라미터 추가
+- 롤백 후 `TransactionFailed` 이벤트 발생 및 알림 처리 확인
+
+### 모니터링 및 로깅
+- 모든 요청은 고유 GUID로 추적 가능
+- MDC를 통해 로그에 자동으로 컨텍스트 정보 포함
+- 비동기 작업에도 컨텍스트 전파 보장
+
 ---
 
-*소스 분석을 통해 종합적으로 생성됨*
+*본 README.md는 프로젝트 소스 코드 분석을 기반으로 최신 정보로 업데이트되었습니다 (2026-02-02)*

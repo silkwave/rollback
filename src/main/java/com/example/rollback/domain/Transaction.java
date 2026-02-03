@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
  *   <li>입금/출금 거래 생성</li>
  *   <li>거래 상태 관리</li>
  *   <li>거래 완료/실패/취소 처리</li>
- *   <li>참조번호 자동 생성</li>
  * </ul>
  * 
  * @author Banking System Team
@@ -56,9 +55,6 @@ public class Transaction {
     /** 거래 상태 */
     private TransactionStatus status;
     
-    /** 거래 참조번호 (외부 시스템과의 연동용) */
-    private String referenceNumber;
-    
     /** 거래 생성 일시 */
     private LocalDateTime createdAt;
     
@@ -67,33 +63,6 @@ public class Transaction {
     
     /** 거래 실패 사유 */
     private String failureReason;
-    
-    /** 거래 요청 IP 주소 (보안 로깅용) */
-    private String ipAddress;
-    
-    /** 거래 기기 정보 (모바일, 웹 등) */
-    private String deviceInfo;
-    
-    /** 거래 생성자 ID */
-    private String createdBy;
-    
-    /** 거래 승인자 ID (대규모 거래의 경우) */
-    private String approvedBy;
-    
-    /** 거래 승인 일시 */
-    private LocalDateTime approvedAt;
-    
-    /** 거래 채널 (온라인, ATM, 지점 등) */
-    private String transactionChannel;
-    
-    /** 거래 분류 (송금, 결제 등) */
-    private String transactionCategory;
-    
-    /** 거래 수수료 */
-    private java.math.BigDecimal feeAmount;
-    
-    /** 거래 후 잔액 */
-    private java.math.BigDecimal balanceAfter;
 
     /**
      * 입금 거래를 생성하는 팩토리 메서드
@@ -139,8 +108,6 @@ public class Transaction {
      * 거래를 성공적으로 완료 처리합니다
      * 
      * <p>거래 상태를 COMPLETED로 변경하고 완료 시간을 기록합니다.</p>
-     * 
-     * @return 완료된 Transaction 객체
      */
     public void complete() {
         updateTransactionStatus(TransactionStatus.COMPLETED, null,
@@ -151,7 +118,6 @@ public class Transaction {
      * 거래를 실패 처리합니다
      * 
      * @param reason 실패 사유
-     * @return 실패 처리된 Transaction 객체
      */
     public void fail(String reason) {
         updateTransactionStatus(TransactionStatus.FAILED, reason,
@@ -162,25 +128,10 @@ public class Transaction {
      * 거래를 취소 처리합니다
      * 
      * @param reason 취소 사유
-     * @return 취소된 Transaction 객체
      */
     public void cancel(String reason) {
         updateTransactionStatus(TransactionStatus.CANCELLED, reason,
                                 "거래 취소 - GUID: {}, 유형: {}, 금액: {}, 사유: {}", guid, transactionType, amount, reason);
-    }
-
-    /**
-     * 거래 참조번호를 생성하거나 반환합니다
-     * 
-     * <p>참조번호가 없는 경우에만 새로 생성합니다. 형식: TXN + 타임스탬프 + 4자리 랜덤 숫자</p>
-     * 
-     * @return 거래 참조번호
-     */
-    public String generateReferenceNumber() {
-        if (this.referenceNumber == null) {
-            this.referenceNumber = "TXN" + System.currentTimeMillis() + String.format("%04d", (int)(Math.random() * 10000));
-        }
-        return this.referenceNumber;
     }
 
     /**
@@ -231,8 +182,6 @@ public class Transaction {
         transaction.currency = currency;
         transaction.description = description;
         transaction.status = TransactionStatus.PENDING;
-        transaction.transactionChannel = "ONLINE";
-        transaction.feeAmount = java.math.BigDecimal.ZERO;
         transaction.createdAt = LocalDateTime.now();
         return transaction;
     }

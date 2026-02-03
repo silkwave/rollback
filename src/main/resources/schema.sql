@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 -- 거래 내역 테이블
 CREATE TABLE IF NOT EXISTS transactions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    guid VARCHAR(36) NOT NULL,
+    guid VARCHAR(36) NOT NULL UNIQUE,
     from_account_id BIGINT,
     to_account_id BIGINT,
     customer_id BIGINT NOT NULL,
@@ -44,30 +44,16 @@ CREATE TABLE IF NOT EXISTS transactions (
     currency VARCHAR(10) NOT NULL DEFAULT 'KRW',
     description VARCHAR(500),
     status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, COMPLETED, FAILED, CANCELLED
-    reference_number VARCHAR(50),
     failure_reason VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
-    -- 은행 거래 필드 추가
-    ip_address VARCHAR(45),
-    device_info VARCHAR(100),
-    created_by VARCHAR(50),
-    approved_by VARCHAR(50),
-    approved_at TIMESTAMP,
-    transaction_channel VARCHAR(20) DEFAULT 'ONLINE', -- ONLINE, MOBILE, ATM, BRANCH
-    transaction_category VARCHAR(30), -- TRANSFER, PAYMENT, UTILITY, LOAN, etc.
-    fee_amount DECIMAL(19,2) DEFAULT 0.00,
-    balance_after DECIMAL(19,2),
     FOREIGN KEY (from_account_id) REFERENCES accounts(id),
     FOREIGN KEY (to_account_id) REFERENCES accounts(id),
     FOREIGN KEY (customer_id) REFERENCES customers(id),
 -- 추가 제약조건
     CONSTRAINT chk_transaction_type CHECK (transaction_type IN ('DEPOSIT', 'WITHDRAWAL', 'FEE', 'INTEREST', 'PENALTY')),
     CONSTRAINT chk_transaction_status CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REVERSED')),
-    CONSTRAINT chk_amount_positive CHECK (amount > 0),
-    CONSTRAINT chk_fee_non_negative CHECK (fee_amount >= 0),
-    CONSTRAINT chk_transaction_channel CHECK (transaction_channel IN ('ONLINE', 'MOBILE', 'ATM', 'BRANCH', 'API')),
-    CONSTRAINT uk_transaction_guid UNIQUE (guid)
+    CONSTRAINT chk_amount_positive CHECK (amount > 0)
 );
 
 -- 알림 로그 테이블 (기존과 호환)
@@ -115,7 +101,4 @@ CREATE INDEX idx_transactions_created_at ON transactions(created_at);
 CREATE INDEX idx_transactions_status ON transactions(status);
 CREATE INDEX idx_transactions_type ON transactions(transaction_type);
 CREATE INDEX idx_transactions_guid ON transactions(guid);
-CREATE INDEX idx_transactions_reference ON transactions(reference_number);
 
--- 알림 로그 인덱스
-CREATE INDEX idx_notification_logs_created_at ON notification_logs(created_at);

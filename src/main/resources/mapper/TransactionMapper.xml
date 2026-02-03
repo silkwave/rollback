@@ -3,13 +3,13 @@
 <mapper namespace="com.example.rollback.repository.TransactionRepository">
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO transactions (guid, from_account_id, to_account_id, customer_id, transaction_type, amount, currency, description, status, reference_number)
-        VALUES (#{guid}, #{fromAccountId}, #{toAccountId}, #{customerId}, #{transactionType}, #{amount}, #{currency}, #{description}, #{status}, #{referenceNumber})
+        INSERT INTO transactions (guid, from_account_id, to_account_id, customer_id, transaction_type, amount, currency, description, status, failure_reason, created_at)
+        VALUES (#{guid}, #{fromAccountId}, #{toAccountId}, #{customerId}, #{transactionType}, #{amount}, #{currency}, #{description}, #{status}, #{failureReason}, #{createdAt})
     </insert>
 
     <select id="findById" resultType="com.example.rollback.domain.Transaction">
         SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
-               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               transaction_type as transactionType, amount, currency, description, status,
                failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
         FROM transactions
         WHERE id = #{id}
@@ -17,7 +17,7 @@
 
     <select id="findByGuid" resultType="com.example.rollback.domain.Transaction">
         SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
-               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               transaction_type as transactionType, amount, currency, description, status,
                failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
         FROM transactions
         WHERE guid = #{guid}
@@ -25,7 +25,7 @@
 
     <select id="findByAccountId" resultType="com.example.rollback.domain.Transaction">
         SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
-               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               transaction_type as transactionType, amount, currency, description, status,
                failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
         FROM transactions
         WHERE from_account_id = #{accountId} OR to_account_id = #{accountId}
@@ -34,7 +34,7 @@
 
     <select id="findByCustomerId" resultType="com.example.rollback.domain.Transaction">
         SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
-               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               transaction_type as transactionType, amount, currency, description, status,
                failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
         FROM transactions
         WHERE customer_id = #{customerId}
@@ -43,7 +43,7 @@
 
     <select id="findAll" resultType="com.example.rollback.domain.Transaction">
         SELECT id, guid, from_account_id as fromAccountId, to_account_id as toAccountId, customer_id as customerId,
-               transaction_type as transactionType, amount, currency, description, status, reference_number as referenceNumber,
+               transaction_type as transactionType, amount, currency, description, status,
                failure_reason as failureReason, created_at as createdAt, completed_at as completedAt
         FROM transactions
         ORDER BY created_at DESC

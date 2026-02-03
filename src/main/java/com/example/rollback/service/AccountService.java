@@ -180,7 +180,6 @@ public class AccountService {
 
                 // 2. 거래 생성
                 transaction = request.toTransaction(guid); // Assignment here
-                transaction.generateReferenceNumber();
                 transactionRepository.save(transaction);
                 log.info("거래 생성 완료 - 거래ID: {}", transaction.getId());
 

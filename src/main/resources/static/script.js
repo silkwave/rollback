@@ -667,7 +667,6 @@ class BankingSystem {
                 <td><strong>${this.formatCurrency(transaction.amount, transaction.currency)}</strong></td>
                 <td>${transaction.currency}</td>
                 <td><span class="status-badge ${this.getStatusClass(transaction.status)}">${this.getStatusText(transaction.status)}</span></td>
-                <td>${transaction.referenceNumber || "-"}</td>
                 <td>${transaction.description || "-"}</td>
                 <td>${this.formatDate(transaction.createdAt)}</td>
             `;

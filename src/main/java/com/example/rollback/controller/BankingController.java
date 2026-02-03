@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 
@@ -68,11 +67,7 @@ public class BankingController {
         Account account = accountService.createAccount(request);
         log.info("계좌 개설 성공: {}", account.getAccountNumber());
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "guid", MDC.get("guid"),
-                "message", "계좌가 성공적으로 개설되었습니다",
-                "account", account));
+        return createSuccessResponse("계좌가 성공적으로 개설되었습니다", "account", account);
     }
 
     /**
@@ -86,11 +81,7 @@ public class BankingController {
         Transaction transaction = accountService.deposit(request);
         log.info("입금 성공: {}", transaction.getGuid());
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "guid", MDC.get("guid"),
-                "message", "입금이 성공적으로 처리되었습니다",
-                "transaction", transaction));
+        return createSuccessResponse("입금이 성공적으로 처리되었습니다", "transaction", transaction);
     }
 
     /**
@@ -164,22 +155,10 @@ public class BankingController {
      */
     @PostMapping("/accounts/{id}/freeze")
     public ResponseEntity<?> freezeAccount(@PathVariable Long id) {
-        Account account = accountRepository.findById(id);
-        if (account == null) {
-            log.warn("동결할 계좌를 찾을 수 없음: {}", id);
-            return ResponseEntity.notFound().build();
-        }
-        
-        account.freeze();
-        accountRepository.update(account);
-        log.info("계좌 동결 성공: {}", account.getAccountNumber());
-        
-        return ResponseEntity.ok(Map.of(
-            "success", true,
-            "guid", MDC.get("guid"),
-            "message", "계좌가 동결되었습니다",
-            "account", account
-        ));
+        return changeAccountStatus(id, account -> {
+            account.freeze();
+            return "동결";
+        }, "계좌가 동결되었습니다");
     }
 
     /**
@@ -190,21 +169,46 @@ public class BankingController {
      */
     @PostMapping("/accounts/{id}/activate")
     public ResponseEntity<?> activateAccount(@PathVariable Long id) {
+        return changeAccountStatus(id, account -> {
+            account.activate();
+            return "활성화";
+        }, "계좌가 활성화되었습니다");
+    }
+
+    /**
+     * 성공적인 API 응답을 위한 공통 ResponseEntity를 생성합니다.
+     * @param message 응답 메시지
+     * @param dataKey 응답 본문에 포함될 데이터 객체의 키 (예: "account", "transaction")
+     * @param data 응답 본문에 포함될 데이터 객체
+     * @return 표준화된 성공 ResponseEntity
+     */
+    private ResponseEntity<Map<String, Object>> createSuccessResponse(String message, String dataKey, Object data) {
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "guid", MDC.get("guid"),
+                "message", message,
+                dataKey, data
+        ));
+    }
+
+    /**
+     * 계좌의 상태를 변경하는 공통 로직을 처리합니다.
+     * @param id 계좌 ID
+     * @param accountAction 계좌에 적용할 액션 (예: account.freeze(), account.activate()) 및 해당 액션의 로깅 메시지를 반환하는 함수
+     * @param successMessage 성공 응답에 포함될 메시지
+     * @return 처리 결과 (성공 시 변경된 계좌 정보, 실패 시 404 Not Found)
+     */
+    private ResponseEntity<?> changeAccountStatus(Long id, java.util.function.Function<Account, String> accountAction, String successMessage) {
         Account account = accountRepository.findById(id);
         if (account == null) {
-            log.warn("활성화할 계좌를 찾을 수 없음: {}", id);
+            log.warn("계좌를 찾을 수 없음: {}", id);
             return ResponseEntity.notFound().build();
         }
         
-        account.activate();
+        String actionLog = accountAction.apply(account); // Apply the action and get the log message
         accountRepository.update(account);
-        log.info("계좌 활성화 성공: {}", account.getAccountNumber());
+        log.info("계좌 {} 성공: {}", actionLog, account.getAccountNumber());
         
-        return ResponseEntity.ok(Map.of(
-            "success", true,
-            "guid", MDC.get("guid"),
-            "message", "계좌가 활성화되었습니다",
-            "account", account
-        ));
+        return createSuccessResponse(successMessage, "account", account);
     }
 }

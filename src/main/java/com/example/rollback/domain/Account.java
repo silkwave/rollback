@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 @Slf4j
 @Data
 public class Account {
+    /** 기본 월초계좌 한도 */
+    private static final java.math.BigDecimal DEFAULT_OVERDRAFT_LIMIT = new java.math.BigDecimal("1000000");
     /** 계좌 고유 ID */
     private Long id;
     
@@ -103,7 +105,7 @@ public class Account {
         account.currency = currency;
         account.balance = initialDeposit != null ? initialDeposit : java.math.BigDecimal.ZERO;
         account.overdraftLimit = accountType == AccountType.CREDIT || accountType == AccountType.BUSINESS ? 
-            new java.math.BigDecimal("1000000") : java.math.BigDecimal.ZERO;
+            DEFAULT_OVERDRAFT_LIMIT : java.math.BigDecimal.ZERO;
         account.status = AccountStatus.ACTIVE;
         account.createdAt = LocalDateTime.now();
         account.updatedAt = LocalDateTime.now();
@@ -118,8 +120,7 @@ public class Account {
         account.lastDailyReset = LocalDateTime.now();
         account.lastMonthlyReset = LocalDateTime.now();
         
-        log.info("계좌 생성됨 - 계좌번호: {}, 고객ID: {}, 유형: {}, 초기잔액: {}", 
-            accountNumber, customerId, accountType, account.balance);
+        account.logAccountActivity("생성됨 - 고객ID: {}, 유형: {}, 초기잔액: {}", customerId, accountType, account.balance);
         return account;
     }
 
@@ -130,14 +131,12 @@ public class Account {
      * @return 입금이 완료된 Account 객체 (메서드 체이닝을 위함)
      * @throws IllegalArgumentException 금액이 0 이하일 경우
      */
-    public Account deposit(java.math.BigDecimal amount) {
+    public void deposit(java.math.BigDecimal amount) {
         validateAmount(amount);
         this.balance = this.balance.add(amount);
         this.lastTransactionAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        log.info("입금 완료 - 계좌번호: {}, 금액: {}, 신규잔액: {}", 
-            accountNumber, amount, balance);
-        return this;
+        this.logAccountActivity("입금 완료 - 금액: {}, 신규잔액: {}", amount, balance);
     }
 
     /**
@@ -148,15 +147,13 @@ public class Account {
      * @throws IllegalArgumentException 금액이 0 이하일 경우
      * @throws IllegalStateException 잔액이 부족할 경우
      */
-    public Account withdraw(java.math.BigDecimal amount) {
+    public void withdraw(java.math.BigDecimal amount) {
         validateAmount(amount);
         validateSufficientFunds(amount);
         this.balance = this.balance.subtract(amount);
         this.lastTransactionAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        log.info("출금 완료 - 계좌번호: {}, 금액: {}, 신규잔액: {}", 
-            accountNumber, amount, balance);
-        return this;
+        this.logAccountActivity("출금 완료 - 금액: {}, 신규잔액: {}", amount, balance);
     }
 
     /**
@@ -167,11 +164,10 @@ public class Account {
      * 
      * @return 동결된 Account 객체
      */
-    public Account freeze() {
+    public void freeze() {
         this.status = AccountStatus.FROZEN;
         this.updatedAt = LocalDateTime.now();
-        log.info("계좌 동결 - 계좌번호: {}", accountNumber);
-        return this;
+        this.logAccountActivity("동결");
     }
 
     /**
@@ -182,11 +178,10 @@ public class Account {
      * 
      * @return 활성화된 Account 객체
      */
-    public Account activate() {
+    public void activate() {
         this.status = AccountStatus.ACTIVE;
         this.updatedAt = LocalDateTime.now();
-        log.info("계좌 활성화 - 계좌번호: {}", accountNumber);
-        return this;
+        this.logAccountActivity("활성화");
     }
 
     /**
@@ -218,6 +213,15 @@ public class Account {
      */
     public String getAccountNumber() {
         return accountNumber;
+    }
+
+    /**
+     * 계좌 관련 활동을 로깅하는 유틸리티 메서드.
+     * @param message 포맷팅된 로그 메시지.
+     * @param args 메시지에 포함될 인자들.
+     */
+    private void logAccountActivity(String message, Object... args) {
+        log.info("계좌번호: {} - " + message, this.accountNumber, args);
     }
 
     /**

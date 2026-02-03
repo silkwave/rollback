@@ -108,18 +108,8 @@ public class Transaction {
      */
     public static Transaction createDeposit(String guid, Long accountId, Long customerId,
                                           java.math.BigDecimal amount, String currency, String description) {
-        Transaction transaction = new Transaction();
-        transaction.guid = guid;
+        Transaction transaction = createBaseTransaction(guid, customerId, amount, currency, description, TransactionType.DEPOSIT);
         transaction.toAccountId = accountId;
-        transaction.customerId = customerId;
-        transaction.transactionType = TransactionType.DEPOSIT;
-        transaction.amount = amount;
-        transaction.currency = currency;
-        transaction.description = description;
-        transaction.status = TransactionStatus.PENDING;
-        transaction.transactionChannel = "ONLINE";
-        transaction.feeAmount = java.math.BigDecimal.ZERO;
-        transaction.createdAt = LocalDateTime.now();
         
         log.info("입금 거래 생성 - GUID: {}, 계좌: {}, 금액: {}", guid, accountId, amount);
         return transaction;
@@ -138,18 +128,8 @@ public class Transaction {
      */
     public static Transaction createWithdrawal(String guid, Long accountId, Long customerId,
                                                 java.math.BigDecimal amount, String currency, String description) {
-        Transaction transaction = new Transaction();
-        transaction.guid = guid;
+        Transaction transaction = createBaseTransaction(guid, customerId, amount, currency, description, TransactionType.WITHDRAWAL);
         transaction.fromAccountId = accountId;
-        transaction.customerId = customerId;
-        transaction.transactionType = TransactionType.WITHDRAWAL;
-        transaction.amount = amount;
-        transaction.currency = currency;
-        transaction.description = description;
-        transaction.status = TransactionStatus.PENDING;
-        transaction.transactionChannel = "ONLINE";
-        transaction.feeAmount = java.math.BigDecimal.ZERO;
-        transaction.createdAt = LocalDateTime.now();
         
         log.info("출금 거래 생성 - GUID: {}, 계좌: {}, 금액: {}", guid, accountId, amount);
         return transaction;
@@ -162,11 +142,9 @@ public class Transaction {
      * 
      * @return 완료된 Transaction 객체
      */
-    public Transaction complete() {
-        this.status = TransactionStatus.COMPLETED;
-        this.completedAt = LocalDateTime.now();
-        log.info("거래 완료 - GUID: {}, 유형: {}, 금액: {}", guid, transactionType, amount);
-        return this;
+    public void complete() {
+        updateTransactionStatus(TransactionStatus.COMPLETED, null,
+                                "거래 완료 - GUID: {}, 유형: {}, 금액: {}", guid, transactionType, amount);
     }
 
     /**
@@ -175,12 +153,9 @@ public class Transaction {
      * @param reason 실패 사유
      * @return 실패 처리된 Transaction 객체
      */
-    public Transaction fail(String reason) {
-        this.status = TransactionStatus.FAILED;
-        this.failureReason = reason;
-        this.completedAt = LocalDateTime.now();
-        log.info("거래 실패 - GUID: {}, 유형: {}, 금액: {}, 사유: {}", guid, transactionType, amount, reason);
-        return this;
+    public void fail(String reason) {
+        updateTransactionStatus(TransactionStatus.FAILED, reason,
+                                "거래 실패 - GUID: {}, 유형: {}, 금액: {}, 사유: {}", guid, transactionType, amount, reason);
     }
 
     /**
@@ -189,12 +164,9 @@ public class Transaction {
      * @param reason 취소 사유
      * @return 취소된 Transaction 객체
      */
-    public Transaction cancel(String reason) {
-        this.status = TransactionStatus.CANCELLED;
-        this.failureReason = reason;
-        this.completedAt = LocalDateTime.now();
-        log.info("거래 취소 - GUID: {}, 유형: {}, 금액: {}, 사유: {}", guid, transactionType, amount, reason);
-        return this;
+    public void cancel(String reason) {
+        updateTransactionStatus(TransactionStatus.CANCELLED, reason,
+                                "거래 취소 - GUID: {}, 유형: {}, 금액: {}, 사유: {}", guid, transactionType, amount, reason);
     }
 
     /**
@@ -236,5 +208,48 @@ public class Transaction {
      */
     public boolean isFailed() {
         return TransactionStatus.FAILED.equals(this.status);
+    }
+
+    /**
+     * 모든 거래 유형에 공통적인 기본 거래 객체를 생성합니다.
+     * @param guid 거래 고유 식별자
+     * @param customerId 거래를 요청한 고객 ID
+     * @param amount 거래 금액
+     * @param currency 통화 코드
+     * @param description 거래 설명
+     * @param transactionType 거래 유형
+     * @return 기본 필드가 초기화된 Transaction 객체
+     */
+    private static Transaction createBaseTransaction(String guid, Long customerId,
+                                                   java.math.BigDecimal amount, String currency,
+                                                   String description, TransactionType transactionType) {
+        Transaction transaction = new Transaction();
+        transaction.guid = guid;
+        transaction.customerId = customerId;
+        transaction.transactionType = transactionType;
+        transaction.amount = amount;
+        transaction.currency = currency;
+        transaction.description = description;
+        transaction.status = TransactionStatus.PENDING;
+        transaction.transactionChannel = "ONLINE";
+        transaction.feeAmount = java.math.BigDecimal.ZERO;
+        transaction.createdAt = LocalDateTime.now();
+        return transaction;
+    }
+
+    /**
+     * 거래의 상태를 업데이트하고 완료 시간을 기록하며, 필요에 따라 실패 사유를 설정합니다.
+     * @param newStatus 새로운 거래 상태
+     * @param reason 실패 또는 취소 사유 (필요 없는 경우 null)
+     * @param logMessage 로깅할 메시지
+     * @param logArgs 로깅 메시지의 인자
+     */
+    private void updateTransactionStatus(TransactionStatus newStatus, String reason, String logMessage, Object... logArgs) {
+        this.status = newStatus;
+        this.completedAt = LocalDateTime.now();
+        if (reason != null) {
+            this.failureReason = reason;
+        }
+        log.info(logMessage, logArgs);
     }
 }

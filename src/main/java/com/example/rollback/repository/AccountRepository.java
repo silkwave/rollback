@@ -1,6 +1,7 @@
 package com.example.rollback.repository;
 
 import com.example.rollback.domain.Account;
+import com.example.rollback.domain.AccountStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -77,7 +78,7 @@ public interface AccountRepository {
      * @param id 업데이트할 계좌의 ID
      * @param status 새로운 상태 (ACTIVE, FROZEN, CLOSED 등)
      */
-    void updateStatus(@Param("id") Long id, @Param("status") String status);
+    void updateStatus(@Param("id") Long id, @Param("status") AccountStatus status);
     
     /**
      * 계좌 정보 전체를 업데이트합니다.

@@ -126,7 +126,7 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
         
-        customer.changeStatus("SUSPENDED");
+        customer.changeStatus(Customer.CustomerStatus.SUSPENDED);
         customerRepository.update(customer);
         log.info("고객 정지 성공: {}", customer.getCustomerNumber());
         

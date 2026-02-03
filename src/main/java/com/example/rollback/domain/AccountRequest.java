@@ -49,9 +49,6 @@ public class AccountRequest {
     @NotBlank(message = "계좌주 명은 필수입니다")
     private String accountHolderName;
 
-    /** 지점 코드 (선택사항) */
-    private String branchCode;
-
     /** 초기 입금액 (선택사항) */
     private BigDecimal initialDeposit;
 
@@ -71,11 +68,6 @@ public class AccountRequest {
         AccountType accType = AccountType.valueOf(accountType.toUpperCase());
         Account account = Account.create(accountNumber, customerId, accType, currency, initialDeposit,
                 accountHolderName);
-
-        // 지점 코드가 제공된 경우 설정
-        if (branchCode != null && !branchCode.trim().isEmpty()) {
-            account.setBranchCode(branchCode);
-        }
 
         return account;
     }

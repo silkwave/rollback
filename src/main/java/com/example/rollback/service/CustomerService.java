@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.function.Supplier;
 
 /**
  * 고객 관리 서비스
@@ -50,31 +51,21 @@ public class CustomerService {
      */
     @Transactional
     public Customer createCustomer(CustomerRequest request) {
-        long startTime = System.currentTimeMillis();
         final String guid = ContextHolder.getCurrentGuid();
         MDC.put("guid", guid);
 
-        try {
-            log.info("고객 생성 시작 - 이름: {}, 유형: {}", request.getName(), request.getCustomerType());
+        return measureExecutionTime(() -> {
+            log.info("고객 생성 시작 - 이름: {}", request.getName());
 
-            // 1. 고객번호 생성
             String customerNumber = IdGenerator.generate("CUST");
             log.info("고객번호 생성: {}", customerNumber);
 
-            // 2. 고객 생성
             Customer customer = request.toCustomer(customerNumber);
             customerRepository.save(customer);
             log.info("고객 저장 완료 - ID: {}", customer.getId());
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("고객 생성 완료 - 고객번호: {}, 소요시간: {}ms", customerNumber, duration);
             return customer;
-
-        } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            log.error("고객 생성 실패 - 소요시간: {}ms, 사유: {}", duration, e.getMessage(), e);
-            throw new RuntimeException("고객 생성에 실패했습니다.", e);
-        }
+        }, "고객 생성");
     }
 
     /**
@@ -119,11 +110,10 @@ public class CustomerService {
      */
     @Transactional
     public Customer updateCustomer(Long id, CustomerRequest request) {
-        long startTime = System.currentTimeMillis();
         final String guid = ContextHolder.getCurrentGuid();
         MDC.put("guid", guid);
 
-        try {
+        return measureExecutionTime(() -> {
             log.info("고객 정보 업데이트 시작 - ID: {}", id);
 
             Customer existingCustomer = customerRepository.findById(id);
@@ -132,18 +122,33 @@ public class CustomerService {
             }
 
             // 정보 업데이트
-            existingCustomer.updateInfo(request.getEmail(), request.getPhoneNumber(), request.getAddress());
+            existingCustomer.updateInfo(request.getEmail(), request.getPhoneNumber()); // Removed address
             customerRepository.update(existingCustomer);
             log.info("고객 정보 업데이트 완료 - ID: {}", id);
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("고객 정보 업데이트 성공 - 소요시간: {}ms", duration);
             return existingCustomer;
+        }, "고객 정보 업데이트");
+    }
 
+    /**
+     * 주어진 작업을 실행하고 실행 시간을 측정하여 로깅합니다.
+     * @param <T> 작업의 반환 타입
+     * @param task 실행할 작업 (Supplier 형태)
+     * @param taskName 로깅에 사용될 작업의 이름
+     * @return 작업의 결과
+     * @throws RuntimeException 작업 실행 중 발생한 예외
+     */
+    private <T> T measureExecutionTime(java.util.function.Supplier<T> task, String taskName) {
+        long startTime = System.currentTimeMillis();
+        try {
+            T result = task.get();
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("{} 완료 - 소요시간: {}ms", taskName, duration);
+            return result;
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("고객 정보 업데이트 실패 - 소요시간: {}ms, 사유: {}", duration, e.getMessage(), e);
-            throw new RuntimeException("고객 정보 업데이트에 실패했습니다.", e);
+            log.error("{} 실패 - 소요시간: {}ms, 사유: {}", taskName, duration, e.getMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 

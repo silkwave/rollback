@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
  *   <li>계좌 생성 및 초기화</li>
  *   <li>입금 및 출금 처리</li>
  *   <li>계좌 상태 관리 (활성화, 동결 등)</li>
- *   <li>일일/월간 거래 한도 관리</li>
  * </ul>
  * 
  * @author Banking System Team
@@ -26,8 +25,6 @@ import java.time.LocalDateTime;
 @Slf4j
 @Data
 public class Account {
-    /** 기본 월초계좌 한도 */
-    private static final java.math.BigDecimal DEFAULT_OVERDRAFT_LIMIT = new java.math.BigDecimal("1000000");
     /** 계좌 고유 ID */
     private Long id;
     
@@ -46,9 +43,6 @@ public class Account {
     /** 현재 계좌 잔액 */
     private java.math.BigDecimal balance;
     
-    /** 월초계좌 한도 (신용카드, 법인계좌에만 적용) */
-    private java.math.BigDecimal overdraftLimit;
-    
     /** 계좌 상태 (활성, 동결, 폐쇄, 정지) */
     private AccountStatus status;
     
@@ -61,29 +55,8 @@ public class Account {
     /** 마지막 거래 일시 */
     private LocalDateTime lastTransactionAt;
     
-    /** 일일 거래 한도 */
-    private java.math.BigDecimal dailyTransactionLimit;
-    
-    /** 월간 거래 한도 */
-    private java.math.BigDecimal monthlyTransactionLimit;
-    
-    /** 당일 누적 거래 금액 */
-    private java.math.BigDecimal dailyTransactionAmount;
-    
-    /** 당월 누적 거래 금액 */
-    private java.math.BigDecimal monthlyTransactionAmount;
-    
-    /** 일일 한도 마지막 초기화 일시 */
-    private LocalDateTime lastDailyReset;
-    
-    /** 월간 한도 마지막 초기화 일시 */
-    private LocalDateTime lastMonthlyReset;
-    
     /** 계좌주 성명 */
     private String accountHolderName;
-    
-    /** 지점 코드 */
-    private String branchCode;
 
     /**
      * 새로운 계좌를 생성하는 팩토리 메서드
@@ -104,21 +77,12 @@ public class Account {
         account.accountType = accountType;
         account.currency = currency;
         account.balance = initialDeposit != null ? initialDeposit : java.math.BigDecimal.ZERO;
-        account.overdraftLimit = accountType == AccountType.CREDIT || accountType == AccountType.BUSINESS ? 
-            DEFAULT_OVERDRAFT_LIMIT : java.math.BigDecimal.ZERO;
         account.status = AccountStatus.ACTIVE;
         account.createdAt = LocalDateTime.now();
         account.updatedAt = LocalDateTime.now();
         account.lastTransactionAt = LocalDateTime.now();
         
-        // 은행 시스템 기본값 설정
         account.accountHolderName = accountHolderName;
-        account.dailyTransactionLimit = new java.math.BigDecimal("1000000");
-        account.monthlyTransactionLimit = new java.math.BigDecimal("5000000");
-        account.dailyTransactionAmount = java.math.BigDecimal.ZERO;
-        account.monthlyTransactionAmount = java.math.BigDecimal.ZERO;
-        account.lastDailyReset = LocalDateTime.now();
-        account.lastMonthlyReset = LocalDateTime.now();
         
         account.logAccountActivity("생성됨 - 고객ID: {}, 유형: {}, 초기잔액: {}", customerId, accountType, account.balance);
         return account;
@@ -128,7 +92,6 @@ public class Account {
      * 계좌에 입금을 처리합니다
      * 
      * @param amount 입금할 금액 (0보다 커야 함)
-     * @return 입금이 완료된 Account 객체 (메서드 체이닝을 위함)
      * @throws IllegalArgumentException 금액이 0 이하일 경우
      */
     public void deposit(java.math.BigDecimal amount) {
@@ -143,7 +106,6 @@ public class Account {
      * 계좌에서 출금을 처리합니다
      * 
      * @param amount 출금할 금액 (0보다 커야 함)
-     * @return 출금이 완료된 Account 객체 (메서드 체이닝을 위함)
      * @throws IllegalArgumentException 금액이 0 이하일 경우
      * @throws IllegalStateException 잔액이 부족할 경우
      */
@@ -161,8 +123,6 @@ public class Account {
      * 
      * <p>동결된 계좌는 입출금이 제한됩니다. 보안 상의 이유나
      * 법적 요청으로 인해 계좌를 임시 정지할 때 사용합니다.</p>
-     * 
-     * @return 동결된 Account 객체
      */
     public void freeze() {
         this.status = AccountStatus.FROZEN;
@@ -175,8 +135,6 @@ public class Account {
      * 
      * <p>동결 또는 정지 상태였던 계좌를 다시 정상적인 입출금이
      * 가능한 상태로 되돌립니다.</p>
-     * 
-     * @return 활성화된 Account 객체
      */
     public void activate() {
         this.status = AccountStatus.ACTIVE;
@@ -187,14 +145,13 @@ public class Account {
     /**
      * 계좌에 충분한 잔액이 있는지 확인합니다
      * 
-     * <p>월초계좌 한도를 포함하여 출금 가능한지 판단합니다.
-     * 현재 잔액 + 월초계좌 한도 >= 요청 금액</p>
+     * <p>현재 잔액 >= 요청 금액</p>
      * 
      * @param amount 확인할 금액
      * @return 출금 가능하면 true, 불가능하면 false
      */
     public boolean hasSufficientFunds(java.math.BigDecimal amount) {
-        return balance.add(overdraftLimit).compareTo(amount) >= 0;
+        return balance.compareTo(amount) >= 0; // Simplified
     }
 
     /**
@@ -248,6 +205,4 @@ public class Account {
                 String.format("잔액이 부족합니다. 잔액: %s, 출금요청: %s", balance, amount));
         }
     }
-
-
 }

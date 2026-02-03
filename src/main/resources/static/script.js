@@ -477,10 +477,10 @@ class BankingSystem {
         row.innerHTML = `
                     <td>${account.id || "-"}</td>
                     <td><strong>${account.accountNumber || "-"}</strong></td>
-                    <td>${account.accountHolderName || "-"}</td>
+                    <td>${account.customerId || "-"}</td> <!-- Changed from accountHolderName -->
                     <td><span class="status-badge ${this.getStatusClass(accountType)}">${this.getStatusText(accountType)}</span></td>
-                    <td><strong>${this.formatCurrency(account.balance || 0, account.currency || "KRW")}</strong></td>
                     <td>${account.currency || "KRW"}</td>
+                    <td><strong>${this.formatCurrency(account.balance || 0, account.currency || "KRW")}</strong></td>
                     <td><span class="status-badge ${this.getStatusClass(status)}">${this.getStatusText(status)}</span></td>
                     <td>${account.createdAt ? this.formatDate(account.createdAt) : "-"}</td>
                     <td>${this.getAccountActions(account)}</td>
@@ -767,7 +767,7 @@ class BankingSystem {
 
       console.log("[TRACE] 고객 등록 데이터:", data);
       this.addLog(
-        `👤 고객 등록 요청 - ${data.name} (${data.customerType})`,
+        `👤 고객 등록 요청 - ${data.name}`,
         "info",
       );
 
@@ -833,10 +833,8 @@ class BankingSystem {
                 <td>${customer.id}</td>
                 <td><strong>${customer.customerNumber}</strong></td>
                 <td>${customer.name}</td>
-                <td>${customer.phoneNumber}</td>
                 <td>${customer.email}</td>
-                <td><span class="status-badge ${this.getStatusClass(customer.customerType)}">${this.getStatusText(customer.customerType)}</span></td>
-                <td><span class="status-badge">${this.getStatusText(customer.riskLevel)}</span></td>
+                <td>${customer.phoneNumber}</td>
                 <td><span class="status-badge ${this.getStatusClass(customer.status)}">${this.getStatusText(customer.status)}</span></td>
                 <td>${this.formatDate(customer.createdAt)}</td>
                 <td>
@@ -902,7 +900,7 @@ class BankingSystem {
       const accounts = Array.from(rows)
         .map((row, index) => {
           const cells = row.querySelectorAll("td");
-          if (cells.length < 7) {
+          if (cells.length < 9) {
             console.warn(
               `[DEBUG] 행 ${index}에 셀이 부족함: ${cells.length}개`,
             );

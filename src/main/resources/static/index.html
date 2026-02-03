@@ -59,10 +59,6 @@
                                 <input type="text" id="accountHolderName" name="accountHolderName" required placeholder="예: 홍길동">
                             </div>
                             <div class="form-group">
-                                <label for="branchCode">지점 코드 (선택)</label>
-                                <input type="text" id="branchCode" name="branchCode" placeholder="예: 001">
-                            </div>
-                            <div class="form-group">
                                 <label for="initialDeposit">초기 입금액</label>
                                 <input type="number" id="initialDeposit" name="initialDeposit" min="0" step="100" placeholder="예: 100000">
                             </div>
@@ -125,7 +121,6 @@
                                     <th>계좌유형</th>
                                     <th>통화</th>
                                     <th>잔액</th>
-                                    <th>초과한도</th>
                                     <th>상태</th>
                                     <th>생성일</th>
                                     <th>작업</th>
@@ -156,26 +151,6 @@
                                 <label for="customerPhone">전화번호</label>
                                 <input type="tel" id="customerPhone" name="phoneNumber" required placeholder="예: 010-1234-5678">
                             </div>
-                            <div class="form-group">
-                                <label for="customerType">고객 유형</label>
-                                <select id="customerType" name="customerType" required>
-                                    <option value="" disabled selected>고객 유형을 선택하세요</option>
-                                    <option value="INDIVIDUAL">개인</option>
-                                    <option value="BUSINESS">법인</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="dateOfBirth">생년월일 (개인)</label>
-                                <input type="date" id="dateOfBirth" name="dateOfBirth" placeholder="예: 1990-01-01">
-                            </div>
-                            <div class="form-group">
-                                <label for="idNumber">주민/사업자번호</label>
-                                <input type="text" id="idNumber" name="idNumber" required placeholder="예: 900101-1234567 또는 123-45-67890">
-                            </div>
-                            <div class="form-group">
-                                <label for="customerAddress">주소</label>
-                                <textarea id="customerAddress" name="address" rows="3" placeholder="상세 주소 입력"></textarea>
-                            </div>
                             <button type="submit" class="btn-primary"><i class="fas fa-user-check"></i> 고객 등록</button>
                         </form>
                     </div>
@@ -188,18 +163,16 @@
                         <div class="table-container">
                             <table id="customersTable">
                                 <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>고객번호</th>
-                                        <th>이름</th>
-                                        <th>이메일</th>
-                                        <th>전화번호</th>
-                                        <th>유형</th>
-                                        <th>상태</th>
-                                        <th>생성일</th>
-                                        <th>작업</th>
-                                    </tr>
-                                </thead>
+                                                                    <tr>
+                                                                        <th>ID</th>
+                                                                        <th>고객번호</th>
+                                                                        <th>이름</th>
+                                                                        <th>이메일</th>
+                                                                        <th>전화번호</th>
+                                                                        <th>상태</th>
+                                                                        <th>생성일</th>
+                                                                        <th>작업</th>
+                                                                    </tr>                                </thead>
                                 <tbody>
                                 </tbody>
                             </table>

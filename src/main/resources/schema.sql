@@ -5,24 +5,11 @@ CREATE TABLE IF NOT EXISTS customers (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
-    date_of_birth DATE,
-    gender VARCHAR(10),
-    id_number VARCHAR(50),
-    customer_type VARCHAR(20) DEFAULT 'INDIVIDUAL', -- INDIVIDUAL, BUSINESS
-    risk_level VARCHAR(20) DEFAULT 'LOW', -- LOW, MEDIUM, HIGH
     status VARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, SUSPENDED, CLOSED
-    address VARCHAR(500),
-    city VARCHAR(100),
-    country VARCHAR(100),
-    postal_code VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    last_login_at TIMESTAMP,
     -- 추가 제약조건
-    CONSTRAINT chk_customer_type CHECK (customer_type IN ('INDIVIDUAL', 'BUSINESS')),
-    CONSTRAINT chk_risk_level CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH')),
-    CONSTRAINT chk_customer_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'CLOSED')),
-    CONSTRAINT chk_email_format CHECK (email LIKE '%_@_%.%')
+    CONSTRAINT chk_customer_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'CLOSED'))
 );
 
 -- 계좌 테이블
@@ -30,31 +17,19 @@ CREATE TABLE IF NOT EXISTS accounts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     account_number VARCHAR(30) NOT NULL UNIQUE,
     customer_id BIGINT NOT NULL,
-    account_type VARCHAR(20) NOT NULL, -- CHECKING, SAVINGS, CREDIT
+    account_type VARCHAR(20) NOT NULL, -- CHECKING, SAVINGS, CREDIT, BUSINESS
     currency VARCHAR(10) NOT NULL DEFAULT 'KRW',
     balance DECIMAL(19,2) NOT NULL DEFAULT 0.00,
-    overdraft_limit DECIMAL(19,2) NOT NULL DEFAULT 0.00,
     status VARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, FROZEN, CLOSED, SUSPENDED
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_transaction_at TIMESTAMP,
-    -- 은행 시스템 필드 추가
-    daily_transaction_limit DECIMAL(19,2) DEFAULT 1000000.00,
-    monthly_transaction_limit DECIMAL(19,2) DEFAULT 5000000.00,
-    daily_transaction_amount DECIMAL(19,2) DEFAULT 0.00,
-    monthly_transaction_amount DECIMAL(19,2) DEFAULT 0.00,
-    last_daily_reset TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_monthly_reset TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     account_holder_name VARCHAR(100) NOT NULL,
-    branch_code VARCHAR(10),
     FOREIGN KEY (customer_id) REFERENCES customers(id),
     -- 추가 제약조건
     CONSTRAINT chk_account_type CHECK (account_type IN ('CHECKING', 'SAVINGS', 'CREDIT', 'BUSINESS')),
     CONSTRAINT chk_account_status CHECK (status IN ('ACTIVE', 'FROZEN', 'CLOSED', 'SUSPENDED')),
-    CONSTRAINT chk_balance_non_negative CHECK (balance >= 0),
-    CONSTRAINT chk_overdraft_limit CHECK (overdraft_limit >= 0),
-    CONSTRAINT chk_daily_limit_positive CHECK (daily_transaction_limit >= 0),
-    CONSTRAINT chk_monthly_limit_positive CHECK (monthly_transaction_limit >= 0)
+    CONSTRAINT chk_balance_non_negative CHECK (balance >= 0)
 );
 
 -- 거래 내역 테이블
@@ -107,3 +82,40 @@ CREATE TABLE IF NOT EXISTS notification_logs (
 -- 알림 로그 인덱스
 CREATE INDEX idx_notification_logs_created_at ON notification_logs(created_at);
 
+-- 초기 샘플 데이터
+INSERT INTO customers (customer_number, name, email, phone_number) VALUES 
+('CUST001', '김철수', 'kimcheolsu@example.com', '010-1234-5678'),
+('CUST002', '이영희', 'leeyounghee@example.com', '010-2345-6789'),
+('CUST003', '박상조', 'sangjo@example.com', '010-3456-7890');
+
+INSERT INTO accounts (account_number, customer_id, account_type, currency, balance, account_holder_name) VALUES 
+('ACC001', 1, 'CHECKING', 'KRW', 1000000.00, '김철수'),
+('ACC002', 1, 'SAVINGS', 'KRW', 5000000.00, '김철수'),
+('ACC003', 2, 'CHECKING', 'KRW', 2000000.00, '이영희'),
+('ACC004', 3, 'BUSINESS', 'KRW', 10000000.00, '박상조');
+
+-- 성능 최적화를 위한 인덱스 생성
+-- 고객 관련 인덱스
+CREATE INDEX idx_customers_customer_number ON customers(customer_number);
+CREATE INDEX idx_customers_email ON customers(email);
+CREATE INDEX idx_customers_status ON customers(status);
+
+-- 계좌 관련 인덱스
+CREATE INDEX idx_accounts_customer_id ON accounts(customer_id);
+CREATE INDEX idx_accounts_account_number ON accounts(account_number);
+CREATE INDEX idx_accounts_status ON accounts(status);
+CREATE INDEX idx_accounts_account_type ON accounts(account_type);
+CREATE INDEX idx_accounts_created_at ON accounts(created_at);
+
+-- 거래 관련 인덱스
+CREATE INDEX idx_transactions_from_account ON transactions(from_account_id);
+CREATE INDEX idx_transactions_to_account ON transactions(to_account_id);
+CREATE INDEX idx_transactions_customer ON transactions(customer_id);
+CREATE INDEX idx_transactions_created_at ON transactions(created_at);
+CREATE INDEX idx_transactions_status ON transactions(status);
+CREATE INDEX idx_transactions_type ON transactions(transaction_type);
+CREATE INDEX idx_transactions_guid ON transactions(guid);
+CREATE INDEX idx_transactions_reference ON transactions(reference_number);
+
+-- 알림 로그 인덱스
+CREATE INDEX idx_notification_logs_created_at ON notification_logs(created_at);

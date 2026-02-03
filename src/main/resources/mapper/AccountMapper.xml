@@ -3,14 +3,14 @@
 <mapper namespace="com.example.rollback.repository.AccountRepository">
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO accounts (account_number, customer_id, account_type, currency, balance, overdraft_limit, status, account_holder_name, branch_code)
-        VALUES (#{accountNumber}, #{customerId}, #{accountType}, #{currency}, #{balance}, #{overdraftLimit}, #{status}, #{accountHolderName}, #{branchCode})
+        INSERT INTO accounts (account_number, customer_id, account_type, currency, balance, status, account_holder_name)
+        VALUES (#{accountNumber}, #{customerId}, #{accountType}, #{currency}, #{balance}, #{status}, #{accountHolderName})
     </insert>
 
     <select id="findById" resultType="com.example.rollback.domain.Account">
         SELECT id, account_number as accountNumber, customer_id as customerId, account_type as accountType, 
-               currency, balance, overdraft_limit as overdraftLimit, status, 
-               account_holder_name as accountHolderName, branch_code as branchCode,
+               currency, balance, status, 
+               account_holder_name as accountHolderName,
                created_at as createdAt, updated_at as updatedAt, last_transaction_at as lastTransactionAt
         FROM accounts
         WHERE id = #{id} FOR UPDATE NOWAIT
@@ -18,8 +18,8 @@
 
     <select id="findByAccountNumber" resultType="com.example.rollback.domain.Account">
         SELECT id, account_number as accountNumber, customer_id as customerId, account_type as accountType, 
-               currency, balance, overdraft_limit as overdraftLimit, status, 
-               account_holder_name as accountHolderName, branch_code as branchCode,
+               currency, balance, status, 
+               account_holder_name as accountHolderName,
                created_at as createdAt, updated_at as updatedAt, last_transaction_at as lastTransactionAt
         FROM accounts
         WHERE account_number = #{accountNumber}
@@ -27,8 +27,8 @@
 
     <select id="findByCustomerId" resultType="com.example.rollback.domain.Account">
         SELECT id, account_number as accountNumber, customer_id as customerId, account_type as accountType, 
-               currency, balance, overdraft_limit as overdraftLimit, status, 
-               account_holder_name as accountHolderName, branch_code as branchCode,
+               currency, balance, status, 
+               account_holder_name as accountHolderName,
                created_at as createdAt, updated_at as updatedAt, last_transaction_at as lastTransactionAt
         FROM accounts
         WHERE customer_id = #{customerId}
@@ -37,8 +37,8 @@
 
     <select id="findAll" resultType="com.example.rollback.domain.Account">
         SELECT id, account_number as accountNumber, customer_id as customerId, account_type as accountType, 
-               currency, balance, overdraft_limit as overdraftLimit, status, 
-               account_holder_name as accountHolderName, branch_code as branchCode,
+               currency, balance, status, 
+               account_holder_name as accountHolderName,
                created_at as createdAt, updated_at as updatedAt, last_transaction_at as lastTransactionAt
         FROM accounts
         ORDER BY id DESC
@@ -63,10 +63,8 @@
         SET account_type = #{accountType},
             currency = #{currency},
             balance = #{balance},
-            overdraft_limit = #{overdraftLimit},
             status = #{status},
             account_holder_name = #{accountHolderName},
-            branch_code = #{branchCode},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>

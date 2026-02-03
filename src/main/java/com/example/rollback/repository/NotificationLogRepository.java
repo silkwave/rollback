@@ -48,29 +48,7 @@ public interface NotificationLogRepository {
      */
     List<NotificationLog> findAll();
     
-    /**
-     * 특정 계좌와 관련된 알림 로그를 조회합니다.
-     * 
-     * @param accountId 계좌 ID
-     * @return 해당 계좌의 알림 로그 목록
-     */
-    List<NotificationLog> findByAccountId(@Param("accountId") Long accountId);
-    
-    /**
-     * 특정 거래와 관련된 알림 로그를 조회합니다.
-     * 
-     * @param transactionId 거래 ID
-     * @return 해당 거래의 알림 로그 목록
-     */
-    List<NotificationLog> findByTransactionId(@Param("transactionId") Long transactionId);
-    
-    /**
-     * 특정 고객과 관련된 알림 로그를 조회합니다.
-     * 
-     * @param customerId 고객 ID
-     * @return 해당 고객의 알림 로그 목록
-     */
-    List<NotificationLog> findByCustomerId(@Param("customerId") Long customerId);
+
 
 
 }

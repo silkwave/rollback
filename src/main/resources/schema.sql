@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (from_account_id) REFERENCES accounts(id),
     FOREIGN KEY (to_account_id) REFERENCES accounts(id),
     FOREIGN KEY (customer_id) REFERENCES customers(id),
-    -- 추가 제약조건
+-- 추가 제약조건
     CONSTRAINT chk_transaction_type CHECK (transaction_type IN ('DEPOSIT', 'WITHDRAWAL', 'FEE', 'INTEREST', 'PENALTY')),
     CONSTRAINT chk_transaction_status CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REVERSED')),
     CONSTRAINT chk_amount_positive CHECK (amount > 0),
@@ -99,53 +99,11 @@ CREATE TABLE IF NOT EXISTS transactions (
 CREATE TABLE IF NOT EXISTS notification_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     guid VARCHAR(36),
-    account_id BIGINT,
-    transaction_id BIGINT,
-    customer_id BIGINT,
-    message VARCHAR(255),
+    message VARCHAR(1000),
     type VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 초기 샘플 데이터
-INSERT INTO customers (customer_number, name, email, phone_number, date_of_birth, id_number, customer_type, address, city, country, postal_code) VALUES 
-('CUST001', '김철수', 'kimcheolsu@example.com', '010-1234-5678', '1990-01-15', '900101-1234567', 'INDIVIDUAL', '서울시 강남구 테헤란로 123', '서울', '대한민국', '06123'),
-('CUST002', '이영희', 'leeyounghee@example.com', '010-2345-6789', '1985-05-20', '850501-2345678', 'INDIVIDUAL', '서울시 서초구 강남대로 456', '서울', '대한민국', '06456'),
-('CUST003', '박상조', 'sangjo@example.com', '010-3456-7890', NULL, '123-45-67890', 'BUSINESS', '서울시 종로구 세종대로 789', '서울', '대한민국', '03123');
-
-INSERT INTO accounts (account_number, customer_id, account_type, currency, balance, overdraft_limit, account_holder_name) VALUES 
-('ACC001', 1, 'CHECKING', 'KRW', 1000000.00, 0.00, '김철수'),
-('ACC002', 1, 'SAVINGS', 'KRW', 5000000.00, 0.00, '김철수'),
-('ACC003', 2, 'CHECKING', 'KRW', 2000000.00, 500000.00, '이영희'),
-('ACC004', 3, 'BUSINESS', 'KRW', 10000000.00, 2000000.00, '박상조');
-
--- 성능 최적화를 위한 인덱스 생성
--- 고객 관련 인덱스
-CREATE INDEX idx_customers_customer_number ON customers(customer_number);
-CREATE INDEX idx_customers_email ON customers(email);
-CREATE INDEX idx_customers_status ON customers(status);
-CREATE INDEX idx_customers_risk_level ON customers(risk_level);
-
--- 계좌 관련 인덱스
-CREATE INDEX idx_accounts_customer_id ON accounts(customer_id);
-CREATE INDEX idx_accounts_account_number ON accounts(account_number);
-CREATE INDEX idx_accounts_status ON accounts(status);
-CREATE INDEX idx_accounts_account_type ON accounts(account_type);
-CREATE INDEX idx_accounts_created_at ON accounts(created_at);
-
--- 거래 관련 인덱스
-CREATE INDEX idx_transactions_from_account ON transactions(from_account_id);
-CREATE INDEX idx_transactions_to_account ON transactions(to_account_id);
-CREATE INDEX idx_transactions_customer ON transactions(customer_id);
-CREATE INDEX idx_transactions_created_at ON transactions(created_at);
-CREATE INDEX idx_transactions_status ON transactions(status);
-CREATE INDEX idx_transactions_type ON transactions(transaction_type);
-CREATE INDEX idx_transactions_guid ON transactions(guid);
-CREATE INDEX idx_transactions_reference ON transactions(reference_number);
-
 -- 알림 로그 인덱스
-CREATE INDEX idx_notification_logs_account_id ON notification_logs(account_id);
-CREATE INDEX idx_notification_logs_transaction_id ON notification_logs(transaction_id);
-CREATE INDEX idx_notification_logs_customer_id ON notification_logs(customer_id);
 CREATE INDEX idx_notification_logs_created_at ON notification_logs(created_at);
 

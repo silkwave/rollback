@@ -97,14 +97,13 @@ public class AccountRequest {
      * @return 생성된 NotificationLog 객체
      */
     public NotificationLog toErrorLog(String guid, String errorMessage) {
-        NotificationLog notificationLog = new NotificationLog();
-        notificationLog.setGuid(guid);
-        notificationLog.setCustomerId(customerId);
-        notificationLog.setMessage(errorMessage);
-        notificationLog.setType("VALIDATION_ERROR");
-        notificationLog.setCreatedAt(LocalDateTime.now());
+        // Embed customerId into the message
+        String fullMessage = String.format("고객ID: %d - %s", customerId, errorMessage);
+        
+        // Use the constructor that takes guid, message, and type
+        NotificationLog notificationLog = new NotificationLog(guid, fullMessage, NotificationLog.NotificationType.FAILURE);
 
-        log.info("유효성 검사 오류 로그 생성 - GUID: {}, 고객ID: {}, 메시지: {}", guid, customerId, errorMessage);
+        log.info("유효성 검사 오류 로그 생성 - GUID: {}, 고객ID: {}, 메시지: {}", guid, customerId, fullMessage);
         return notificationLog;
     }
 }

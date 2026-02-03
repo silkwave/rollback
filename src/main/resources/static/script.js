@@ -728,9 +728,6 @@ class BankingSystem {
       row.innerHTML = `
                 <td>${notification.id}</td>
                 <td><strong>${notification.guid || "-"}</strong></td>
-                <td>${notification.accountId || "-"}</td>
-                <td>${notification.transactionId || "-"}</td>
-                <td>${notification.customerId || "-"}</td>
                 <td>${notification.message || "-"}</td>
                 <td><span class="status-badge ${this.getNotificationStatusClass(notification.type)}">${this.getNotificationStatusText(notification.type)}</span></td>
                 <td>${this.formatDate(notification.createdAt)}</td>

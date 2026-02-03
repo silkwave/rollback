@@ -34,17 +34,8 @@ public class NotificationLog {
     /** 알림 고유 식별자 (GUID) */
     private String guid;
     
-    /** 관련 계좌 ID */
-    private Long accountId;
-    
-    /** 관련 거래 ID */
-    private Long transactionId;
-    
-    /** 관련 고객 ID */
-    private Long customerId;
-    
     /** 관련 주문 ID */
-    private Long orderId;
+    private Long orderId; // Keep this one
     
     /** 알림 메시지 내용 */
     private String message;
@@ -59,43 +50,35 @@ public class NotificationLog {
      * 주문용 알림 로그를 생성합니다 (하위 호환성 유지)
      * 
      * @param guid 알림 고유 식별자
-     * @param accountId 관련 계좌 ID
      * @param orderId 관련 주문 ID
-     * @param message 알림 메시지
+     * @param message 알림 메시지 (관련 ID 정보 포함)
      * @param type 알림 타입
      */
-    public NotificationLog(String guid, Long accountId, Long orderId, String message, NotificationType type) {
+    public NotificationLog(String guid, Long orderId, String message, NotificationType type) {
         this.guid = guid;
-        this.accountId = accountId;
         this.orderId = orderId;
-        this.transactionId = null;
         this.message = message;
         this.type = type.name();
         this.createdAt = LocalDateTime.now();
         
-        log.info("알림 로그 생성 - GUID: {}, 계좌ID: {}, 주문ID: {}, 타입: {}", guid, accountId, orderId, type);
+        log.info("알림 로그 생성 - GUID: {}, 주문ID: {}, 타입: {}, 메시지: {}", guid, orderId, type, message);
     }
 
     /**
      * 거래용 알림 로그를 생성합니다
      * 
      * @param guid 알림 고유 식별자
-     * @param accountId 관련 계좌 ID
-     * @param transactionId 관련 거래 ID
-     * @param message 알림 메시지
+     * @param message 알림 메시지 (관련 ID 정보 포함)
      * @param type 알림 타입
-     * @param isTransaction 거래용 생성 여부 (구분용)
      */
-    public NotificationLog(String guid, Long accountId, Long transactionId, String message, NotificationType type, boolean isTransaction) {
+    public NotificationLog(String guid, String message, NotificationType type) {
         this.guid = guid;
-        this.accountId = accountId;
-        this.orderId = null;
-        this.transactionId = transactionId;
+        this.orderId = null; // No orderId for transaction-related logs by default
         this.message = message;
         this.type = type.name();
         this.createdAt = LocalDateTime.now();
         
-        log.info("알림 로그 생성 - GUID: {}, 계좌ID: {}, 거래ID: {}, 타입: {}", guid, accountId, transactionId, type);
+        log.info("알림 로그 생성 - GUID: {}, 타입: {}, 메시지: {}", guid, type, message);
     }
     
     /**
@@ -119,7 +102,6 @@ public class NotificationLog {
          * <p>일반적인 정보 전달 목적의 알림입니다.</p>
          */
         INFO, 
-        
         /**
          * 경고 알림
          * <p>주의가 필요한 상황에 대한 알림입니다.</p>

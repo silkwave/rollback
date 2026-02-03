@@ -3,45 +3,19 @@
 <mapper namespace="com.example.rollback.repository.NotificationLogRepository">
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO notification_logs (guid, account_id, transaction_id, customer_id, message, type)
-        VALUES (#{guid}, #{accountId}, #{transactionId}, #{customerId}, #{message}, #{type})
+        INSERT INTO notification_logs (guid, message, type)
+        VALUES (#{guid}, #{message}, #{type})
     </insert>
 
     <select id="findById" resultType="com.example.rollback.domain.NotificationLog">
-        SELECT id, guid, account_id as accountId, transaction_id as transactionId,
-               customer_id as customerId, message, type, created_at as createdAt
+        SELECT id, guid, message, type, created_at as createdAt
         FROM notification_logs
         WHERE id = #{id}
     </select>
 
     <select id="findAll" resultType="com.example.rollback.domain.NotificationLog">
-        SELECT id, guid, account_id as accountId, transaction_id as transactionId,
-               customer_id as customerId, message, type, created_at as createdAt
+        SELECT id, guid, message, type, created_at as createdAt
         FROM notification_logs
-        ORDER BY created_at DESC
-    </select>
-
-    <select id="findByAccountId" resultType="com.example.rollback.domain.NotificationLog">
-        SELECT id, guid, account_id as accountId, transaction_id as transactionId,
-               customer_id as customerId, message, type, created_at as createdAt
-        FROM notification_logs
-        WHERE account_id = #{accountId}
-        ORDER BY created_at DESC
-    </select>
-
-    <select id="findByTransactionId" resultType="com.example.rollback.domain.NotificationLog">
-        SELECT id, guid, account_id as accountId, transaction_id as transactionId,
-               customer_id as customerId, message, type, created_at as createdAt
-        FROM notification_logs
-        WHERE transaction_id = #{transactionId}
-        ORDER BY created_at DESC
-    </select>
-
-    <select id="findByCustomerId" resultType="com.example.rollback.domain.NotificationLog">
-        SELECT id, guid, account_id as accountId, transaction_id as transactionId,
-               customer_id as customerId, message, type, created_at as createdAt
-        FROM notification_logs
-        WHERE customer_id = #{customerId}
         ORDER BY created_at DESC
     </select>
 

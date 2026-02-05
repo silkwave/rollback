@@ -2,7 +2,6 @@ package com.example.rollback.retry.strategy;
 
 import com.example.rollback.retry.RetryStrategy;
 import lombok.extern.slf4j.Slf4j;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -10,20 +9,21 @@ import java.util.concurrent.ThreadLocalRandom;
  * 
  * <p>이 클래스는 RetryStrategy 인터페이스를 구현하여, 랜덤 백오프 알고리즘을 
  * 사용한 지능적인 재시도 정책을 제공합니다. 전략 패턴의 구체적인 전략 구현체이며,
- * 컴포지트 패턴을 활용하여 여러 재시도 조건을 조합할 수 있습니다.</p>
+ * 단일 RetryCondition 객체를 활용하여 재시도 조건을 판단합니다.</p>
  * 
  * <p><strong>랜덤 백오프란?</strong></p>
  * <p>재시도 간격을 랜덤하게 증가시키는 기법으로, 다음과 같은 이점이 있습니다:</p>
  * <ul>
  *   <li><strong>썬더링 헤드 방지:</strong> 여러 클라이언트가 동시에 재시도하는 것을 방지</li>
- *   <li><strong>부하 분산:</strong> 시스템에 가해지는 부하를 시간적으로 분산</li>
+ *   <li><strong>부하 분산:</b> 시스템에 가해지는 부하를 시간적으로 분산</li>
  *   <li><strong>적응성:</strong> 실패 횟수에 따라 점진적으로 대기 시간 증가</li>
  * </ul>
  * 
- * <p><strong>컴포지트 패턴 활용:</strong></p>
- * <p>여러 RetryCondition을 리스트로 받아 처리함으로써, 복잡한 재시도 규칙을
- * 유연하게 구성할 수 있습니다. 예를 들어 락 충돌, 데드락, 네트워크 타임아웃 등
- * 다양한 조건을 조합하여 사용할 수 있습니다.</p>
+ * <p><strong>RetryCondition 통합:</strong></p>
+ * <p>기존에 여러 RetryCondition을 리스트로 받아 처리하던 방식에서, 이제는
+ * LockRetryCondition과 DeadlockRetryCondition의 기능이 통합된 단일
+ * RetryCondition 객체를 통해 재시도 여부를 판단합니다. 이로써 재시도 조건 로직이
+ * 한 곳으로 집중되어 관리됩니다.</p>
  * 
  * <p><strong>대기 시간 계산 공식:</strong></p>
  * <pre>{@code
@@ -42,23 +42,21 @@ import java.util.concurrent.ThreadLocalRandom;
  * <pre>{@code
  * // Spring Configuration에서 설정
  * @Bean
- * public RetryStrategy retryStrategy(List<RetryCondition> conditions) {
- *     return new RandomBackoffRetryStrategy(5, 200, 500, 3000, conditions);
+ * public RetryStrategy retryStrategy(RetryCondition retryCondition) {
+ *     return new RandomBackoffRetryStrategy(5, 200, 500, 3000, retryCondition);
  * }
  * 
  * // 또는 기본 설정 사용
  * @Bean
- * public RetryStrategy retryStrategy(List<RetryCondition> conditions) {
- *     return new RandomBackoffRetryStrategy(conditions);
+ * public RetryStrategy retryStrategy(RetryCondition retryCondition) {
+ *     return new RandomBackoffRetryStrategy(retryCondition);
  * }
  * }</pre>
  * 
  * @author Rollback Team
  * @since 1.0
  * @see RetryStrategy 재시도 전략 인터페이스
- * @see RetryCondition 재시도 조건 인터페이스
- * @see LockRetryCondition 락 충돌 조건
- * @see DeadlockRetryCondition 데드락 조건
+ * @see RetryCondition 재시도 조건 클래스
  */
 @Slf4j
 public class RandomBackoffRetryStrategy implements RetryStrategy {
@@ -75,8 +73,8 @@ public class RandomBackoffRetryStrategy implements RetryStrategy {
     /** 최대 대기 시간 (밀리초) */
     private final long maxWaitMs;
     
-    /** 재시도 조건 리스트 (컴포지트 패턴) */
-    private final List<RetryCondition> conditions;
+    /** 재시도 조건 */
+    private final RetryCondition retryCondition;
 
     /**
      * 기본 설정값으로 RandomBackoffRetryStrategy를 생성하는 생성자
@@ -89,10 +87,10 @@ public class RandomBackoffRetryStrategy implements RetryStrategy {
      *   <li>최대 대기 시간: 2000ms</li>
      * </ul>
      * 
-     * @param conditions 재시도 조건 리스트
+     * @param retryCondition 재시도 조건 객체
      */
-    public RandomBackoffRetryStrategy(List<RetryCondition> conditions) {
-        this(10, 100, 200, 2000, conditions);
+    public RandomBackoffRetryStrategy(RetryCondition retryCondition) {
+        this(10, 100, 200, 2000, retryCondition);
     }
 
     /**
@@ -102,17 +100,16 @@ public class RandomBackoffRetryStrategy implements RetryStrategy {
      * @param baseWaitMs 기본 대기 시간 (밀리초)
      * @param maxJitterMs 최대 랜덤 지터 시간 (밀리초)
      * @param maxWaitMs 최대 대기 시간 (밀리초)
-     * @param conditions 재시도 조건 리스트
+     * @param retryCondition 재시도 조건 객체
      */
     public RandomBackoffRetryStrategy(int maxRetries, long baseWaitMs, long maxJitterMs, 
-                                     long maxWaitMs, List<RetryCondition> conditions) {
+                                     long maxWaitMs, RetryCondition retryCondition) {
         this.maxRetries = maxRetries;
         this.baseWaitMs = baseWaitMs;
         this.maxJitterMs = maxJitterMs;
         this.maxWaitMs = maxWaitMs;
-        this.conditions = conditions;
-        log.info("RandomBackoffRetryStrategy 활성화 (최대 재시도: {}회, 적용된 조건: {}개)", 
-                maxRetries, conditions.size());
+        this.retryCondition = retryCondition;
+        log.info("RandomBackoffRetryStrategy 활성화 (최대 재시도: {}회)", maxRetries);
     }
 
     /**
@@ -121,10 +118,8 @@ public class RandomBackoffRetryStrategy implements RetryStrategy {
      * <p>재시도 여부는 다음과 같은 순서로 판단됩니다:</p>
      * <ol>
      *   <li>최대 재시도 횟수 초과 여부 확인</li>
-     *   <li>등록된 모든 RetryCondition 중 하나라도 true를 반환하면 재시도</li>
+     *   <li>등록된 RetryCondition 객체가 true를 반환하면 재시도</li>
      * </ol>
-     * 
-     * <p>컴포지트 패턴을 활용하여 여러 조건을 OR 논리로 조합합니다.</p>
      * 
      * @param e 발생한 예외
      * @param attemptCount 현재까지의 시도 횟수 (1부터 시작)
@@ -137,8 +132,8 @@ public class RandomBackoffRetryStrategy implements RetryStrategy {
             return false;
         }
         
-        // 등록된 조건 중 하나라도 만족하면 재시도 (컴포지트 패턴)
-        boolean shouldRetry = conditions.stream().anyMatch(c -> c.isRetryable(e));
+        // 통합된 RetryCondition 객체를 통해 재시도 여부 판단
+        boolean shouldRetry = retryCondition.isRetryable(e);
         
         if (shouldRetry) {
             log.debug("재시도 조건 만족 - {} (시도 횟수: {}/{})", 

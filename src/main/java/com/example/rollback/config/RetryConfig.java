@@ -6,7 +6,7 @@ import com.example.rollback.retry.strategy.RandomBackoffRetryStrategy;
 import com.example.rollback.retry.strategy.RetryCondition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.util.List;
+import org.springframework.transaction.PlatformTransactionManager; // PlatformTransactionManager import 추가
 
 /**
  * 재시도(Retry) 관련 기능을 위한 Spring 설정 클래스
@@ -44,14 +44,13 @@ public class RetryConfig {
      * <p>랜덤 백오프 전략은 여러 노드가 동시에 재시도할 때
      * 발생하는 '썬더링 허드' 현상을 방지하고 시스템 안정성을 향상시킵니다.</p>
      * 
-     * @param conditions Spring 컨텍스트에 등록된 모든 재시도 조건 목록.
-     *                  각 조건은 특정 예외나 상황에서 재시도 여부를 결정합니다.
+     * @param retryCondition 재시도 조건 객체. LockRetryCondition과 DeadlockRetryCondition의 기능이 통합되어 있습니다.
      * @return 설정된 랜덤 백오프 재시도 전략 객체
      */
     @Bean
-    public RetryStrategy retryStrategy(List<RetryCondition> conditions) {
+    public RetryStrategy retryStrategy(RetryCondition retryCondition) {
         // 10번 재시도, 기본 100ms 대기, 최대 200ms 지터, 최대 2000ms 대기
-        return new RandomBackoffRetryStrategy(10, 100, 200, 2000, conditions);
+        return new RandomBackoffRetryStrategy(10, 100, 200, 2000, retryCondition);
     }
 
     /**
@@ -71,10 +70,11 @@ public class RetryConfig {
      * 
      * @param retryStrategy 앞서 정의된 재시도 전략 빈.
      *                     락 획득 실패 시의 재시도 로직에 사용됩니다.
+     * @param transactionManager 트랜잭션 관리자. 재시도 시 새로운 트랜잭션을 시작하는 데 사용됩니다.
      * @return 설정된 분산 락 재시도 템플릿 객체
      */
     @Bean
-    public LockRetryTemplate lockRetryTemplate(RetryStrategy retryStrategy) {
-        return new LockRetryTemplate(retryStrategy);
+    public LockRetryTemplate lockRetryTemplate(RetryStrategy retryStrategy, PlatformTransactionManager transactionManager) {
+        return new LockRetryTemplate(retryStrategy, transactionManager);
     }
 }

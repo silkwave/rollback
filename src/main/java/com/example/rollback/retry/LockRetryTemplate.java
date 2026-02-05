@@ -1,6 +1,11 @@
 package com.example.rollback.retry;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +20,7 @@ import java.util.function.Supplier;
  * <p><strong>주요 기능:</strong></p>
  * <ul>
  *   <li>주입된 RetryStrategy를 통해 재시도 여부와 대기 시간 결정</li>
+ *   <li>{@link PlatformTransactionManager}를 활용하여 새로운 트랜잭션 컨텍스트에서 작업 실행</li>
  *   <li>인터럽트 처리를 통한 안전한 스레드 관리</li>
  *   <li>상세한 로깅을 통한 디버깅 및 모니터링 지원</li>
  * </ul>
@@ -30,6 +36,7 @@ import java.util.function.Supplier;
  * 
  * @see RetryStrategy 재시도 전략 인터페이스
  * @see com.example.rollback.retry.strategy.RandomBackoffRetryStrategy 랜덤 백오프 전략 구현체
+ * @see PlatformTransactionManager 트랜잭션 관리자
  */
 @Slf4j
 @Component
@@ -40,13 +47,21 @@ public class LockRetryTemplate {
      * 전략 패턴(Strategy Pattern)을 통해 재시도 방식을 유연하게 변경할 수 있습니다.
      */
     private final RetryStrategy retryStrategy;
+
+    /**
+     * 주입된 트랜잭션 관리자
+     * 재시도 시 새로운 트랜잭션을 시작하기 위해 사용됩니다.
+     */
+    private final PlatformTransactionManager transactionManager;
     
     /**
      * LockRetryTemplate 생성자
      * @param retryStrategy 재시도 전략 객체 (예: RandomBackoffRetryStrategy)
+     * @param transactionManager 트랜잭션 관리자
      */
-    public LockRetryTemplate(RetryStrategy retryStrategy) {
+    public LockRetryTemplate(RetryStrategy retryStrategy, PlatformTransactionManager transactionManager) {
         this.retryStrategy = retryStrategy;
+        this.transactionManager = transactionManager;
     }
     
     /**
@@ -54,6 +69,7 @@ public class LockRetryTemplate {
      * 
      * <p>이 메서드는 템플릿 메서드 패턴을 구현하여 다음과 같은 순서로 작업을 처리합니다:</p>
      * <ol>
+     *   <li>매 시도마다 새로운 트랜잭션(REQUIRES_NEW)을 시작</li>
      *   <li>전달된 작업(action)을 실행</li>
      *   <li>예외가 발생하면 RetryStrategy를 통해 재시도 여부 판단</li>
      *   <li>재시도가 필요하면 지정된 대기 시간만큼 대기 후 재시도</li>
@@ -70,17 +86,37 @@ public class LockRetryTemplate {
         
         while (true) {
             attempt++;
+            
+            TransactionStatus status = null;
             try {
-                log.debug("작업 실행 시도: {}", attempt);
-                return action.get();
+                // 새로운 트랜잭션 시작 (REQUIRES_NEW)
+                DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+                def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                status = transactionManager.getTransaction(def);
+
+                log.debug("작업 실행 시도: {} (새로운 트랜잭션 시작)", attempt);
+                T result = action.get();
+                
+                transactionManager.commit(status); // 성공 시 커밋
+                return result;
                 
             } catch (Exception e) {
+                if (status != null && !status.isCompleted()) {
+                    try {
+                        transactionManager.rollback(status); // 실패 시 롤백
+                    } catch (Exception rollbackEx) {
+                        log.warn("트랜잭션 롤백 실패: {}", rollbackEx.getMessage(), rollbackEx);
+                        // 롤백 실패는 이미 커넥션이 broken 상태일 가능성이 높으므로,
+                        // 재시도를 위해 예외를 무시하고 계속 진행합니다.
+                    }
+                }
+                
                 log.warn("작업 실패 (시도: {}): {}", attempt, e.getMessage());
                 
                 if (retryStrategy.shouldRetry(e, attempt)) {
                     long waitTime = retryStrategy.getWaitTime(attempt);
-                    log.info("재시도 대기: {}ms (시도: {}/{}), 예외: {}", 
-                        waitTime, attempt, 5, e.getClass().getSimpleName());
+                    log.info("재시도 대기: {}ms (시도: {}), 예외: {}", 
+                        waitTime, attempt, e.getClass().getSimpleName());
                     
                     try {
                         Thread.sleep(waitTime);

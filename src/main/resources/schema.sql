@@ -98,7 +98,7 @@ COMMENT ON COLUMN transactions.completed_at IS '거래 처리 완료 일시';
 CREATE TABLE IF NOT EXISTS notification_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY, -- 알림 로그 고유 ID
     guid VARCHAR(36), -- 알림 관련 GUID (예: 거래 GUID)
-    message VARCHAR(1000), -- 알림 메시지 내용 (관련 ID 정보 포함)
+    message VARCHAR(4000), -- 알림 메시지 내용 (관련 ID 정보 포함)
     type VARCHAR(50), -- 알림 유형 (SUCCESS, FAILURE, INFO, WARNING)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- 알림 생성 일시
 );

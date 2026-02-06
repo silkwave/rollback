@@ -251,7 +251,8 @@ public class AccountService {
             events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
                     transaction.getId(), e.getMessage()));
         } else {
-            // If transaction is null, we can't update its status or publish event with transaction ID
+            // If transaction is null, we can't update its status or publish event with
+            // transaction ID
             // Log a more generic error or just re-throw
             events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
                     null, e.getMessage())); // Pass null for transactionId if not available

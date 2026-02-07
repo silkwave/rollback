@@ -30,10 +30,10 @@ public class GuidQueueUtil {
             String guid = guidQueue.getGUID();
             log.debug("큐에서 GUID를 성공적으로 가져왔습니다: {}", guid);
             return guid;
-        } catch (InterruptedException e) {
-            log.error("GUID를 큐에서 가져오는 중 인터럽트 발생", e);
+        } catch (InterruptedException ex) {
+            log.error("GUID를 큐에서 가져오는 중 인터럽트 발생", ex.getClass().getSimpleName());
             Thread.currentThread().interrupt();
-            throw new RuntimeException("GUID 생성 중 인터럽트 발생", e);
+            throw new RuntimeException("GUID 생성 중 인터럽트 발생", ex);
         }
 
     }

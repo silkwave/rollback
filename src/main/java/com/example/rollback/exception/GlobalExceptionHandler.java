@@ -137,7 +137,7 @@ public class GlobalExceptionHandler {
         String guid = MDC.get("guid");
         String message = "서버 내부 오류가 발생했습니다: " + ex.getMessage();
 
-        log.error("[GUID: {}] 처리되지 않은 예외 발생", guid, ex);
+        log.error("[GUID: {}] 처리되지 않은 예외 발생", guid, ex.getClass().getSimpleName());
 
         Map<String, Object> body = Map.of(
                 "success", false,
@@ -182,7 +182,7 @@ public class GlobalExceptionHandler {
         String guid = MDC.get("guid");
         String message = "요청 처리 중 오류가 발생했습니다: " + ex.getMessage();
 
-        log.warn("[GUID: {}] 비즈니스 로직 예외 발생: {}", guid, message, ex);
+        log.warn("[GUID: {}] 비즈니스 로직 예외 발생: {}", guid, message, ex.getClass().getSimpleName());
 
         Map<String, Object> body = Map.of(
                 "success", false,

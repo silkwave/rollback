@@ -33,7 +33,7 @@ public interface RetryStrategy {
      * @param attemptCount 현재까지의 시도 횟수 (1부터 시작)
      * @return 재시도해야 하면 true, 그렇지 않으면 false
      */
-    boolean shouldRetry(Exception e, int attemptCount);
+    boolean shouldRetry(Exception ex, int attemptCount);
     
     /**
      * 다음 재시도까지의 대기 시간을 계산합니다.

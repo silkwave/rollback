@@ -5,6 +5,7 @@ import com.example.rollback.domain.AccountRequest;
 import com.example.rollback.domain.DepositRequest;
 import com.example.rollback.domain.Transaction;
 import com.example.rollback.event.TransactionFailed;
+import com.example.rollback.exception.PaymentException;
 import com.example.rollback.repository.AccountRepository;
 import com.example.rollback.repository.TransactionRepository;
 import com.example.rollback.util.ContextHolder;
@@ -123,8 +124,8 @@ public class AccountService {
                 transactionRepository.updateStatus(transaction.getId(), "COMPLETED");
 
                 log.info("초기 입금 완료 - 계좌: {}, 금액: {}", account.getAccountNumber(), request.getInitialDeposit());
-            } catch (Exception e) {
-                handleTransactionFailure(transaction, e, "초기 입금 처리", "초기 입금");
+            } catch (Exception ex) {
+                handleTransactionFailure(transaction, ex, "초기 입금 처리", "초기 입금");
             }
         }
     }
@@ -199,8 +200,8 @@ public class AccountService {
                         account.getAccountNumber(), request.getAmount());
                 return transaction;
 
-            } catch (Exception e) {
-                handleTransactionFailure(transaction, e, "입금 처리", "입금");
+            } catch (Exception ex) {
+                handleTransactionFailure(transaction, ex, "입금 처리", "입금");
                 throw new IllegalStateException(
                         "Unreachable code - handleTransactionFailure should have thrown an exception.");
             }
@@ -223,10 +224,10 @@ public class AccountService {
             long duration = System.currentTimeMillis() - startTime;
             log.info("{} 완료 - 소요시간: {}ms", taskName, duration);
             return result;
-        } catch (Exception e) {
+        } catch (Exception ex) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("{} 실패 - 소요시간: {}ms, 사유: {}", taskName, duration, e.getMessage(), e);
-            throw new RuntimeException(e); // Supplier가 Exception을 던질 수 없으므로 RuntimeException으로 래핑
+            log.error("{} 실패 - 소요시간: {}ms", taskName, duration, ex.getClass().getSimpleName());
+            throw new RuntimeException(ex); // Supplier가 Exception을 던질 수 없으므로 RuntimeException으로 래핑
         }
     }
 
@@ -240,24 +241,24 @@ public class AccountService {
      * @param transactionType 실패한 트랜잭션의 타입 (예: "입금", "초기 입금")
      * @throws RuntimeException 트랜잭션 실패를 알리는 런타임 예외
      */
-    private void handleTransactionFailure(Transaction transaction, Exception e, String contextMessage,
+    private void handleTransactionFailure(Transaction transaction, Exception ex, String contextMessage,
             String transactionType) {
         String transactionId = (transaction != null) ? String.valueOf(transaction.getId()) : "N/A";
-        log.error("{} 처리 실패 - 거래ID: {}, 사유: {}", transactionType, transactionId, e.getMessage(), e);
+        log.error("{} 처리 실패 - 거래ID: {}", transactionType, transactionId, ex.getClass().getSimpleName());
 
         if (transaction != null) {
-            transaction.fail(transactionType + " 처리 실패: " + e.getMessage());
+            transaction.fail(transactionType + " 처리 실패: " + ex.getMessage());
             transactionRepository.updateStatus(transaction.getId(), "FAILED");
             events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
-                    transaction.getId(), e.getMessage()));
+                    transaction.getId(), ex.getClass().getSimpleName()));
         } else {
             // If transaction is null, we can't update its status or publish event with
             // transaction ID
             // Log a more generic error or just re-throw
             events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
-                    null, e.getMessage())); // Pass null for transactionId if not available
+                    null, ex.getClass().getSimpleName())); // Pass null for transactionId if not available
         }
-        throw new RuntimeException(contextMessage + "에 실패했습니다.", e);
+        throw new RuntimeException(contextMessage + "에 실패했습니다.", ex);
     }
 
     /**

@@ -80,8 +80,8 @@ public class TransactionFailureHandler {
             log.info("[TRANSACTION_ROLLBACK_HANDLER] 롤백 후 거래 실패 이벤트 처리 완료");
             log.info("알림이 발송되었습니다 - 타입: {}, 메시지: {}", "TRANSACTION_FAILURE_NOTIFICATION", "거래 실패 알림 발송 완료");
             
-        } catch (Exception e) {
-            log.error("거래 실패 이벤트 처리 중 예외 발생: {}", e.getMessage(), e);
+        } catch (Exception ex) {
+            log.error("거래 실패 이벤트 처리 중 예외 발생", ex.getClass().getSimpleName());
         } finally {
             // 컨텍스트 정리 - 메모리 누수 방지
             ContextHolder.clearContext();

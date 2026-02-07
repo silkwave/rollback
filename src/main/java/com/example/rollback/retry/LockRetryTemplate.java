@@ -98,23 +98,23 @@ public class LockRetryTemplate {
                 transactionManager.commit(status); // 성공 시 커밋
                 return result;
                 
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 if (status != null && !status.isCompleted()) {
                     try {
                         transactionManager.rollback(status); // 실패 시 롤백
                     } catch (Exception rollbackEx) {
-                        log.warn("트랜잭션 롤백 실패: {}", rollbackEx.getMessage(), rollbackEx);
+                        log.warn("트랜잭션 롤백 실패: {}", rollbackEx.getClass().getSimpleName());
                         // 롤백 실패는 이미 커넥션이 broken 상태일 가능성이 높으므로,
                         // 재시도를 위해 예외를 무시하고 계속 진행합니다.
                     }
                 }
                 
-                log.warn("작업 실패 (시도: {}): {}", attempt, e.getMessage());
+                log.warn("작업 실패 (시도: {}): {}", attempt, ex.getClass().getSimpleName());
                 
-                if (retryStrategy.shouldRetry(e, attempt)) {
+                if (retryStrategy.shouldRetry(ex, attempt)) {
                     long waitTime = retryStrategy.getWaitTime(attempt);
                     log.info("재시도 대기: {}ms (시도: {}), 예외: {}", 
-                        waitTime, attempt, e.getClass().getSimpleName());
+                        waitTime, attempt, ex.getClass().getSimpleName());
                     
                     try {
                         Thread.sleep(waitTime);
@@ -126,8 +126,8 @@ public class LockRetryTemplate {
                     
                     continue;
                 } else {
-                    log.error("재시도 최종 실패 (시도: {}): {}", attempt, e.getMessage());
-                    throw e;
+                    log.error("재시도 최종 실패 (시도: {}): {}", attempt, ex.getClass().getSimpleName());
+                    throw ex;
                 }
             }
         }

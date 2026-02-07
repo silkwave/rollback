@@ -58,9 +58,9 @@ public class GuidQueue {
         producerExecutor.submit(() -> {
             try {
                 produceGuids(); // GUID 생산 시작
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt(); // 인터럽트 상태 복원
-                log.warn("GUID 생성 스레드가 중단되었습니다.", e);
+                log.warn("GUID 생성 스레드가 중단되었습니다.", ex.getClass().getSimpleName());
             }
         });
     }
@@ -186,7 +186,7 @@ public class GuidQueue {
 
                 try {
                     hostname = InetAddress.getLocalHost().getHostName();
-                } catch (UnknownHostException e) {
+                } catch (UnknownHostException ex) {
                     hostname = "localhost";
                 }
                 log.warn("HOSTNAME 환경 변수를 찾을 수 없습니다. 로컬 개발 환경으로 간주합니다. [{}]", hostname);                

@@ -126,21 +126,21 @@ public class RandomBackoffRetryStrategy implements RetryStrategy {
      * @return 재시도해야 하면 true, 그렇지 않으면 false
      */
     @Override
-    public boolean shouldRetry(Exception e, int attemptCount) {
+    public boolean shouldRetry(Exception ex, int attemptCount) {
         if (attemptCount >= maxRetries) {
             log.warn("최대 재시도 횟수({}) 초과로 중단합니다. (시도 횟수: {})", maxRetries, attemptCount);
             return false;
         }
         
         // 통합된 RetryCondition 객체를 통해 재시도 여부 판단
-        boolean shouldRetry = retryCondition.isRetryable(e);
+        boolean shouldRetry = retryCondition.isRetryable(ex);
         
         if (shouldRetry) {
             log.debug("재시도 조건 만족 - {} (시도 횟수: {}/{})", 
-                     e.getClass().getSimpleName(), attemptCount, maxRetries);
+                     ex.getClass().getSimpleName(), attemptCount, maxRetries);
         } else {
             log.debug("재시도 조건 불만족 - {} (시도 횟수: {}/{})", 
-                     e.getClass().getSimpleName(), attemptCount, maxRetries);
+                     ex.getClass().getSimpleName(), attemptCount, maxRetries);
         }
         
         return shouldRetry;

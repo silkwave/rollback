@@ -144,10 +144,10 @@ public class CustomerService {
             long duration = System.currentTimeMillis() - startTime;
             log.info("{} 완료 - 소요시간: {}ms", taskName, duration);
             return result;
-        } catch (Exception e) {
+        } catch (Exception ex) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("{} 실패 - 소요시간: {}ms, 사유: {}", taskName, duration, e.getMessage(), e);
-            throw new RuntimeException(e);
+            log.error("{} 실패 - 소요시간: {}ms", taskName, duration, ex);
+            throw new RuntimeException(ex);
         }
     }
 

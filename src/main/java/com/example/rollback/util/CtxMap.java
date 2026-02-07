@@ -206,7 +206,7 @@ public class CtxMap implements Serializable {
         if (value instanceof String s) {
             try {
                 return Integer.parseInt(s.trim());
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ex) {
                 // 파싱 실패 시에는 아무것도 하지 않고, 최종적으로 기본값 반환
             }
         }
@@ -230,7 +230,7 @@ public class CtxMap implements Serializable {
         if (value instanceof String s) {
             try {
                 return Long.parseLong(s.trim());
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ex) {
                 // 파싱 실패
             }
         }
@@ -254,7 +254,7 @@ public class CtxMap implements Serializable {
         if (value instanceof String s) {
             try {
                 return Double.parseDouble(s.trim());
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ex) {
                 // 파싱 실패
             }
         }

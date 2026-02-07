@@ -23,9 +23,17 @@ public class GuidQueueUtil {
      * @return 생성된 GUID 문자열
      * @throws InterruptedException 큐에서 GUID를 가져오는 동안 스레드가 중단될 경우
      */
-    public String getGUID()  {
+    public String getGUID() {
 
         try {
+
+            log.debug("");
+            log.debug("");
+            log.debug("");
+            log.debug("");
+            log.debug("");
+            log.debug("==============================================================");
+
             log.debug("GUID를 큐에서 가져오는 중...");
             String guid = guidQueue.getGUID();
             log.debug("큐에서 GUID를 성공적으로 가져왔습니다: {}", guid);

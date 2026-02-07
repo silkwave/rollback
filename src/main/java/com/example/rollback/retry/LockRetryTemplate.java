@@ -92,6 +92,14 @@ public class LockRetryTemplate {
                 def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
                 status = transactionManager.getTransaction(def);
 
+                log.debug("");                
+                log.debug("");                
+                log.debug("");                
+                log.debug("");                
+                log.debug("");    
+                log.debug("==============================================================");
+                                                                            
+
                 log.debug("작업 실행 시도: {} (새로운 트랜잭션 시작)", attempt);
                 T result = action.get();
                 

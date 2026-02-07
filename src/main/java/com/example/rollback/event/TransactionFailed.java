@@ -58,6 +58,12 @@ public class TransactionFailed {
         this.transactionId = transactionId;
         this.reason = reason;
         
+        log.info("");
+        log.info("");
+        log.info("");
+        log.info("");
+        log.info("");
+        log.info("==============================================================");        
         log.info("TransactionFailed 이벤트 생성 - GUID: {}, 거래ID: {}, 사유: {}", guid, transactionId, reason);
     }
     

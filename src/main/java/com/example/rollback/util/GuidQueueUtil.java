@@ -36,7 +36,7 @@ public class GuidQueueUtil {
 
             log.debug("GUID를 큐에서 가져오는 중...");
             String guid = guidQueue.getGUID();
-            log.debug("큐에서 GUID를 성공적으로 가져왔습니다: {}", guid);
+            log.debug("큐에서 GUID를 성공적으로 가져왔습니다: [{}]", guid);
             return guid;
         } catch (InterruptedException ex) {
             log.error("GUID를 큐에서 가져오는 중 인터럽트 발생", ex.getClass().getSimpleName());

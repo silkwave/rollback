@@ -1,6 +1,9 @@
 // Banking System JavaScript
 console.log("[TRACE] script.js 로딩 시작");
 
+// ms 밀리초만큼 대기하는 함수
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 class BankingSystem {
   constructor() {
     console.log("[TRACE] BankingSystem constructor 시작");
@@ -599,8 +602,14 @@ class BankingSystem {
 
       console.log("[TRACE] 입금 성공:", result);
       this.showSuccess(`입금 완료: ${this.formatCurrency(data.amount)}`);
+// 1초(1000ms) 대기
+    await sleep(1000);      
       form.reset();
+// 1초(1000ms) 대기
+    await sleep(1000);      
       this.loadAccounts();
+// 1초(1000ms) 대기
+    await sleep(1000);      
       this.loadTransactions();
     } catch (error) {
       console.error("[TRACE] processDeposit() 오류:", error);

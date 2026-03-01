@@ -2,7 +2,6 @@ package com.example.rollback.retry;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import lombok.extern.slf4j.Slf4j;
@@ -106,10 +105,8 @@ public class LockRetryTemplate {
             
             TransactionStatus status = null;
             try {
-                // 새로운 트랜잭션 시작 (REQUIRES_NEW)
-                DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-                def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                status = transactionManager.getTransaction(def);
+                // 트랜잭션 시작
+                status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
                 log.debug("");                
                 log.debug("");                

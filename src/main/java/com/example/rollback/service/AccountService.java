@@ -76,7 +76,7 @@ public class AccountService {
      * @throws IllegalStateException    계좌가 활성 상태가 아닌 경우
      * @throws RuntimeException         입금 처리 실패 시
      */
-    @Transactional
+    @Transactional    
     public Transaction deposit(DepositRequest request) {
         String guid = ContextHolder.getCurrentGuid();
         MDC.put("guid", guid);

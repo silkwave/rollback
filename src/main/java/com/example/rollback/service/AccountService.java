@@ -60,6 +60,10 @@ public class AccountService {
             throw new RuntimeException("테스트를 위한 강제 입금 실패");
         }
 
+
+
+        try {
+
         // 계좌 확인 (락/경합 시 재시도)
         Account account = lockRetryTemplate.execute(
                 () -> loadAccountForDeposit(request.getAccountId()),
@@ -71,8 +75,7 @@ public class AccountService {
         if (!account.isActive()) {
             throw new IllegalStateException("계좌가 활성 상태가 아닙니다");
         }
-
-        try {
+                    
             // 2. 거래 생성
             transaction = request.toTransaction(guid);
             transactionRepository.save(transaction);

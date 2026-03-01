@@ -8,43 +8,18 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * 계좌 리포지토리 인터페이스
- * 
- * <p>MyBatis를 사용하여 계좌 데이터에 대한 CRUD 작업을 수행합니다.
- * 데이터베이스의 accounts 테이블과 매핑되며, 계좌 관련 모든 데이터 접근 로직을 제공합니다.</p>
- * 
- * <h3>주요 기능:</h3>
- * <ul>
- *   <li>계좌 생성, 조회, 수정, 삭제</li>
- *   <li>계좌번호 또는 고객ID 기반 검색</li>
- *   <li>잔액 및 상태 업데이트</li>
- * </ul>
- * 
- * @author Banking System Team
- * @version 1.0
- * @since 2026-02-02
+ * 계좌 테이블 접근을 담당합니다. (MyBatis)
  */
 @Mapper
 public interface AccountRepository {
     
     /**
-     * ID로 계좌를 조회합니다.
-     * 
-     * @param id 조회할 계좌의 ID
-     * @return 계좌 정보 (존재하지 않는 경우 null)
+     * 계좌를 조회합니다.
      */
     Account findById(@Param("id") Long id);
 
     /**
-     * ID로 계좌를 조회하면서 비관적 락을 획득합니다.
-     *
-     * <p>
-     * SKIP LOCKED를 사용하므로, 다른 트랜잭션이 이미 락을 잡은 경우 기다리지 않고
-     * 조회 결과가 null로 반환될 수 있습니다.
-     * </p>
-     *
-     * @param id 조회할 계좌의 ID
-     * @return 락 획득에 성공한 계좌 정보 (락을 획득하지 못하거나 존재하지 않으면 null)
+     * 계좌를 조회하면서 락을 획득합니다. (SKIP LOCKED)
      */
     Account findByIdForUpdateSkipLocked(@Param("id") Long id);
     

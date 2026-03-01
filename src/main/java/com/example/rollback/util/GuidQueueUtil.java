@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class GuidQueueUtil {
 
-    // Spring 컨테이너로부터 GuidQueue Bean을 주입받음
+    // GuidQueue 주입
     private final GuidQueue guidQueue;
 
     /**

@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class GuidQueue {
 
     /** Base 26 변환에 사용될 문자 집합 */
-    // A-Z (26자)
+    // 0-9 + A-P (26자)
     private static final char[] HEX_CHAR = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     /** Kubernetes Pod 환경에서 각 Pod를 고유하게 식별하기 위한 값 */
@@ -81,7 +81,7 @@ public class GuidQueue {
             String guid = getPidSeqGUID();
             log.debug("produceGuids GUID: [{}]", guid);
             queue.put(guid); // 큐가 가득 차면 여기서 대기
-        } while (true); // Loop indefinitely to keep the queue filled
+        } while (true); // 큐를 계속 채움
     }
 
     /**

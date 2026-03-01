@@ -19,23 +19,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * 은행 계좌 관련 REST API 컨트롤러
- * 
- * <p>입금, 계좌 상태 관리(동결/활성화), 거래 내역 조회 등
- * 은행 계좌와 관련된 모든 REST API 엔드포인트를 제공합니다.
- * 모든 요청은 GUID 기반으로 추적되며, 실패 시 트랜잭션 롤백과 이벤트 기반 알림이 처리됩니다.</p>
- * 
- * <h3>주요 기능:</h3>
- * <ul>
- *   <li>입금 처리</li>
- *   <li>계좌 상태 제어 (동결/활성화)</li>
- *   <li>거래 내역 조회</li>
- *   <li>알림 로그 조회</li>
- * </ul>
- * 
- * @author Banking System Team
- * @version 1.0
- * @since 2026-02-02
+ * 뱅킹 API(계좌/거래/알림)를 제공합니다.
  */
 @Slf4j
 @RestController
@@ -43,23 +27,20 @@ import java.util.function.Consumer;
 @RequestMapping("/api/banking")
 public class BankingController {
 
-    /** 계좌 서비스 - 계좌 관련 비즈니스 로직 처리 */
+    /** 계좌 서비스 */
     private final AccountService accountService;
     
-    /** 계좌 리포지토리 - 계좌 데이터 접근 */
+    /** 계좌 조회용 리포지토리 */
     private final AccountRepository accountRepository;
     
-    /** 거래 리포지토리 - 거래 내역 데이터 접근 */
+    /** 거래 조회용 리포지토리 */
     private final TransactionRepository transactionRepository;
     
-    /** 알림 로그 리포지토리 - 알림 기록 데이터 접근 */
+    /** 알림 로그 조회용 리포지토리 */
     private final NotificationLogRepository notificationLogRepository;
 
     /**
-     * 계좌에 입금하는 엔드포인트
-     * 
-     * @param request 입금 요청 정보 (계좌ID, 입금액, 통화 등)
-     * @return 처리된 입금 거래 정보와 결과
+     * 입금을 처리합니다.
      */
     @PostMapping("/deposit")
     public ResponseEntity<?> deposit(@Valid @RequestBody DepositRequest request) {
@@ -70,9 +51,7 @@ public class BankingController {
     }
 
     /**
-     * 모든 계좌 목록을 조회하는 엔드포인트
-     * 
-     * @return 전체 계좌 목록
+     * 계좌 목록을 조회합니다.
      */
     @GetMapping("/accounts")
     public List<Account> getAllAccounts() {
@@ -81,10 +60,7 @@ public class BankingController {
     }
 
     /**
-     * 특정 ID의 계좌를 조회하는 엔드포인트
-     * 
-     * @param id 조회할 계좌의 ID
-     * @return 계좌 정보 (존재하지 않는 경우 404)
+     * 계좌 단건을 조회합니다.
      */
     @GetMapping("/accounts/{id}")
     public ResponseEntity<Account> getAccount(@PathVariable Long id) {
@@ -99,10 +75,7 @@ public class BankingController {
     }
 
     /**
-     * 특정 고객의 모든 계좌를 조회하는 엔드포인트
-     * 
-     * @param customerId 고객 ID
-     * @return 해당 고객의 계좌 목록
+     * 고객별 계좌를 조회합니다.
      */
     @GetMapping("/accounts/customer/{customerId}")
     public List<Account> getAccountsByCustomerId(@PathVariable Long customerId) {
@@ -111,9 +84,7 @@ public class BankingController {
     }
 
     /**
-     * 모든 거래 내역을 조회하는 엔드포인트
-     * 
-     * @return 전체 거래 내역 목록
+     * 거래 내역을 조회합니다.
      */
     @GetMapping("/transactions")
     public List<Transaction> getAllTransactions() {
@@ -122,9 +93,7 @@ public class BankingController {
     }
 
     /**
-     * 모든 알림 로그를 조회하는 엔드포인트
-     * 
-     * @return 전체 알림 로그 목록
+     * 알림 로그를 조회합니다.
      */
     @GetMapping("/notifications")
     public List<NotificationLog> getAllNotifications() {
@@ -133,10 +102,7 @@ public class BankingController {
     }
 
     /**
-     * 계좌를 동결 상태로 변경하는 엔드포인트
-     * 
-     * @param id 동결할 계좌의 ID
-     * @return 처리 결과와 업데이트된 계좌 정보
+     * 계좌를 동결합니다.
      */
     @PostMapping("/accounts/{id}/freeze")
     public ResponseEntity<?> freezeAccount(@PathVariable Long id) {
@@ -144,10 +110,7 @@ public class BankingController {
     }
 
     /**
-     * 동결된 계좌를 활성 상태로 변경하는 엔드포인트
-     * 
-     * @param id 활성화할 계좌의 ID
-     * @return 처리 결과와 업데이트된 계좌 정보
+     * 계좌를 활성화합니다.
      */
     @PostMapping("/accounts/{id}/activate")
     public ResponseEntity<?> activateAccount(@PathVariable Long id) {
@@ -155,11 +118,7 @@ public class BankingController {
     }
 
     /**
-     * 성공적인 API 응답을 위한 공통 ResponseEntity를 생성합니다.
-     * @param message 응답 메시지
-     * @param dataKey 응답 본문에 포함될 데이터 객체의 키 (예: "account", "transaction")
-     * @param data 응답 본문에 포함될 데이터 객체
-     * @return 표준화된 성공 ResponseEntity
+     * 성공 응답 바디를 생성합니다.
      */
     private ResponseEntity<Map<String, Object>> createSuccessResponse(String message, String dataKey, Object data) {
         return ResponseEntity.ok(Map.of(
@@ -171,12 +130,7 @@ public class BankingController {
     }
 
     /**
-     * 계좌의 상태를 변경하는 공통 로직을 처리합니다.
-     * @param id 계좌 ID
-     * @param accountAction 계좌에 적용할 액션 (예: account.freeze(), account.activate())
-     * @param actionLog 상태 변경 액션명 (예: "동결", "활성화")
-     * @param successMessage 성공 응답에 포함될 메시지
-     * @return 처리 결과 (성공 시 변경된 계좌 정보, 실패 시 404 Not Found)
+     * 계좌 상태를 변경합니다.
      */
     private ResponseEntity<?> changeAccountStatus(Long id, Consumer<Account> accountAction, String actionLog,
             String successMessage) {

@@ -5,7 +5,7 @@ package com.example.rollback.util;
  */
 public final class IdGenerator {
 
-    // private 생성자로 인스턴스화 방지
+    // 인스턴스화 방지
     private IdGenerator() {}
 
     /**
@@ -16,8 +16,7 @@ public final class IdGenerator {
      * @return 생성된 고유 ID
      */
     public static String generate(String prefix) {
-        // 동시성 문제를 피하기 위해 ThreadLocalRandom 사용을 고려할 수 있지만,
-        // 현재 요구사항에서는 Math.random()으로도 충분합니다.
+        // 단순 난수(요구사항 범위)
         String timePart = String.valueOf(System.currentTimeMillis());
         String randomPart = String.format("%04d", (int) (Math.random() * 10000));
         return prefix + timePart + randomPart;

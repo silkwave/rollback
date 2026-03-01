@@ -6,21 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 
 /**
- * 고객 엔티티 클래스
- * 
- * <p>이 클래스는 은행 고객의 모든 정보를 관리하며, 개인 고객과 법인 고객의
- * 정보를 통합적으로 처리합니다. 고객 생성, 정보 업데이트, 상태 관리 등의 기능을 제공합니다.</p>
- * 
- * <p>주요 기능:</p>
- * <ul>
- *   <li>개인/법인 고객 생성 (간소화)</li>
- *   <li>고객 정보 관리</li>
- *   <li>고객 상태 관리</li>
- * </ul>
- * 
- * @author Banking System Team
- * @version 1.0
- * @since 2024-01-01
+ * 고객 정보(생성/수정/상태)를 담는 엔티티입니다.
  */
 @Slf4j
 @Data
@@ -40,8 +26,8 @@ public class Customer {
     /** 전화번호 */
     private String phoneNumber;
     
-    /** 고객 상태 (ACTIVE: 활성, INACTIVE: 비활성, SUSPENDED: 정지, CLOSED: 폐쇄) */
-    private CustomerStatus status; // Changed to enum type
+    /** 고객 상태 (ACTIVE/INACTIVE/SUSPENDED/CLOSED) */
+    private CustomerStatus status; // 상태는 enum으로 관리
     
     /** 고객 정보 생성 일시 */
     private LocalDateTime createdAt;
@@ -64,7 +50,7 @@ public class Customer {
         customer.name = name;
         customer.email = email;
         customer.phoneNumber = phoneNumber;
-        customer.status = CustomerStatus.ACTIVE; // Default to enum
+        customer.status = CustomerStatus.ACTIVE; // 기본 상태
         customer.createdAt = LocalDateTime.now();
         customer.updatedAt = LocalDateTime.now();
         
@@ -93,7 +79,7 @@ public class Customer {
      * @param newStatus 새로운 상태 (ACTIVE, INACTIVE, SUSPENDED, CLOSED)
      * @return 상태가 변경된 Customer 객체
      */
-    public Customer changeStatus(CustomerStatus newStatus) { // Changed parameter type
+    public Customer changeStatus(CustomerStatus newStatus) { // 상태 변경
         this.status = newStatus;
         this.updatedAt = LocalDateTime.now();
         log.info("고객 상태 변경 - 고객번호: {}, 상태: {}", customerNumber, newStatus);

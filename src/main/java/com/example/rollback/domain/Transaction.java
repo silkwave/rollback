@@ -6,21 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 
 /**
- * 거래 내역 엔티티 클래스
- * 
- * <p>이 클래스는 모든 금융 거래의 정보를 관리하며, 입금, 출금, 이체, 수수료 등
- * 다양한 유형의 거래를 처리합니다. 거래 생성, 상태 관리, 완료/실패 처리 등의 기능을 제공합니다.</p>
- * 
- * <p>주요 기능:</p>
- * <ul>
- *   <li>입금/출금 거래 생성</li>
- *   <li>거래 상태 관리</li>
- *   <li>거래 완료/실패/취소 처리</li>
- * </ul>
- * 
- * @author Banking System Team
- * @version 1.0
- * @since 2024-01-01
+ * 거래 정보와 상태를 관리하는 엔티티입니다.
  */
 @Slf4j
 @Data
@@ -65,15 +51,7 @@ public class Transaction {
     private String failureReason;
 
     /**
-     * 입금 거래를 생성하는 팩토리 메서드
-     * 
-     * @param guid 거래 고유 식별자
-     * @param accountId 입금받을 계좌 ID
-     * @param customerId 거래를 요청한 고객 ID
-     * @param amount 입금 금액
-     * @param currency 통화 코드
-     * @param description 거래 설명
-     * @return 생성된 Transaction 객체
+     * 입금 거래를 생성합니다.
      */
     public static Transaction createDeposit(String guid, Long accountId, Long customerId,
                                           java.math.BigDecimal amount, String currency, String description) {
@@ -85,15 +63,7 @@ public class Transaction {
     }
 
     /**
-     * 출금 거래를 생성하는 팩토리 메서드
-     * 
-     * @param guid 거래 고유 식별자
-     * @param accountId 출금할 계좌 ID
-     * @param customerId 거래를 요청한 고객 ID
-     * @param amount 출금 금액
-     * @param currency 통화 코드
-     * @param description 거래 설명
-     * @return 생성된 Transaction 객체
+     * 출금 거래를 생성합니다.
      */
     public static Transaction createWithdrawal(String guid, Long accountId, Long customerId,
                                                 java.math.BigDecimal amount, String currency, String description) {
@@ -105,9 +75,7 @@ public class Transaction {
     }
 
     /**
-     * 거래를 성공적으로 완료 처리합니다
-     * 
-     * <p>거래 상태를 COMPLETED로 변경하고 완료 시간을 기록합니다.</p>
+     * 거래를 완료 처리합니다.
      */
     public void complete() {
         updateTransactionStatus(TransactionStatus.COMPLETED, null,
@@ -115,9 +83,7 @@ public class Transaction {
     }
 
     /**
-     * 거래를 실패 처리합니다
-     * 
-     * @param reason 실패 사유
+     * 거래를 실패 처리합니다.
      */
     public void fail(String reason) {
         updateTransactionStatus(TransactionStatus.FAILED, reason,
@@ -125,9 +91,7 @@ public class Transaction {
     }
 
     /**
-     * 거래를 취소 처리합니다
-     * 
-     * @param reason 취소 사유
+     * 거래를 취소 처리합니다.
      */
     public void cancel(String reason) {
         updateTransactionStatus(TransactionStatus.CANCELLED, reason,
@@ -135,41 +99,28 @@ public class Transaction {
     }
 
     /**
-     * 거래가 완료된 상태인지 확인합니다
-     * 
-     * @return 완료된 거래이면 true, 아니면 false
+     * 완료 여부를 반환합니다.
      */
     public boolean isCompleted() {
         return TransactionStatus.COMPLETED.equals(this.status);
     }
     
     /**
-     * 거래 ID를 반환합니다
-     * 
-     * @return 거래 고유 ID
+     * 거래 ID를 반환합니다.
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * 거래가 실패한 상태인지 확인합니다
-     * 
-     * @return 실패한 거래이면 true, 아니면 false
+     * 실패 여부를 반환합니다.
      */
     public boolean isFailed() {
         return TransactionStatus.FAILED.equals(this.status);
     }
 
     /**
-     * 모든 거래 유형에 공통적인 기본 거래 객체를 생성합니다.
-     * @param guid 거래 고유 식별자
-     * @param customerId 거래를 요청한 고객 ID
-     * @param amount 거래 금액
-     * @param currency 통화 코드
-     * @param description 거래 설명
-     * @param transactionType 거래 유형
-     * @return 기본 필드가 초기화된 Transaction 객체
+     * 공통 필드가 채워진 거래를 생성합니다.
      */
     private static Transaction createBaseTransaction(String guid, Long customerId,
                                                    java.math.BigDecimal amount, String currency,
@@ -187,11 +138,7 @@ public class Transaction {
     }
 
     /**
-     * 거래의 상태를 업데이트하고 완료 시간을 기록하며, 필요에 따라 실패 사유를 설정합니다.
-     * @param newStatus 새로운 거래 상태
-     * @param reason 실패 또는 취소 사유 (필요 없는 경우 null)
-     * @param logMessage 로깅할 메시지
-     * @param logArgs 로깅 메시지의 인자
+     * 상태/완료시간/실패사유를 갱신합니다.
      */
     private void updateTransactionStatus(TransactionStatus newStatus, String reason, String logMessage, Object... logArgs) {
         this.status = newStatus;

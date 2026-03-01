@@ -11,51 +11,22 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 알림 전송 및 로그 기록 서비스 (별도 트랜잭션)
- * 
- * <p>
- * 트랜잭션 실패 시 고객에게 알림을 전송하고, 모든 알림 기록을 데이터베이스에 저장합니다.
- * 새로운 트랜잭션(REQUIRES_NEW)에서 실행되어 원본 트랜잭션 롤백에 영향을 받지 않습니다.
- * </p>
- * 
- * <h3>주요 기능:</h3>
- * <ul>
- * <li>거래 실패 알림 전송 (SMS, 이메일)</li>
- * <li>알림 로그 기록 및 관리</li>
- * <li>하위 호환성 지원 (기존 주문 시스템)</li>
- * </ul>
- * 
- * <p>
- * <strong>트랜잭션 정책:</strong><br>
- * REQUIRES_NEW propagation을 사용하여 호출하는 트랜잭션과 별개의 새로운 트랜잭션에서 실행됩니다.
- * 이를 통해 원본 트랜잭션이 롤백되더라도 알림 로그는 정상적으로 저장됩니다.
- * </p>
- * 
- * @author Banking System Team
- * @version 1.0
- * @since 2026-02-02
+ * 알림 전송 및 로그 저장을 담당합니다.
+ * 알림 로그는 {@code REQUIRES_NEW}로 저장해 원본 트랜잭션과 분리합니다.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
-    /** 알림 로그 리포지토리 - 알림 기록 데이터 접근 */
+    /** 알림 로그 저장소 */
     private final NotificationLogRepository notificationLogRepository;
 
     /**
-     * 실패 알림을 전송하고 로그를 기록합니다 (주문용 - 하위 호환성)
-     * 
-     * <p>
-     * 기존 주문 시스템과의 호환성을 위해 제공되는 메서드입니다.
-     * 새로운 트랜잭션에서 실행되어 주문 트랜잭션 롤백에 영향을 받지 않습니다.
-     * </p>
-     * 
-     * @param orderId 실패한 주문의 ID
-     * @param reason  실패 사유
+     * 주문 실패 알림을 기록합니다. (하위 호환)
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-public void sendFailure(Long orderId, String reason) {
+    public void sendFailure(Long orderId, String reason) {
 
         log.info("");
         log.info("");
@@ -75,16 +46,7 @@ public void sendFailure(Long orderId, String reason) {
     }
 
     /**
-     * 거래 실패 알림을 전송하고 로그를 기록합니다 (은행용)
-     * 
-     * <p>
-     * 은행 거래 실패 시 고객에게 SMS와 이메일로 알림을 전송하고,
-     * 알림 내역을 데이터베이스에 기록합니다.
-     * 새로운 트랜잭션에서 실행되어 거래 트랜잭션 롤백에 영향을 받지 않습니다.
-     * </p>
-     * 
-     * @param transactionId 실패한 거래의 ID
-     * @param reason        실패 사유
+     * 거래 실패 알림을 기록합니다.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendTransactionFailure(Long transactionId, String reason) {

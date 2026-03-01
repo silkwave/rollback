@@ -12,61 +12,38 @@ import java.util.function.BiFunction;
 import java.util.Objects;
 
 /**
- * CtxMap: Map&lt;String,Object&gt;를 래핑하여 타입-안전 접근자를 제공하는 스레드-안전 유틸리티 클래스.
- * 실무 활용을 위해 내부적으로 ConcurrentHashMap을 사용하며, 데이터 조회 로직의 안정성을 높였습니다.
- *
- * @author Banking System Team
- * @since 2026-02-02
+ * {@code Map<String, Object>} 래퍼입니다.
+ * 타입 안전 접근자를 제공합니다.
  */
 public class CtxMap implements Serializable {
 
-    // 직렬화 호환성을 위한 버전 UID
+    // 직렬화 UID
     private static final long serialVersionUID = 20240114L;
 
-    /** 내부 저장소. 동시성 보장을 위해 ConcurrentHashMap 사용. */
+    /** 내부 저장소(동시성: ConcurrentHashMap) */
     private final Map<String, Object> storage;
 
-    /** 기본 생성자 (빈 ConcurrentHashMap) */
+    /** 빈 맵으로 생성합니다. */
     public CtxMap() {
         this.storage = new ConcurrentHashMap<>();
     }
 
-    /**
-     * 방어적 복사 생성자.
-     * 외부에서 받은 맵의 변경이 현재 맵에 영향을 주지 않도록 새로운 맵을 생성합니다.
-     * 
-     * @param initial 초기화에 사용할 맵. null이 아니면 모든 요소가 복사됩니다.
-     */
+    /** 방어적 복사로 생성합니다. */
     public CtxMap(Map<String, Object> initial) {
         this.storage = (initial != null) ? new ConcurrentHashMap<>(initial) : new ConcurrentHashMap<>();
     }
 
-    /**
-     * 정적 팩토리 메소드.
-     * 
-     * @param initial 초기화에 사용할 맵.
-     * @return 새로운 CtxMap 인스턴스.
-     */
+    /** 정적 팩토리입니다. */
     public static CtxMap of(Map<String, Object> initial) {
         return new CtxMap(initial);
     }
 
-    /**
-     * 비어있는 새로운 CtxMap 인스턴스를 반환합니다.
-     * 
-     * @return 비어있는 CtxMap 인스턴스.
-     */
+    /** 빈 인스턴스를 생성합니다. */
     public static CtxMap empty() {
         return new CtxMap();
     }
 
-    /**
-     * 키-값 쌍을 저장합니다.
-     * 
-     * @param key   저장할 키
-     * @param value 저장할 값
-     * @return 메소드 체이닝을 위한 현재 인스턴스
-     */
+    /** 값을 저장합니다. */
     public CtxMap put(String key, Object value) {
         if (key != null) {
             storage.put(key, value);
@@ -74,12 +51,7 @@ public class CtxMap implements Serializable {
         return this;
     }
 
-    /**
-     * 다른 맵의 모든 데이터를 현재 맵에 병합합니다.
-     * 
-     * @param other 병합할 맵. null이면 아무 작업도 수행하지 않습니다.
-     * @return 메소드 체이닝을 위한 현재 인스턴스
-     */
+    /** 다른 맵을 병합합니다. */
     public CtxMap putAll(Map<String, ?> other) {
         if (other != null) {
             storage.putAll(other);
@@ -87,7 +59,7 @@ public class CtxMap implements Serializable {
         return this;
     }
 
-    // --- 타입-안전 접근자 ---
+    // 타입 안전 접근자
 
     /**
      * 키와 기대 타입을 지정하여 값을 조회합니다. 타입이 일치하지 않으면 null을 반환합니다.
@@ -127,7 +99,7 @@ public class CtxMap implements Serializable {
         Object value = storage.get(key);
         if (value instanceof Map<?, ?> m) {
             Map<String, Object> result = new HashMap<>();
-            // CtxMap의 키 타입인 String을 보장하기 위해 키 타입을 확인
+            // 키 타입(String)만 허용
             for (Map.Entry<?, ?> e : m.entrySet()) {
                 if (e.getKey() instanceof String k) {
                     result.put(k, e.getValue());
@@ -151,7 +123,7 @@ public class CtxMap implements Serializable {
         Object value = storage.get(key);
         if (value instanceof List<?> list) {
             List<T> result = new ArrayList<>();
-            // 리스트의 각 요소를 순회하며 타입 안전성 검사
+            // 요소 타입 검사
             for (Object o : list) {
                 if (elementType.isInstance(o)) {
                     result.add(elementType.cast(o));
@@ -171,7 +143,7 @@ public class CtxMap implements Serializable {
      */
     public String getString(String key, String defaultValue) {
         Object value = storage.get(key);
-        // `toString()`을 호출하지 않고, 실제 String 타입인 경우에만 값을 반환하여 예측 가능성 높임
+        // String일 때만 반환
         if (value instanceof String s) {
             return s;
         }
@@ -198,11 +170,11 @@ public class CtxMap implements Serializable {
      */
     public int getInt(String key, int defaultValue) {
         Object value = storage.get(key);
-        // 1. Number 타입인 경우, 직접 int 값으로 변환 (성능상 이점)
+        // Number면 바로 변환
         if (value instanceof Number n) {
             return n.intValue();
         }
-        // 2. String 타입인 경우, 파싱 시도
+        // String이면 파싱
         if (value instanceof String s) {
             try {
                 return Integer.parseInt(s.trim());

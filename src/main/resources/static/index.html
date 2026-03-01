@@ -6,23 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spring Boot Banking System Demo</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/banking-style.css">
 </head>
 
-<body>
+<body class="compact-ui">
     <div class="container">
         <header>
-            <h1><i class="fas fa-university"></i> Spring Boot Banking System</h1>
+            <h1>Spring Boot Banking System</h1>
             <p>은행 계좌 관리 시스템 - 트랜잭션 롤백 및 이벤트 처리 데모</p>
         </header>
 
         <main>
-            <nav class="tabs">
-                <button class="tab-btn active" data-tab="accounts"><i class="fas fa-piggy-bank"></i> 계좌 관리</button>
-                <button class="tab-btn" data-tab="customers"><i class="fas fa-users"></i> 고객 관리</button>
-                <button class="tab-btn" data-tab="transactions"><i class="fas fa-exchange-alt"></i> 거래 내역</button>
-                <button class="tab-btn" data-tab="notifications"><i class="fas fa-bell"></i> 알림 로그</button>
+            <nav class="tabs" aria-label="주요 메뉴">
+                <button type="button" class="tab-btn active" data-tab="accounts">계좌 관리</button>
+                <button type="button" class="tab-btn" data-tab="customers">고객 관리</button>
+                <button type="button" class="tab-btn" data-tab="transactions">거래 내역</button>
+                <button type="button" class="tab-btn" data-tab="notifications">알림 로그</button>
             </nav>
 
             <!-- 계좌 관리 탭 -->
@@ -30,7 +29,7 @@
                 <div class="content-grid">
                  
                     <div class="card transaction-form">
-                        <h2><i class="fas fa-plus-circle"></i> 입금</h2>
+                        <h2>입금</h2>
                         <form id="depositForm">
                             <div class="form-group">
                                 <label for="depositAccountId">계좌 ID</label>
@@ -64,16 +63,16 @@
                                 <input type="checkbox" id="depositForceFailure" name="forceFailure">
                                 <label for="depositForceFailure">입금 실패 강제 발생</label>
                             </div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> 입금</button>
+                            <button type="submit" class="btn-primary">입금</button>
                         </form>
                     </div>
                 </div>
 
                 <div class="card accounts-list">
                     <div class="card-header">
-                        <h2><i class="fas fa-list-ul"></i> 계좌 목록</h2>
-                        <button id="refreshAccountsBtn" class="btn-icon refresh-btn" title="계좌 새로고침"><i
-                                class="fas fa-sync-alt"></i></button>
+                        <h2>계좌 목록</h2>
+                        <button id="refreshAccountsBtn" class="btn-icon refresh-btn" title="계좌 새로고침"
+                            aria-label="계좌 새로고침">↻</button>
                     </div>
                     <div class="table-container">
                         <table id="accountsTable">
@@ -101,7 +100,7 @@
             <section id="customers-tab" class="tab-content">
                 <div class="content-grid">
                     <div class="card customer-form">
-                        <h2><i class="fas fa-user-plus"></i> 고객 등록</h2>
+                        <h2>고객 등록</h2>
                         <form id="customerForm">
                             <div class="form-group">
                                 <label for="customerName">고객명</label>
@@ -117,15 +116,15 @@
                                 <input type="tel" id="customerPhone" name="phoneNumber" required
                                     placeholder="예: 010-1234-5678">
                             </div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-user-check"></i> 고객 등록</button>
+                            <button type="submit" class="btn-primary">고객 등록</button>
                         </form>
                     </div>
 
                     <div class="card customers-list">
                         <div class="card-header">
-                            <h2><i class="fas fa-users"></i> 고객 목록</h2>
-                            <button id="refreshCustomersBtn" class="btn-icon refresh-btn" title="고객 새로고침"><i
-                                    class="fas fa-sync-alt"></i></button>
+                            <h2>고객 목록</h2>
+                            <button id="refreshCustomersBtn" class="btn-icon refresh-btn" title="고객 새로고침"
+                                aria-label="고객 새로고침">↻</button>
                         </div>
                         <div class="table-container">
                             <table id="customersTable">
@@ -153,9 +152,9 @@
             <section id="transactions-tab" class="tab-content">
                 <div class="card full-width">
                     <div class="card-header">
-                        <h2><i class="fas fa-exchange-alt"></i> 거래 내역</h2>
-                        <button id="refreshTransactionsBtn" class="btn-icon refresh-btn" title="거래 내역 새로고침"><i
-                                class="fas fa-sync-alt"></i></button>
+                        <h2>거래 내역</h2>
+                        <button id="refreshTransactionsBtn" class="btn-icon refresh-btn" title="거래 내역 새로고침"
+                            aria-label="거래 내역 새로고침">↻</button>
                     </div>
                     <div class="table-container">
                         <table id="transactionsTable">
@@ -184,9 +183,9 @@
             <section id="notifications-tab" class="tab-content">
                 <div class="card full-width">
                     <div class="card-header">
-                        <h2><i class="fas fa-bell"></i> 알림 로그</h2>
-                        <button id="refreshNotificationsBtn" class="btn-icon refresh-btn" title="알림 로그 새로고침"><i
-                                class="fas fa-sync-alt"></i></button>
+                        <h2>알림 로그</h2>
+                        <button id="refreshNotificationsBtn" class="btn-icon refresh-btn" title="알림 로그 새로고침"
+                            aria-label="알림 로그 새로고침">↻</button>
                     </div>
                     <div class="table-container">
                         <table id="notificationsTable">
@@ -208,9 +207,8 @@
 
             <section class="card logs">
                 <div class="card-header">
-                    <h2><i class="fas fa-file-alt"></i> 실행 로그</h2>
-                    <button id="clearLogsBtn" class="btn-icon clear-btn" title="로그 지우기"><i
-                            class="fas fa-trash-alt"></i></button>
+                    <h2>실행 로그</h2>
+                    <button id="clearLogsBtn" class="btn-icon clear-btn" title="로그 지우기" aria-label="로그 지우기">✕</button>
                 </div>
                 <div id="logs" class="log-container"></div>
             </section>
@@ -221,7 +219,7 @@
     <div id="errorModal" class="modal">
         <div class="modal-content error-modal">
             <div class="modal-header">
-                <i class="fas fa-exclamation-circle"></i>
+                <span class="modal-icon" aria-hidden="true">!</span>
                 <h3>오류 발생</h3>
                 <button class="modal-close" onclick="bankingApp.closeModal()">&times;</button>
             </div>
@@ -237,7 +235,7 @@
     <!-- 성공 토스트 알림 -->
     <div id="successToast" class="toast">
         <div class="toast-content">
-            <i class="fas fa-check-circle"></i>
+            <span class="toast-icon" aria-hidden="true">✓</span>
             <span id="successMessage"></span>
         </div>
     </div>

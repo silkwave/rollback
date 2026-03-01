@@ -28,13 +28,6 @@ import java.util.List;
 public interface AccountRepository {
     
     /**
-     * 새로운 계좌를 저장합니다.
-     * 
-     * @param account 저장할 계좌 정보
-     */
-    void save(Account account);
-    
-    /**
      * ID로 계좌를 조회합니다.
      * 
      * @param id 조회할 계좌의 ID

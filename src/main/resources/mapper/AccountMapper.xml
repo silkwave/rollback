@@ -2,11 +2,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.rollback.repository.AccountRepository">
 
-    <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO accounts (account_number, customer_id, account_type, currency, balance, status, account_holder_name)
-        VALUES (#{accountNumber}, #{customerId}, #{accountType}, #{currency}, #{balance}, #{status}, #{accountHolderName})
-    </insert>
-
     <select id="findById" resultType="com.example.rollback.domain.Account">
         SELECT id, account_number as accountNumber, customer_id as customerId, account_type as accountType, 
                currency, balance, status, 

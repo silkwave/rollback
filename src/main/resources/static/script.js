@@ -26,14 +26,6 @@ class BankingSystem {
     console.log("[TRACE] setupEventListeners() 시작");
 
     // Form submissions
-    const accountForm = document.getElementById("accountForm");
-    console.log("[TRACE] accountForm 요소:", accountForm ? "찾음" : "없음");
-    accountForm?.addEventListener("submit", (e) => {
-      console.log("[TRACE] accountForm submit 이벤트 발생");
-      e.preventDefault();
-      this.createAccount();
-    });
-
     const depositForm = document.getElementById("depositForm");
     console.log("[TRACE] depositForm 요소:", depositForm ? "찾음" : "없음");
     depositForm?.addEventListener("submit", (e) => {
@@ -373,41 +365,6 @@ class BankingSystem {
       this.addLog(`🚨 API 요청 실패: ${error.message}`, "error");
       throw error;
     }
-  }
-
-  // Account Management Methods
-  async createAccount() {
-    console.log("[TRACE] createAccount() 시작");
-    try {
-      const form = document.getElementById("accountForm");
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
-
-      // Convert checkbox to boolean
-      data.forceFailure = formData.has("forceFailure");
-
-      console.log("[TRACE] 계좌 개설 데이터:", data);
-      this.addLog(
-        `📝 계좌 개설 요청 - 고객ID: ${data.customerId}, 유형: ${data.accountType}`,
-        "info",
-      );
-
-      console.log("[TRACE] 계좌 개설 API 호출:", `${this.API_BASE}/accounts`);
-      const result = await this.makeRequest(`${this.API_BASE}/accounts`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-
-      console.log("[TRACE] 계좌 개설 성공:", result);
-      this.showSuccess(`계좌 개설 성공: ${result.accountNumber}`);
-      form.reset();
-      this.loadAccounts();
-      this.populateAccountSelects();
-    } catch (error) {
-      console.error("[TRACE] createAccount() 오류:", error);
-      this.showError(`계좌 개설 실패: ${error.message}`);
-    }
-    console.log("[TRACE] createAccount() 완료");
   }
 
   async loadAccounts() {

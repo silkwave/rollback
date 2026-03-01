@@ -1,7 +1,6 @@
 package com.example.rollback.controller;
 
 import com.example.rollback.domain.Account;
-import com.example.rollback.domain.AccountRequest;
 import com.example.rollback.domain.DepositRequest;
 import com.example.rollback.domain.NotificationLog;
 import com.example.rollback.domain.Transaction;
@@ -21,13 +20,12 @@ import java.util.Map;
 /**
  * 은행 계좌 관련 REST API 컨트롤러
  * 
- * <p>계좌 개설, 입금, 계좌 상태 관리(동결/활성화), 거래 내역 조회 등
+ * <p>입금, 계좌 상태 관리(동결/활성화), 거래 내역 조회 등
  * 은행 계좌와 관련된 모든 REST API 엔드포인트를 제공합니다.
  * 모든 요청은 GUID 기반으로 추적되며, 실패 시 트랜잭션 롤백과 이벤트 기반 알림이 처리됩니다.</p>
  * 
  * <h3>주요 기능:</h3>
  * <ul>
- *   <li>계좌 개설 및 관리</li>
  *   <li>입금 처리</li>
  *   <li>계좌 상태 제어 (동결/활성화)</li>
  *   <li>거래 내역 조회</li>
@@ -55,20 +53,6 @@ public class BankingController {
     
     /** 알림 로그 리포지토리 - 알림 기록 데이터 접근 */
     private final NotificationLogRepository notificationLogRepository;
-
-    /**
-     * 새로운 은행 계좌를 개설하는 엔드포인트
-     * 
-     * @param request 계좌 개설 요청 정보 (고객ID, 계좌유형, 초기입금액 등)
-     * @return 생성된 계좌 정보와 처리 결과
-     */
-    @PostMapping("/accounts")
-    public ResponseEntity<?> createAccount(@Valid @RequestBody AccountRequest request) {
-        Account account = accountService.createAccount(request);
-        log.info("계좌 개설 성공: {}", account.getAccountNumber());
-
-        return createSuccessResponse("계좌가 성공적으로 개설되었습니다", "account", account);
-    }
 
     /**
      * 계좌에 입금하는 엔드포인트

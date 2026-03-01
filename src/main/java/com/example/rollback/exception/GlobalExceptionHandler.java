@@ -9,7 +9,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.example.rollback.domain.AccountRequest;
 import com.example.rollback.domain.NotificationLog;
 import com.example.rollback.repository.NotificationLogRepository;
 import java.util.Map;
@@ -84,22 +83,13 @@ public class GlobalExceptionHandler {
         log.warn("[GUID: {}] 유효성 검사 실패: {}", guid, errorMessage, ex);
 
         // 유효성 검사 실패 시 notification_logs 테이블에 저장
-        Object target = ex.getBindingResult().getTarget();
-        if (target instanceof AccountRequest) {
-            AccountRequest accountRequest = (AccountRequest) target;
-            NotificationLog notificationLog = accountRequest.toErrorLog(guid, errorMessage);
-            notificationLogRepository.save(notificationLog);
-            log.info("[GUID: {}] 유효성 검사 실패 로그 저장 완료: {}", guid, errorMessage);
-        } else {
-            // 다른 DTO 타입이거나 toErrorLog 메서드가 없는 경우 일반적인 로그를 저장
-            NotificationLog genericLog = new NotificationLog();
-            genericLog.setGuid(guid);
-            genericLog.setMessage("유효성 검사 실패: " + errorMessage);
-            genericLog.setType("VALIDATION_ERROR");
-            genericLog.setCreatedAt(java.time.LocalDateTime.now());
-            notificationLogRepository.save(genericLog);
-            log.info("[GUID: {}] 일반 유효성 검사 실패 로그 저장 완료: {}", guid, errorMessage);
-        }
+        NotificationLog genericLog = new NotificationLog();
+        genericLog.setGuid(guid);
+        genericLog.setMessage("유효성 검사 실패: " + errorMessage);
+        genericLog.setType("VALIDATION_ERROR");
+        genericLog.setCreatedAt(java.time.LocalDateTime.now());
+        notificationLogRepository.save(genericLog);
+        log.info("[GUID: {}] 일반 유효성 검사 실패 로그 저장 완료: {}", guid, errorMessage);
 
         Map<String, Object> body = Map.of(
                 "success", false,

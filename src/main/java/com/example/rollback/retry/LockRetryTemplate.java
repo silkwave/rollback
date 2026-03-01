@@ -8,6 +8,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 /**
  * 락(Lock) 재시도 템플릿 클래스
@@ -80,6 +81,24 @@ public class LockRetryTemplate {
      * @throws RuntimeException 작업 실패 또는 인터럽트 발생 시
      */
     public <T> T execute(Supplier<T> action) {
+        return execute(action, null);
+    }
+
+    /**
+     * 재시도 로직이 적용된 작업을 실행하는 메서드 (최종 실패 훅 제공)
+     *
+     * <p>
+     * 최종 실패(더 이상 재시도하지 않음)로 판단되는 경우, 롤백 전에 {@code onFinalFailure}가 호출됩니다.
+     * 이 훅은 실패 이벤트 발행 등 "최종 실패 1회"에만 수행해야 하는 부가 작업에 사용합니다.
+     * </p>
+     *
+     * @param <T> 반환 타입
+     * @param action 실행할 작업을 나타내는 Supplier 함수
+     * @param onFinalFailure 더 이상 재시도하지 않는 최종 실패 시 호출되는 훅 (null 가능)
+     * @return 작업 성공 시 반환 결과
+     * @throws RuntimeException 작업 실패 또는 인터럽트 발생 시
+     */
+    public <T> T execute(Supplier<T> action, Consumer<Exception> onFinalFailure) {
         int attempt = 0;
         
         while (true) {
@@ -107,6 +126,15 @@ public class LockRetryTemplate {
                 return result;
                 
             } catch (Exception ex) {
+                boolean shouldRetry = retryStrategy.shouldRetry(ex, attempt);
+                if (!shouldRetry && onFinalFailure != null) {
+                    try {
+                        onFinalFailure.accept(ex);
+                    } catch (Exception hookEx) {
+                        log.warn("최종 실패 훅(onFinalFailure) 처리 중 예외 발생: {}", hookEx.getClass().getSimpleName());
+                    }
+                }
+
                 if (status != null && !status.isCompleted()) {
                     try {
                         transactionManager.rollback(status); // 실패 시 롤백
@@ -119,7 +147,7 @@ public class LockRetryTemplate {
                 
                 log.warn("작업 실패 (시도: {}): {}", attempt, ex.getClass().getSimpleName());
                 
-                if (retryStrategy.shouldRetry(ex, attempt)) {
+                if (shouldRetry) {
                     long waitTime = retryStrategy.getWaitTime(attempt);
                     log.info("재시도 대기: {}ms (시도: {}), 예외: {}", 
                         waitTime, attempt, ex.getClass().getSimpleName());

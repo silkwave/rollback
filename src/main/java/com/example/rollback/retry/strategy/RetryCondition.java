@@ -1,5 +1,6 @@
 package com.example.rollback.retry.strategy;
 
+import com.example.rollback.retry.RetryableException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Component;
@@ -115,6 +116,11 @@ public class RetryCondition {
         // 1. 특정 예외 타입 확인
         if (t instanceof PessimisticLockingFailureException) {
             log.debug("PessimisticLockingFailureException 감지 - 재시도 가능");
+            return true;
+        }
+
+        if (t instanceof RetryableException) {
+            log.debug("RetryableException 감지 - 재시도 가능");
             return true;
         }
 

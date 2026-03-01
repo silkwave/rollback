@@ -6,6 +6,7 @@ import com.example.rollback.domain.Transaction;
 import com.example.rollback.event.TransactionFailed;
 import com.example.rollback.repository.AccountRepository;
 import com.example.rollback.repository.TransactionRepository;
+import com.example.rollback.retry.RetryableException;
 import com.example.rollback.util.ContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,52 +81,59 @@ public class AccountService {
         String guid = ContextHolder.getCurrentGuid();
         MDC.put("guid", guid);
 
-        return measureExecutionTime(() -> {
-            Transaction transaction = null;
+        java.util.concurrent.atomic.AtomicReference<Long> lastTransactionId = new java.util.concurrent.atomic.AtomicReference<>();
+
+        return measureExecutionTime(() -> lockRetryTemplate.execute(() -> {
+            lastTransactionId.set(null);
+
+            Transaction transaction;
             log.info("입금 처리 시작 - 계좌ID: {}, 금액: {}", request.getAccountId(), request.getAmount());
 
-            try {
-                if (request.isForceFailure()) {
-                    log.warn("DepositRequest의 forceFailure가 true로 설정되어 입금 처리를 강제로 실패시킵니다.");
-                    throw new RuntimeException("테스트를 위한 강제 입금 실패");
-                }
+            if (request.isForceFailure()) {
+                log.warn("DepositRequest의 forceFailure가 true로 설정되어 입금 처리를 강제로 실패시킵니다.");
+                throw new RuntimeException("테스트를 위한 강제 입금 실패");
+            }
 
-                // 1. 계좌 확인
-                Account account = lockRetryTemplate.execute(
-                        () -> accountRepository.findById(request.getAccountId()));
-                if (account == null) {
+            // 1. 계좌 확인 (락 획득 시도)
+            Account account = accountRepository.findByIdForUpdateSkipLocked(request.getAccountId());
+            if (account == null) {
+                Account exists = accountRepository.findById(request.getAccountId());
+                if (exists == null) {
                     throw new IllegalArgumentException("계좌를 찾을 수 없습니다: " + request.getAccountId());
                 }
-
-                if (!account.isActive()) {
-                    throw new IllegalStateException("계좌가 활성 상태가 아닙니다");
-                }
-
-                // 2. 거래 생성
-                transaction = request.toTransaction(guid);
-                transactionRepository.save(transaction);
-                log.info("거래 생성 완료 - 거래ID: {}", transaction.getId());
-
-                // 3. 결제 처리
-
-                // 이전에 paymentClient.processPayment 로직이 있었으나 제거됨
-
-                // 4. 계좌 잔액 업데이트
-                account.deposit(request.getAmount());
-                accountRepository.updateBalance(account);
-
-                // 5. 거래 완료 처리
-                transaction.complete();
-                transactionRepository.updateStatus(transaction.getId(), "COMPLETED");
-
-                log.info("입금 처리 완료 - 계좌: {}, 금액: {}",
-                        account.getAccountNumber(), request.getAmount());
-                return transaction;
-
-            } catch (Exception ex) {
-                throw handleTransactionFailure(transaction, ex, "입금 처리", "입금");
+                throw new RetryableException("account busy");
             }
-        }, "입금 처리");
+
+            if (!account.isActive()) {
+                throw new IllegalStateException("계좌가 활성 상태가 아닙니다");
+            }
+
+            // 2. 거래 생성
+            transaction = request.toTransaction(guid);
+            transactionRepository.save(transaction);
+            lastTransactionId.set(transaction.getId());
+            log.info("거래 생성 완료 - 거래ID: {}", transaction.getId());
+
+            // 3. 결제 처리
+            // 이전에 paymentClient.processPayment 로직이 있었으나 제거됨
+
+            // 4. 계좌 잔액 업데이트
+            account.deposit(request.getAmount());
+            accountRepository.updateBalance(account);
+
+            // 5. 거래 완료 처리
+            transaction.complete();
+            transactionRepository.updateStatus(transaction.getId(), "COMPLETED");
+
+            log.info("입금 처리 완료 - 계좌: {}, 금액: {}", account.getAccountNumber(), request.getAmount());
+            return transaction;
+        }, (ex) -> {
+            Long txId = lastTransactionId.get();
+            events.publishEvent(new TransactionFailed(
+                    ContextHolder.copyContext().asReadOnlyMap(),
+                    txId,
+                    ex.getClass().getSimpleName()));
+        }), "입금 처리");
     }
 
     /**
@@ -161,27 +169,7 @@ public class AccountService {
      * @param transactionType 실패한 트랜잭션의 타입 (예: "입금", "초기 입금")
      * @throws RuntimeException 트랜잭션 실패를 알리는 런타임 예외
      */
-    private RuntimeException handleTransactionFailure(Transaction transaction, Exception ex, String contextMessage,
-            String transactionType) {
-        Long transactionId = (transaction != null) ? transaction.getId() : null;
-        log.error("{} 처리 실패 - 거래ID: {}", transactionType, transactionId, ex);
-
-        if (transaction != null) {
-            transaction.fail(transactionType + " 처리 실패: " + ex.getMessage());
-            transactionRepository.updateStatus(transaction.getId(), "FAILED");
-            events.publishEvent(new TransactionFailed(
-                    ContextHolder.copyContext().asReadOnlyMap(),
-                    transaction.getId(),
-                    ex.getClass().getSimpleName()));
-        } else {
-            // If transaction is null, we can't update its status or publish event with
-            // transaction ID
-            // Log a more generic error or just re-throw
-            events.publishEvent(new TransactionFailed(
-                    ContextHolder.copyContext().asReadOnlyMap(),
-                    null,
-                    ex.getClass().getSimpleName())); // Pass null for transactionId if not available
-        }
-        return new RuntimeException(contextMessage + "에 실패했습니다.", ex);
-    }
+    // NOTE:
+    // 실패 이벤트(TransactionFailed)는 LockRetryTemplate의 "최종 실패 훅(onFinalFailure)"에서
+    // 1회만 발행되도록 처리합니다. 재시도 중간 실패에서는 이벤트를 발행하지 않습니다.
 }

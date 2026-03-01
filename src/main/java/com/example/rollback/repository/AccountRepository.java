@@ -34,6 +34,19 @@ public interface AccountRepository {
      * @return 계좌 정보 (존재하지 않는 경우 null)
      */
     Account findById(@Param("id") Long id);
+
+    /**
+     * ID로 계좌를 조회하면서 비관적 락을 획득합니다.
+     *
+     * <p>
+     * SKIP LOCKED를 사용하므로, 다른 트랜잭션이 이미 락을 잡은 경우 기다리지 않고
+     * 조회 결과가 null로 반환될 수 있습니다.
+     * </p>
+     *
+     * @param id 조회할 계좌의 ID
+     * @return 락 획득에 성공한 계좌 정보 (락을 획득하지 못하거나 존재하지 않으면 null)
+     */
+    Account findByIdForUpdateSkipLocked(@Param("id") Long id);
     
     /**
      * 계좌번호로 계좌를 조회합니다.

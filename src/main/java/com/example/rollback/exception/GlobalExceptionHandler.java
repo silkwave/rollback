@@ -49,6 +49,13 @@ public class GlobalExceptionHandler {
 
     private final NotificationLogRepository notificationLogRepository; // 리포지토리 주입
 
+    private static Map<String, Object> errorBody(String guid, String message) {
+        return Map.of(
+                "success", false,
+                "guid", guid,
+                "message", message);
+    }
+
     /**
      * DTO 유효성 검사 실패 예외를 처리합니다.
      * 
@@ -91,10 +98,7 @@ public class GlobalExceptionHandler {
         notificationLogRepository.save(genericLog);
         log.info("[GUID: {}] 일반 유효성 검사 실패 로그 저장 완료: {}", guid, errorMessage);
 
-        Map<String, Object> body = Map.of(
-                "success", false,
-                "guid", guid,
-                "message", "유효성 검사 실패: " + errorMessage);
+        Map<String, Object> body = errorBody(guid, "유효성 검사 실패: " + errorMessage);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
@@ -127,12 +131,9 @@ public class GlobalExceptionHandler {
         String guid = MDC.get("guid");
         String message = "서버 내부 오류가 발생했습니다: " + ex.getMessage();
 
-        log.error("[GUID: {}] 처리되지 않은 예외 발생", guid, ex.getClass().getSimpleName());
+        log.error("[GUID: {}] 처리되지 않은 예외 발생: {}", guid, ex.getClass().getSimpleName(), ex);
 
-        Map<String, Object> body = Map.of(
-                "success", false,
-                "guid", guid,
-                "message", message);
+        Map<String, Object> body = errorBody(guid, message);
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -172,12 +173,9 @@ public class GlobalExceptionHandler {
         String guid = MDC.get("guid");
         String message = "요청 처리 중 오류가 발생했습니다: " + ex.getMessage();
 
-        log.warn("[GUID: {}] 비즈니스 로직 예외 발생: {}", guid, message, ex.getClass().getSimpleName());
+        log.warn("[GUID: {}] 비즈니스 로직 예외 발생: {}", guid, message, ex);
 
-        Map<String, Object> body = Map.of(
-                "success", false,
-                "guid", guid,
-                "message", message);
+        Map<String, Object> body = errorBody(guid, message);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 }

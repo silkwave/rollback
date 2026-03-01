@@ -77,22 +77,22 @@ public class AccountService {
      */
     @Transactional
     public Transaction deposit(DepositRequest request) {
-        final String guid = ContextHolder.getCurrentGuid();
+        String guid = ContextHolder.getCurrentGuid();
         MDC.put("guid", guid);
 
         return measureExecutionTime(() -> {
-            Transaction transaction = null; // Declare at higher scope
+            Transaction transaction = null;
             log.info("입금 처리 시작 - 계좌ID: {}, 금액: {}", request.getAccountId(), request.getAmount());
 
             try {
-                // Add forceFailure check here for DepositRequest
                 if (request.isForceFailure()) {
                     log.warn("DepositRequest의 forceFailure가 true로 설정되어 입금 처리를 강제로 실패시킵니다.");
                     throw new RuntimeException("테스트를 위한 강제 입금 실패");
                 }
 
                 // 1. 계좌 확인
-                Account account = lockRetryTemplate.execute(() -> accountRepository.findById(request.getAccountId()));
+                Account account = lockRetryTemplate.execute(
+                        () -> accountRepository.findById(request.getAccountId()));
                 if (account == null) {
                     throw new IllegalArgumentException("계좌를 찾을 수 없습니다: " + request.getAccountId());
                 }
@@ -102,7 +102,7 @@ public class AccountService {
                 }
 
                 // 2. 거래 생성
-                transaction = request.toTransaction(guid); // Assignment here
+                transaction = request.toTransaction(guid);
                 transactionRepository.save(transaction);
                 log.info("거래 생성 완료 - 거래ID: {}", transaction.getId());
 
@@ -123,9 +123,7 @@ public class AccountService {
                 return transaction;
 
             } catch (Exception ex) {
-                handleTransactionFailure(transaction, ex, "입금 처리", "입금");
-                throw new IllegalStateException(
-                        "Unreachable code - handleTransactionFailure should have thrown an exception.");
+                throw handleTransactionFailure(transaction, ex, "입금 처리", "입금");
             }
         }, "입금 처리");
     }
@@ -148,7 +146,7 @@ public class AccountService {
             return result;
         } catch (Exception ex) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("{} 실패 - 소요시간: {}ms", taskName, duration, ex.getClass().getSimpleName());
+            log.error("{} 실패 - 소요시간: {}ms", taskName, duration, ex);
             throw new RuntimeException(ex); // Supplier가 Exception을 던질 수 없으므로 RuntimeException으로 래핑
         }
     }
@@ -163,23 +161,27 @@ public class AccountService {
      * @param transactionType 실패한 트랜잭션의 타입 (예: "입금", "초기 입금")
      * @throws RuntimeException 트랜잭션 실패를 알리는 런타임 예외
      */
-    private void handleTransactionFailure(Transaction transaction, Exception ex, String contextMessage,
+    private RuntimeException handleTransactionFailure(Transaction transaction, Exception ex, String contextMessage,
             String transactionType) {
-        String transactionId = (transaction != null) ? String.valueOf(transaction.getId()) : "N/A";
-        log.error("{} 처리 실패 - 거래ID: {}", transactionType, transactionId, ex.getClass().getSimpleName());
+        Long transactionId = (transaction != null) ? transaction.getId() : null;
+        log.error("{} 처리 실패 - 거래ID: {}", transactionType, transactionId, ex);
 
         if (transaction != null) {
             transaction.fail(transactionType + " 처리 실패: " + ex.getMessage());
             transactionRepository.updateStatus(transaction.getId(), "FAILED");
-            events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
-                    transaction.getId(), ex.getClass().getSimpleName()));
+            events.publishEvent(new TransactionFailed(
+                    ContextHolder.copyContext().asReadOnlyMap(),
+                    transaction.getId(),
+                    ex.getClass().getSimpleName()));
         } else {
             // If transaction is null, we can't update its status or publish event with
             // transaction ID
             // Log a more generic error or just re-throw
-            events.publishEvent(new TransactionFailed(ContextHolder.copyContext().asReadOnlyMap(),
-                    null, ex.getClass().getSimpleName())); // Pass null for transactionId if not available
+            events.publishEvent(new TransactionFailed(
+                    ContextHolder.copyContext().asReadOnlyMap(),
+                    null,
+                    ex.getClass().getSimpleName())); // Pass null for transactionId if not available
         }
-        throw new RuntimeException(contextMessage + "에 실패했습니다.", ex);
+        return new RuntimeException(contextMessage + "에 실패했습니다.", ex);
     }
 }

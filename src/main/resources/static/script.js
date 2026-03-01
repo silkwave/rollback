@@ -1,114 +1,76 @@
 // Banking System JavaScript
-console.log("[TRACE] script.js 로딩 시작");
 
 // ms 밀리초만큼 대기하는 함수
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 class BankingSystem {
   constructor() {
-    console.log("[TRACE] BankingSystem constructor 시작");
     this.API_BASE = "/api/banking";
     this.logs = [];
-    console.log("[TRACE] API_BASE 설정:", this.API_BASE);
     this.init();
-    console.log("[TRACE] BankingSystem constructor 완료");
   }
 
   init() {
-    console.log("[TRACE] init() 메서드 시작");
     this.setupEventListeners();
     this.setupTabs();
     this.loadInitialData();
-    console.log("[TRACE] init() 메서드 완료");
   }
 
   setupEventListeners() {
-    console.log("[TRACE] setupEventListeners() 시작");
 
     // Form submissions
     const depositForm = document.getElementById("depositForm");
-    console.log("[TRACE] depositForm 요소:", depositForm ? "찾음" : "없음");
     depositForm?.addEventListener("submit", (e) => {
-      console.log("[TRACE] depositForm submit 이벤트 발생");
       e.preventDefault();
       this.processDeposit();
     });
 
     const customerForm = document.getElementById("customerForm");
-    console.log("[TRACE] customerForm 요소:", customerForm ? "찾음" : "없음");
     customerForm?.addEventListener("submit", (e) => {
-      console.log("[TRACE] customerForm submit 이벤트 발생");
       e.preventDefault();
       this.createCustomer();
     });
 
     // Refresh buttons
     const refreshAccountsBtn = document.getElementById("refreshAccountsBtn");
-    console.log(
-      "[TRACE] refreshAccountsBtn 요소:",
-      refreshAccountsBtn ? "찾음" : "없음",
-    );
     refreshAccountsBtn?.addEventListener("click", () => {
-      console.log("[TRACE] refreshAccountsBtn 클릭");
       this.loadAccounts();
     });
 
     const refreshCustomersBtn = document.getElementById("refreshCustomersBtn");
-    console.log(
-      "[TRACE] refreshCustomersBtn 요소:",
-      refreshCustomersBtn ? "찾음" : "없음",
-    );
     refreshCustomersBtn?.addEventListener("click", () => {
-      console.log("[TRACE] refreshCustomersBtn 클릭");
       this.loadCustomers();
     });
 
     const refreshTransactionsBtn = document.getElementById(
       "refreshTransactionsBtn",
     );
-    console.log(
-      "[TRACE] refreshTransactionsBtn 요소:",
-      refreshTransactionsBtn ? "찾음" : "없음",
-    );
     refreshTransactionsBtn?.addEventListener("click", () => {
-      console.log("[TRACE] refreshTransactionsBtn 클릭");
       this.loadTransactions();
     });
 
     const refreshNotificationsBtn = document.getElementById(
       "refreshNotificationsBtn",
     );
-    console.log(
-      "[TRACE] refreshNotificationsBtn 요소:",
-      refreshNotificationsBtn ? "찾음" : "없음",
-    );
     refreshNotificationsBtn?.addEventListener("click", () => {
-      console.log("[TRACE] refreshNotificationsBtn 클릭");
       this.loadNotifications();
     });
 
     // Clear logs
     const clearLogsBtn = document.getElementById("clearLogsBtn");
-    console.log("[TRACE] clearLogsBtn 요소:", clearLogsBtn ? "찾음" : "없음");
     clearLogsBtn?.addEventListener("click", () => {
-      console.log("[TRACE] clearLogsBtn 클릭");
       this.clearLogs();
     });
 
-    console.log("[TRACE] setupEventListeners() 완료");
   }
 
   setupTabs() {
-    console.log("[TRACE] setupTabs() 시작");
     const tabs = document.querySelectorAll(".tab-btn");
     const tabContents = document.querySelectorAll(".tab-content");
-    console.log("[TRACE] 탭 버튼 개수:", tabs.length);
-    console.log("[TRACE] 탭 컨텐츠 개수:", tabContents.length);
 
     tabs.forEach((tab, index) => {
       tab.addEventListener("click", () => {
         const targetTab = tab.getAttribute("data-tab");
-        console.log(`[TRACE] 탭 클릭: ${targetTab} (인덱스: ${index})`);
 
         // Update active states with animation
         tabs.forEach((t) => t.classList.remove("active"));
@@ -118,73 +80,58 @@ class BankingSystem {
         setTimeout(() => {
           tab.classList.add("active");
           document.getElementById(targetTab + "-tab").classList.add("active");
-          console.log("[TRACE] 탭 활성화:", targetTab);
 
           // Load data for active tab
           this.loadTabData(targetTab);
         }, 100);
       });
     });
-    console.log("[TRACE] setupTabs() 완료");
   }
 
   loadTabData(tabName) {
-    console.log("[TRACE] loadTabData() 호출:", tabName);
     switch (tabName) {
       case "accounts":
-        console.log("[TRACE] 계좌 탭 데이터 로딩");
         this.loadAccounts();
         break;
       case "customers":
-        console.log("[TRACE] 고객 탭 데이터 로딩");
         this.loadCustomers();
         break;
       case "transactions":
-        console.log("[TRACE] 거래내역 탭 데이터 로딩");
         this.loadTransactions();
         break;
       case "notifications":
-        console.log("[TRACE] 알림 로그 탭 데이터 로딩");
         this.loadNotifications();
         break;
       default:
-        console.log("[TRACE] 알 수 없는 탭:", tabName);
     }
   }
 
   async loadInitialData() {
-    console.log("[TRACE] loadInitialData() 시작");
     this.addLog("🏦 은행 시스템 초기화 중...", "info");
     try {
-      console.log("[TRACE] 초기 데이터 로딩 시작 - Promise.all");
       await Promise.all([
         this.loadAccounts(),
         this.loadCustomers(),
         this.loadTransactions(),
       ]);
-      console.log("[TRACE] 초기 데이터 로딩 완료");
       this.addLog("✅ 시스템 초기화 완료", "success");
     } catch (error) {
       console.error("[TRACE] 초기 데이터 로딩 실패:", error);
       this.addLog("❌ 시스템 초기화 실패: " + error.message, "error");
     }
-    console.log("[TRACE] loadInitialData() 완료");
   }
 
   formatCurrency(amount, currency = "KRW") {
-    console.log("[TRACE] formatCurrency() 호출:", amount, currency);
     const result = new Intl.NumberFormat("ko-KR", {
       style: "currency",
       currency: currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-    console.log("[TRACE] formatCurrency() 결과:", result);
     return result;
   }
 
   formatDate(dateString) {
-    console.log("[TRACE] formatDate() 호출:", dateString);
     const date = new Date(dateString);
     const result = date.toLocaleString("ko-KR", {
       year: "numeric",
@@ -194,12 +141,10 @@ class BankingSystem {
       minute: "2-digit",
       second: "2-digit",
     });
-    console.log("[TRACE] formatDate() 결과:", result);
     return result;
   }
 
   getStatusClass(status) {
-    console.log("[TRACE] getStatusClass() 호출:", status);
     const statusMap = {
       ACTIVE: "status-active",
       FROZEN: "status-frozen",
@@ -210,12 +155,10 @@ class BankingSystem {
       FAILED: "status-failed",
     };
     const result = statusMap[status] || "status-pending";
-    console.log("[TRACE] getStatusClass() 결과:", result);
     return result;
   }
 
   getStatusText(status) {
-    console.log("[TRACE] getStatusText() 호출:", status);
     const statusMap = {
       ACTIVE: "활성",
       FROZEN: "동결",
@@ -237,12 +180,10 @@ class BankingSystem {
       HIGH: "높음",
     };
     const result = statusMap[status] || status;
-    console.log("[TRACE] getStatusText() 결과:", result);
     return result;
   }
 
   addLog(message, type = "info") {
-    console.log(`[TRACE] addLog() 호출: [${type}] ${message}`);
     const logContainer = document.getElementById("logs");
     if (!logContainer) {
       console.error("[TRACE] logContainer 요소를 찾을 수 없음");
@@ -270,21 +211,17 @@ class BankingSystem {
 
     // Limit logs to prevent memory issues
     if (this.logs.length > 1000) {
-      console.log("[TRACE] 로그 개수 1000개 초과, 오래된 로그 삭제");
       this.logs.shift();
     }
-    console.log("[TRACE] addLog() 완료");
   }
 
   clearLogs() {
-    console.log("[TRACE] clearLogs() 호출");
     const logContainer = document.getElementById("logs");
     if (logContainer) {
       logContainer.innerHTML = "";
     }
     this.logs = [];
     this.addLog("🗑️ 로그가 지워졌습니다", "info");
-    console.log("[TRACE] clearLogs() 완료");
   }
 
   showError(message) {
@@ -297,7 +234,6 @@ class BankingSystem {
     if (modal && errorMessage) {
       errorMessage.textContent = message;
       modal.classList.add("active");
-      console.log("[TRACE] 에러 모달 표시");
     } else {
       // 폴백: 모달이 없으면 alert 사용
       alert(message);
@@ -305,16 +241,13 @@ class BankingSystem {
   }
 
   closeModal() {
-    console.log("[TRACE] closeModal() 호출");
     const modal = document.getElementById("errorModal");
     if (modal) {
       modal.classList.remove("active");
-      console.log("[TRACE] 모달 닫힘");
     }
   }
 
   showSuccess(message) {
-    console.log("[TRACE] showSuccess() 호출:", message);
     this.addLog(`✅ ${message}`, "success");
 
     // 토스트 알림 표시
@@ -323,20 +256,16 @@ class BankingSystem {
     if (toast && successMessage) {
       successMessage.textContent = message;
       toast.classList.add("active");
-      console.log("[TRACE] 성공 토스트 표시");
 
       // 3초 후 자동으로 닫기
       setTimeout(() => {
         toast.classList.remove("active");
-        console.log("[TRACE] 토스트 자동 닫힘");
       }, 3000);
     }
   }
 
   async makeRequest(url, options = {}) {
-    console.log("[TRACE] makeRequest() 시작:", url, options.method || "GET");
     try {
-      console.log("[TRACE] fetch 요청:", url);
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
@@ -345,12 +274,6 @@ class BankingSystem {
         ...options,
       });
 
-      console.log(
-        "[TRACE] fetch 응답 상태:",
-        response.status,
-        response.statusText,
-      );
-
       if (!response.ok) {
         const errorData = await response.json();
         console.error("[TRACE] API 오류 응답:", errorData);
@@ -358,7 +281,6 @@ class BankingSystem {
       }
 
       const result = await response.json();
-      console.log("[TRACE] API 응답 데이터:", result);
       return result;
     } catch (error) {
       console.error("[TRACE] makeRequest() 오류:", error);
@@ -369,18 +291,15 @@ class BankingSystem {
 
   async loadAccounts() {
     try {
-      console.log("[DEBUG] loadAccounts 시작");
       this.addLog("📋 계좌 목록 로딩 중...", "info");
 
       const response = await fetch(`${this.API_BASE}/accounts`);
-      console.log("[DEBUG] API 응답 상태:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const accounts = await response.json();
-      console.log("[DEBUG] API 응답 데이터:", accounts);
 
       if (!Array.isArray(accounts)) {
         console.error("[DEBUG] 응답이 배열이 아님:", accounts);
@@ -394,7 +313,6 @@ class BankingSystem {
         `✅ 계좌 목록 로딩 완료 (${accounts.length}개 계좌)`,
         "success",
       );
-      console.log("[DEBUG] loadAccounts 완료");
     } catch (error) {
       console.error("[DEBUG] loadAccounts 오류:", error);
       this.showError(`계좌 목록 로딩 실패: ${error.message}`);
@@ -402,7 +320,6 @@ class BankingSystem {
   }
 
   renderAccountsTable(accounts) {
-    console.log("[DEBUG] renderAccountsTable 호출, 데이터:", accounts);
 
     if (!Array.isArray(accounts)) {
       console.error("[DEBUG] accounts가 배열이 아님:", accounts);
@@ -417,10 +334,8 @@ class BankingSystem {
     }
 
     tbody.innerHTML = "";
-    console.log("[DEBUG] 테이블 초기화 완료, 계좌 수:", accounts.length);
 
     accounts.forEach((account, index) => {
-      console.log(`[DEBUG] 계좌 ${index} 렌더링:`, account);
 
       if (!account || typeof account !== "object") {
         console.error(`[DEBUG] 계좌 ${index}가 유효하지 않음:`, account);
@@ -447,17 +362,14 @@ class BankingSystem {
                 `;
 
         tbody.appendChild(row);
-        console.log(`[DEBUG] 계좌 ${index} 행 추가 완료`);
       } catch (error) {
         console.error(`[DEBUG] 계좌 ${index} 렌더링 중 오류:`, error);
       }
     });
 
-    console.log("[DEBUG] renderAccountsTable 완료");
   }
 
   getAccountActions(account) {
-    console.log("[DEBUG] getAccountActions 호출:", account);
 
     let actions = "";
     const status = account.status || "";
@@ -474,27 +386,19 @@ class BankingSystem {
       actions += `<button class="btn-small btn-activate" onclick="bankingSystem.activateAccount(${account.id})">활성화</button>`;
     }
 
-    console.log("[DEBUG] getAccountActions 결과:", actions);
     return actions;
   }
 
   async freezeAccount(accountId) {
-    console.log("[TRACE] freezeAccount() 호출:", accountId);
     if (!confirm("정말로 계좌를 동결하시겠습니까?")) {
-      console.log("[TRACE] 동결 취소 (사용자 확인 거부)");
       return;
     }
 
     try {
-      console.log(
-        "[TRACE] 계좌 동결 API 호출:",
-        `${this.API_BASE}/accounts/${accountId}/freeze`,
-      );
       await this.makeRequest(`${this.API_BASE}/accounts/${accountId}/freeze`, {
         method: "POST",
       });
 
-      console.log("[TRACE] 계좌 동결 성공");
       this.showSuccess("계좌가 동결되었습니다");
       this.loadAccounts();
     } catch (error) {
@@ -504,17 +408,11 @@ class BankingSystem {
   }
 
   async activateAccount(accountId) {
-    console.log("[TRACE] activateAccount() 호출:", accountId);
     if (!confirm("정말로 계좌를 활성화하시겠습니까?")) {
-      console.log("[TRACE] 활성화 취소 (사용자 확인 거부)");
       return;
     }
 
     try {
-      console.log(
-        "[TRACE] 계좌 활성화 API 호출:",
-        `${this.API_BASE}/accounts/${accountId}/activate`,
-      );
       await this.makeRequest(
         `${this.API_BASE}/accounts/${accountId}/activate`,
         {
@@ -522,7 +420,6 @@ class BankingSystem {
         },
       );
 
-      console.log("[TRACE] 계좌 활성화 성공");
       this.showSuccess("계좌가 활성화되었습니다");
       this.loadAccounts();
     } catch (error) {
@@ -533,7 +430,6 @@ class BankingSystem {
 
   // Transaction Methods
   async processDeposit() {
-    console.log("[TRACE] processDeposit() 시작");
     try {
       const form = document.getElementById("depositForm");
       const formData = new FormData(form);
@@ -545,49 +441,39 @@ class BankingSystem {
       data.amount = parseFloat(data.amount);
       data.forceFailure = formData.has("forceFailure");
 
-      console.log("[TRACE] 입금 데이터:", data);
       this.addLog(
         `💰 입금 처리 - 계좌ID: ${data.accountId}, 금액: ${this.formatCurrency(data.amount)}`,
         "info",
       );
 
-      console.log("[TRACE] 입금 API 호출:", `${this.API_BASE}/deposit`);
       const result = await this.makeRequest(`${this.API_BASE}/deposit`, {
         method: "POST",
         body: JSON.stringify(data),
       });
 
-      console.log("[TRACE] 입금 성공:", result);
       this.showSuccess(`입금 완료: ${this.formatCurrency(data.amount)}`);
 // 1초(1000ms) 대기
-    await sleep(1000);      
+    await sleep(1000);
       form.reset();
 // 1초(1000ms) 대기
-    await sleep(1000);      
+    await sleep(1000);
       this.loadAccounts();
 // 1초(1000ms) 대기
-    await sleep(1000);      
+    await sleep(1000);
       this.loadTransactions();
     } catch (error) {
       console.error("[TRACE] processDeposit() 오류:", error);
       this.showError(`입금 실패: ${error.message}`);
     }
-    console.log("[TRACE] processDeposit() 완료");
   }
 
   async loadTransactions() {
-    console.log("[TRACE] loadTransactions() 시작");
     try {
       this.addLog("📜 거래 내역 로딩 중...", "info");
 
-      console.log(
-        "[TRACE] 거래 내역 API 호출:",
-        `${this.API_BASE}/transactions`,
-      );
       const transactions = await this.makeRequest(
         `${this.API_BASE}/transactions`,
       );
-      console.log("[TRACE] 거래 내역 수신:", transactions.length, "개");
 
       this.renderTransactionsTable(transactions);
 
@@ -599,15 +485,9 @@ class BankingSystem {
       console.error("[TRACE] loadTransactions() 오류:", error);
       this.showError(`거래 내역 로딩 실패: ${error.message}`);
     }
-    console.log("[TRACE] loadTransactions() 완료");
   }
 
   renderTransactionsTable(transactions) {
-    console.log(
-      "[TRACE] renderTransactionsTable() 시작:",
-      transactions.length,
-      "개 거래",
-    );
     const tbody = document.querySelector("#transactionsTable tbody");
     if (!tbody) {
       console.error("[TRACE] transactionsTable tbody 요소를 찾을 수 없음");
@@ -615,14 +495,8 @@ class BankingSystem {
     }
 
     tbody.innerHTML = "";
-    console.log("[TRACE] 거래 테이블 초기화 완료");
 
     transactions.forEach((transaction, index) => {
-      console.log(
-        `[TRACE] 거래 ${index + 1} 렌더링:`,
-        transaction.id,
-        transaction.guid,
-      );
       const row = document.createElement("tr");
       row.innerHTML = `
                 <td>${transaction.id}</td>
@@ -638,22 +512,15 @@ class BankingSystem {
             `;
       tbody.appendChild(row);
     });
-    console.log("[TRACE] renderTransactionsTable() 완료");
   }
 
   async loadNotifications() {
-    console.log("[TRACE] loadNotifications() 시작");
     try {
       this.addLog("🔔 알림 로그 로딩 중...", "info");
 
-      console.log(
-        "[TRACE] 알림 로그 API 호출:",
-        `${this.API_BASE}/notifications`,
-      );
       const notifications = await this.makeRequest(
         `${this.API_BASE}/notifications`,
       );
-      console.log("[TRACE] 알림 로그 수신:", notifications.length, "개");
 
       this.renderNotificationsTable(notifications);
 
@@ -665,15 +532,9 @@ class BankingSystem {
       console.error("[TRACE] loadNotifications() 오류:", error);
       this.showError(`알림 로그 로딩 실패: ${error.message}`);
     }
-    console.log("[TRACE] loadNotifications() 완료");
   }
 
   renderNotificationsTable(notifications) {
-    console.log(
-      "[TRACE] renderNotificationsTable() 시작:",
-      notifications.length,
-      "개 알림",
-    );
     const tbody = document.querySelector("#notificationsTable tbody");
     if (!tbody) {
       console.error("[TRACE] notificationsTable tbody 요소를 찾을 수 없음");
@@ -681,14 +542,8 @@ class BankingSystem {
     }
 
     tbody.innerHTML = "";
-    console.log("[TRACE] 알림 로그 테이블 초기화 완료");
 
     notifications.forEach((notification, index) => {
-      console.log(
-        `[TRACE] 알림 ${index + 1} 렌더링:`,
-        notification.id,
-        notification.guid,
-      );
       const row = document.createElement("tr");
       row.innerHTML = `
                 <td>${notification.id}</td>
@@ -699,7 +554,6 @@ class BankingSystem {
             `;
       tbody.appendChild(row);
     });
-    console.log("[TRACE] renderNotificationsTable() 완료");
   }
 
   getNotificationStatusClass(type) {
@@ -724,25 +578,21 @@ class BankingSystem {
 
   // Customer Methods
   async createCustomer() {
-    console.log("[TRACE] createCustomer() 시작");
     try {
       const form = document.getElementById("customerForm");
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
 
-      console.log("[TRACE] 고객 등록 데이터:", data);
       this.addLog(
         `👤 고객 등록 요청 - ${data.name}`,
         "info",
       );
 
-      console.log("[TRACE] 고객 등록 API 호출:", `${this.API_BASE}/customers`);
       const result = await this.makeRequest(`${this.API_BASE}/customers`, {
         method: "POST",
         body: JSON.stringify(data),
       });
 
-      console.log("[TRACE] 고객 등록 성공:", result);
       this.showSuccess(`고객 등록 완료: ${result.customerNumber}`);
       form.reset();
       this.loadCustomers();
@@ -750,17 +600,13 @@ class BankingSystem {
       console.error("[TRACE] createCustomer() 오류:", error);
       this.showError(`고객 등록 실패: ${error.message}`);
     }
-    console.log("[TRACE] createCustomer() 완료");
   }
 
   async loadCustomers() {
-    console.log("[TRACE] loadCustomers() 시작");
     try {
       this.addLog("👥 고객 목록 로딩 중...", "info");
 
-      console.log("[TRACE] 고객 목록 API 호출:", `${this.API_BASE}/customers`);
       const customers = await this.makeRequest(`${this.API_BASE}/customers`);
-      console.log("[TRACE] 고객 목록 수신:", customers.length, "명");
 
       this.renderCustomersTable(customers);
 
@@ -769,15 +615,9 @@ class BankingSystem {
       console.error("[TRACE] loadCustomers() 오류:", error);
       this.showError(`고객 목록 로딩 실패: ${error.message}`);
     }
-    console.log("[TRACE] loadCustomers() 완료");
   }
 
   renderCustomersTable(customers) {
-    console.log(
-      "[TRACE] renderCustomersTable() 시작:",
-      customers.length,
-      "명 고객",
-    );
     const tbody = document.querySelector("#customersTable tbody");
     if (!tbody) {
       console.error("[TRACE] customersTable tbody 요소를 찾을 수 없음");
@@ -785,14 +625,8 @@ class BankingSystem {
     }
 
     tbody.innerHTML = "";
-    console.log("[TRACE] 고객 테이블 초기화 완료");
 
     customers.forEach((customer, index) => {
-      console.log(
-        `[TRACE] 고객 ${index + 1} 렌더링:`,
-        customer.id,
-        customer.customerNumber,
-      );
       const row = document.createElement("tr");
       row.innerHTML = `
                 <td>${customer.id}</td>
@@ -808,21 +642,14 @@ class BankingSystem {
             `;
       tbody.appendChild(row);
     });
-    console.log("[TRACE] renderCustomersTable() 완료");
   }
 
   async suspendCustomer(customerId) {
-    console.log("[TRACE] suspendCustomer() 호출:", customerId);
     if (!confirm("정말로 고객을 정지하시겠습니까?")) {
-      console.log("[TRACE] 고객 정지 취소 (사용자 확인 거부)");
       return;
     }
 
     try {
-      console.log(
-        "[TRACE] 고객 정지 API 호출:",
-        `${this.API_BASE}/customers/${customerId}/suspend`,
-      );
       await this.makeRequest(
         `${this.API_BASE}/customers/${customerId}/suspend`,
         {
@@ -830,7 +657,6 @@ class BankingSystem {
         },
       );
 
-      console.log("[TRACE] 고객 정지 성공");
       this.showSuccess("고객이 정지되었습니다");
       this.loadCustomers();
     } catch (error) {
@@ -841,14 +667,12 @@ class BankingSystem {
 
   // Utility Methods
   populateAccountSelects() {
-    console.log("[DEBUG] populateAccountSelects 시작");
 
     const selects = ["depositAccountId", "withdrawAccountId"];
 
     selects.forEach((selectId) => {
       const select = document.getElementById(selectId);
       if (!select) {
-        console.log(`[DEBUG] ${selectId} 요소 없음, 건너뜀`);
         return;
       }
 
@@ -860,15 +684,11 @@ class BankingSystem {
       }
 
       const rows = tbody.querySelectorAll("tr");
-      console.log(`[DEBUG] 테이블에서 ${rows.length}개 행 발견`);
 
       const accounts = Array.from(rows)
         .map((row, index) => {
           const cells = row.querySelectorAll("td");
           if (cells.length < 9) {
-            console.warn(
-              `[DEBUG] 행 ${index}에 셀이 부족함: ${cells.length}개`,
-            );
             return null;
           }
           return {
@@ -878,11 +698,6 @@ class BankingSystem {
           };
         })
         .filter((acc) => acc !== null);
-
-      console.log(
-        `[DEBUG] ${selectId}용 계좌 ${accounts.length}개 추출`,
-        accounts,
-      );
 
       // Save the first option if it exists
       const firstOption = select.querySelector("option");
@@ -894,9 +709,6 @@ class BankingSystem {
       // Add the first option back if it existed
       if (firstOptionClone) {
         select.appendChild(firstOptionClone);
-        console.log(
-          `[DEBUG] 첫 번째 옵션 추가: ${firstOptionClone.textContent}`,
-        );
       } else {
         // Create default placeholder if no first option
         const defaultOption = document.createElement("option");
@@ -905,7 +717,6 @@ class BankingSystem {
         defaultOption.disabled = true;
         defaultOption.selected = true;
         select.appendChild(defaultOption);
-        console.log(`[DEBUG] 기본 옵션 생성`);
       }
 
       // Add account options
@@ -921,29 +732,17 @@ class BankingSystem {
         }
       });
 
-      console.log(`[DEBUG] ${selectId}에 활성 계좌 ${addedCount}개 추가`);
     });
 
-    console.log("[DEBUG] populateAccountSelects 완료");
   }
 }
 
 // Initialize banking system when DOM is loaded
-console.log("[TRACE] DOMContentLoaded 리스너 등록");
 document.addEventListener("DOMContentLoaded", function () {
-  console.log(
-    "[TRACE] DOMContentLoaded 콜백 실행 - BankingSystem 인스턴스 생성 시작",
-  );
   try {
     window.bankingSystem = new BankingSystem();
     window.bankingApp = window.bankingSystem; // HTML onclick 핸들러용 별칭
-    console.log(
-      "[TRACE] BankingSystem 인스턴스 생성 완료, window.bankingSystem:",
-      window.bankingSystem,
-    );
   } catch (error) {
     console.error("[TRACE] BankingSystem 인스턴스 생성 오류:", error);
   }
 });
-
-console.log("[TRACE] script.js 로딩 완료");

@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * 은행 계좌 관련 REST API 컨트롤러
@@ -139,10 +140,7 @@ public class BankingController {
      */
     @PostMapping("/accounts/{id}/freeze")
     public ResponseEntity<?> freezeAccount(@PathVariable Long id) {
-        return changeAccountStatus(id, account -> {
-            account.freeze();
-            return "동결";
-        }, "계좌가 동결되었습니다");
+        return changeAccountStatus(id, Account::freeze, "동결", "계좌가 동결되었습니다");
     }
 
     /**
@@ -153,10 +151,7 @@ public class BankingController {
      */
     @PostMapping("/accounts/{id}/activate")
     public ResponseEntity<?> activateAccount(@PathVariable Long id) {
-        return changeAccountStatus(id, account -> {
-            account.activate();
-            return "활성화";
-        }, "계좌가 활성화되었습니다");
+        return changeAccountStatus(id, Account::activate, "활성화", "계좌가 활성화되었습니다");
     }
 
     /**
@@ -178,18 +173,20 @@ public class BankingController {
     /**
      * 계좌의 상태를 변경하는 공통 로직을 처리합니다.
      * @param id 계좌 ID
-     * @param accountAction 계좌에 적용할 액션 (예: account.freeze(), account.activate()) 및 해당 액션의 로깅 메시지를 반환하는 함수
+     * @param accountAction 계좌에 적용할 액션 (예: account.freeze(), account.activate())
+     * @param actionLog 상태 변경 액션명 (예: "동결", "활성화")
      * @param successMessage 성공 응답에 포함될 메시지
      * @return 처리 결과 (성공 시 변경된 계좌 정보, 실패 시 404 Not Found)
      */
-    private ResponseEntity<?> changeAccountStatus(Long id, java.util.function.Function<Account, String> accountAction, String successMessage) {
+    private ResponseEntity<?> changeAccountStatus(Long id, Consumer<Account> accountAction, String actionLog,
+            String successMessage) {
         Account account = accountRepository.findById(id);
         if (account == null) {
             log.warn("계좌를 찾을 수 없음: {}", id);
             return ResponseEntity.notFound().build();
         }
         
-        String actionLog = accountAction.apply(account); // Apply the action and get the log message
+        accountAction.accept(account);
         accountRepository.update(account);
         log.info("계좌 {} 성공: {}", actionLog, account.getAccountNumber());
         
